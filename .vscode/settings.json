@@ -1,0 +1,12 @@
+{
+    "[antlr]": {
+        "editor.formatOnSave": false,
+        "editor.tabSize": 2
+    },
+    "antlr4.generation": {
+        "mode": "internal",
+        "language": "CSharp",
+        "listeners": false,
+        "visitors": false,
+    }
+}

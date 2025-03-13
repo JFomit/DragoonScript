@@ -1,0 +1,6 @@
+namespace Compiler;
+
+class Parser
+{
+
+}
