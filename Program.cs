@@ -1,39 +1,30 @@
-﻿using Compiler.Syntax;
+﻿using Compiler;
+using Compiler.Syntax;
+using Pixie.Code;
 
 var s = """
-type Bool = True | False
-let otherwise = True
-
-fn ^ x y
-  | y == 0    = 1
-  | y == 1    = x
-  | y < 0     = 1 / (^ x -y)
-  | otherwise = (x * x) ^ (y - 1)
-
-type Option x = Some x | None
-
-fn min a b: int -> int -> int
-  | a <= b    = a
-  | otherwise = b
-
-type Rational = record
-  numerator: int
-  denominator: int
-
-fn f x = x ^ 2
-
-fn main = ()
+fn sqr x = x * x
 """;
-var lexer = new Lexer();
+var doc = new StringDocument("stdin", s);
 
-var t = lexer.NextToken(s);
-while (t.Type != TokenType.EoF)
-{
-    while (t.Type == TokenType.WhiteSpace || t.Type == TokenType.NewLine)
-    {
-        t = lexer.NextToken(s);
-    }
-    Console.WriteLine($"{t.Type} {t.AsSpan(s)}");
-    t = lexer.NextToken(s);
-}
-Console.WriteLine($"{TokenType.EoF}");
+var lexer = new Lexer(doc);
+var parser = new Parser(new NoWS(lexer));
+
+var tree = parser.File();
+var printer = new Printer();
+printer.Visit((IParseTreeItem)tree);
+
+// var de = new WithDestructor();
+
+// typeof(WithDestructor)
+// .GetMethod("Finalize", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)!.Invoke(de, []);
+// typeof(WithDestructor)
+// .GetMethod("Finalize", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)!.Invoke(de, []);
+
+// class WithDestructor
+// {
+//     ~WithDestructor()
+//     {
+//         Console.WriteLine("Destroyed!");
+//     }
+// }

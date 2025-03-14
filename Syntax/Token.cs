@@ -1,6 +1,8 @@
+using Pixie.Code;
+
 namespace Compiler.Syntax;
 
-enum TokenType
+enum TokenKind
 {
     Error = -1,
     EoF = 0,
@@ -27,15 +29,9 @@ enum TokenType
     Integer,
 }
 
-readonly struct Token(TokenType type, int pos, int length)
+readonly struct Token(TokenKind type, SourceSpan view)
 {
-    public readonly TokenType Type = type;
-    public readonly int Pos = pos;
-    public readonly int Length = length;
+    public readonly TokenKind Kind = type;
 
-    public readonly ReadOnlySpan<char> AsSpan(string source)
-        => source.AsSpan().Slice(Pos, Length);
-
-    public static Token Create(TokenType type = TokenType.EoF, int pos = 0, int length = 0)
-        => new(type, pos, length);
+    public readonly SourceSpan View = view;
 }

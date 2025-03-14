@@ -1,11 +1,13 @@
 using Compiler.Syntax;
 
-namespace Compiler;
+namespace Compiler.Syntax;
 
-enum TreeNodeKind
+enum TreeKind
 {
-    Error,
+    Error = -1,
     Token,
+
+    File,
 
     UnionTypeDecl,
     RecordTypeDecl,
@@ -24,12 +26,27 @@ enum TreeNodeKind
     LetExpr,
 }
 
-class ParseTree
+class ParseTree(TreeKind kind = TreeKind.Error) : IParseTreeItem
 {
-    public TreeNodeKind Kind { get; set; }
-    public List<ParseTreeChild> Children { get; } = [];
-}
+    public TreeKind Kind { get; set; } = kind;
+    public List<ParseTree> Children { get; } = [];
 
-abstract record ParseTreeChild;
-sealed record TokenChild(Token Token) : ParseTreeChild;
-sealed record TreeChild(ParseTree Tree) : ParseTreeChild;
+    public ParseTree AddChild(ParseTree child)
+    {
+        Children.Add(child);
+        return this;
+    }
+
+    public virtual void Accept(ParseTreeVisitor visitor)
+    {
+        visitor.Visit(this);
+    }
+}
+sealed class TokenTree(Token token) : ParseTree(TreeKind.Token), IParseTreeItem
+{
+    public Token Token { get; set; } = token;
+    public override void Accept(ParseTreeVisitor visitor)
+    {
+        visitor.Visit(this);
+    }
+}
