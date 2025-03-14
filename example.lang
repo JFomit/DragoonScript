@@ -1,11 +1,11 @@
 type Bool = True | False
 let otherwise = True
 
-fn `^` x y
+fn ^ x y
   | y == 0        = 1
   | y == 1        = x
-  | y < 0         = 1 / (`^` x -y)
-  | otherwise     = `^` (x * x) (y - 1)
+  | y < 0         = 1 / (x ^ -y)
+  | otherwise     = (x * x) ^ (y - 1)
 
 type Option x = Some x | None
 
@@ -16,8 +16,6 @@ fn min a b: int -> int -> int
 type Rational = record
   numerator: int
   denominator: int
-
-fn \frac x y = Rational x y
 
 fn f x = x ^ 2
 

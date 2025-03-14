@@ -23,7 +23,9 @@ enum TreeKind
     FnApply,
     LiteralExpr,
     VariableRefExpr,
-    LetExpr,
+    LetBind,
+
+    LetPattern,
 }
 
 class ParseTree(TreeKind kind = TreeKind.Error) : IParseTreeItem

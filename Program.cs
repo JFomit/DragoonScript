@@ -3,7 +3,8 @@ using Compiler.Syntax;
 using Pixie.Code;
 
 var s = """
-fn sqr x = x * x
+let x =
+fn s x x = x * x
 """;
 var doc = new StringDocument("stdin", s);
 

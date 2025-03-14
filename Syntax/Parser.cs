@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Reflection.Metadata;
 using Compiler.Syntax;
 
 namespace Compiler.Syntax;
@@ -28,6 +29,18 @@ class Parser(TokenStream lexer)
         return Lexer.Peek().Kind == kind;
     }
     private bool Eof() => At(TokenKind.EoF);
+    private ParseTree Expect(TokenKind kind)
+    {
+        if (At(kind))
+        {
+            return Eat(kind);
+        }
+        else
+        {
+            Console.WriteLine($"Invalid token, expected {kind}.");
+            return new ParseTree(TreeKind.Error);
+        }
+    }
     private TokenTree Eat(TokenKind? expectedKind = null)
     {
         var next = Lexer.Next();
@@ -40,7 +53,7 @@ class Parser(TokenStream lexer)
         Fuel = 256;
         return new(next);
     }
-
+    // File ::= (FunctionDeclaration | TypeDeclaration | LetBinding)* EOF;
     public ParseTree File()
     {
         var tree = EnterRule();
@@ -54,6 +67,10 @@ class Parser(TokenStream lexer)
             else if (At(TokenKind.Type))
             {
                 // tree.AddChild(TypeDeclaration());
+            }
+            else if (At(TokenKind.Let))
+            {
+                tree.AddChild(LetBinding());
             }
             else
             {
@@ -73,17 +90,69 @@ class Parser(TokenStream lexer)
         return ExitRule(tree, TreeKind.Error);
     }
 
+    // FunctionDeclaration ::= 'fn' ID parameterList '='
     private ParseTree FunctionDeclaration()
     {
         var tree = EnterRule();
-        tree.AddChild(Eat(TokenKind.Fn));
-        tree.AddChild(Eat(TokenKind.Identifier));
-        tree.AddChild(Eat(TokenKind.Identifier));
-        tree.AddChild(Eat(TokenKind.Is));
-        tree.AddChild(Eat(TokenKind.Identifier));
-        tree.AddChild(Eat(TokenKind.Operator));
-        tree.AddChild(Eat(TokenKind.Identifier));
+        tree.AddChild(Eat(TokenKind.Fn)); // 'fn'
+        tree.AddChild(Expect(TokenKind.Identifier)); // name
+        tree.AddChild(ParameterList()); // params
+        if (At(TokenKind.Colon))
+        {
+            tree.AddChild(TypeExpression());
+        }
+        tree.AddChild(Expect(TokenKind.Is)); // '='
+        // TODO: expressions
 
         return ExitRule(tree, TreeKind.FnDecl);
+    }
+
+    private ParseTree TypeExpression()
+    {
+        throw new NotImplementedException();
+    }
+
+    // ParameterList ::= Parameter*
+    private ParseTree ParameterList()
+    {
+        var tree = EnterRule();
+        while (!At(TokenKind.Is) && !Eof())
+        {
+            if (At(TokenKind.Identifier))
+            {
+                tree.AddChild(Parameter());
+            }
+            else
+            {
+                break;
+            }
+        }
+        return ExitRule(tree, TreeKind.FnParameterList);
+    }
+    // Parameter ::= ID
+    private TokenTree Parameter()
+    {
+        return Eat(TokenKind.Identifier);
+    }
+    // LetBinding ::= 'let' BindingPattern '='
+    private ParseTree LetBinding()
+    {
+        var tree = EnterRule();
+
+        tree.AddChild(Eat(TokenKind.Let)); // 'let'
+        tree.AddChild(BindingPattern()); // pattern
+        tree.AddChild(Expect(TokenKind.Is)); // '='
+        // TODO: expressions
+
+        return ExitRule(tree, TreeKind.LetBind);
+    }
+    // BindingPattern ::= ID
+    private ParseTree BindingPattern()
+    {
+        var tree = EnterRule();
+
+        tree.AddChild(Expect(TokenKind.Identifier)); // varName
+
+        return ExitRule(tree, TreeKind.LetPattern);
     }
 }
