@@ -5,11 +5,12 @@ namespace Compiler.Diagnostic;
 
 record CompilerDiagnostic(SourceDocument Document)
 {
-    public int Start { get; init; } = 0;
-    public int Length { get; init; } = Document.Length;
+    public required int Start { get; init; }
+    public required int Length { get; init; }
 
-    public DiagnosticSeverity Severity { get; init; } = DiagnosticSeverity.Fatal;
+    public required DiagnosticSeverity Severity { get; init; }
 
     public required string Message { get; init; }
+    public List<string> Context { get; init; } = [];
     public Option<string> Suggestion { get; init; }
 }

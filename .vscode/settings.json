@@ -8,5 +8,17 @@
         "language": "CSharp",
         "listeners": false,
         "visitors": false,
+    },
+    "files.exclude": {
+        "**/.git": true,
+        "**/.svn": true,
+        "**/.hg": true,
+        "**/.DS_Store": true,
+        "**/Thumbs.db": true,
+        "**/.antlr": true,
+        "**/.idea": true,
+        "**/bin": true,
+        "**/obj": true,
+        "**Folder.DotSettings.user": true
     }
 }
