@@ -1,6 +1,7 @@
 using Compiler.Diagnostics;
 using System.Diagnostics;
 using Compiler.Syntax.Source;
+using Compiler.Syntax.Lexing;
 
 namespace Compiler.Syntax;
 
@@ -192,8 +193,8 @@ class Parser(TokenStream lexer)
     {
         var tree = EnterRule();
 
-        tree.AddChild(Eat(TokenKind.Let)); // 'let'
-        tree.AddChild(BindingPattern()); // pattern
+        tree.AddChild(Eat(TokenKind.Let));   // 'let'
+        tree.AddChild(BindingPattern());     // pattern
         tree.AddChild(Expect(TokenKind.Is)); // '='
                                              // TODO: expressions
 

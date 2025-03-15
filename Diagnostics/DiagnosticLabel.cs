@@ -1,4 +1,4 @@
-using Compiler.Syntax;
+using Compiler.Syntax.Lexing;
 using Compiler.Syntax.Source;
 
 namespace Compiler.Diagnostics;

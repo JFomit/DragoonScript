@@ -1,50 +1,89 @@
 using System.Diagnostics;
+using Compiler.Syntax.Lexing;
+using JFomit.Functional.Extensions;
 using JFomit.Functional.Monads;
 using static JFomit.Functional.Prelude;
 
 namespace Compiler.Syntax.Utils;
 
-class PrattParser(TokenStream lexer)
+abstract class PrattParser(TokenStream lexer)
 {
     TokenStream Lexer { get; } = lexer;
 
-    public ParseTree TypeExpression(int rbp = 0)
+    private Token Next(bool skipWs = true)
     {
-        var current = Lexer.Next();
+        while (true)
+        {
+            var next = Lexer.Next();
+            if (skipWs && (next.Kind is TokenKind.NewLine or TokenKind.WhiteSpace))
+            {
+                continue;
+            }
+
+            return next;
+        }
+    }
+    private Token Peek(bool skipWs = true)
+    {
+        while (true)
+        {
+            var peeked = Lexer.Peek();
+            if (skipWs && (peeked.Kind is TokenKind.NewLine or TokenKind.WhiteSpace))
+            {
+                Lexer.Next();
+                continue;
+            }
+
+            return peeked;
+        }
+    }
+
+    public ParseTree ParseExpression(int rbp = 0)
+    {
+        var current = Next();
         var lhs = current.Kind switch
         {
             TokenKind.Identifier => new ParseTree(TreeKind.SimpleTypeExpr).AddChild(new TokenTree(current)),
+            TokenKind.Operator or TokenKind.Pipe or TokenKind.SignatureArrow => PrefixOperator(current),
             _ => new ParseTree(TreeKind.Error).AddChild(new TokenTree(current))
         };
 
         while (true)
         {
-            var op = Lexer.Peek();
-            var (opLbp, opRbp, shouldGo) = InfixBindingPower(op);
-            if (!shouldGo)
+            var op = Peek();
+            var opt = InfixBindingPower(op);
+            if (opt.TryUnwrap(out var operation))
             {
-                break;
+                if (operation.lbp < rbp)
+                {
+                    break;
+                }
+                Next();
+                var rhs = ParseExpression(operation.rbp);
+                lhs = ConstructTree(lhs, op, rhs);
             }
-            if (opLbp < rbp)
-            {
-                break;
-            }
-            Lexer.Next();
-            var rhs = TypeExpression(opRbp);
 
-            lhs = new ParseTree(TreeKind.TypeArrowExpr).AddChild(lhs).AddChild(new TokenTree(op)).AddChild(rhs);
+            break;
         }
 
         return lhs;
     }
 
-    private static (int, int, bool) InfixBindingPower(Token token)
+    private ParseTree PrefixOperator(Token current)
     {
-        if (token.Kind == TokenKind.SignatureArrow)
-        {
-            return (2, 1, true);
-        }
+        var text = current.View.AsSpan();
+        var c = text[0];
 
-        return (0, 0, false);
+        return PrefixBindingPower(current).Match(
+            (self: this, current),
+            some: static (rbp, tuple) => tuple.self.ConstructTree(tuple.current, tuple.self.ParseExpression(rbp)),
+            none: static tuple => new ParseTree(TreeKind.Error).AddChild(new TokenTree(tuple.current))
+        );
     }
+
+    protected abstract ParseTree ConstructTree(Token token, ParseTree rhs);
+    protected abstract ParseTree ConstructTree(ParseTree lhs, Token token, ParseTree rhs);
+
+    protected abstract Option<int> PrefixBindingPower(Token current);
+    protected abstract Option<(int lbp, int rbp)> InfixBindingPower(Token token);
 }

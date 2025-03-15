@@ -8,9 +8,9 @@ using JFomit.Functional.Extensions;
 
 var s = """
 let x =
-fn s x x: = fn
+fn s x x: =
 """;
-var doc = new SourceDocument("stdin", s);
+var doc = new SourceDocument("test", s);
 
 var lexer = new Lexer(doc);
 var parser = new Parser(lexer);

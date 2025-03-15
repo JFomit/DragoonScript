@@ -1,4 +1,5 @@
-using Compiler.Syntax;
+using Compiler.Syntax.Lexing;
+using Compiler.Syntax.Utils;
 
 namespace Compiler.Syntax;
 

@@ -1,3 +1,5 @@
+using Compiler.Syntax.Utils;
+
 namespace Compiler.Syntax;
 
 abstract class ParseTreeVisitor

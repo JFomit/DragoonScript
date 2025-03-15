@@ -1,8 +1,7 @@
-using Compiler.Syntax;
 using Compiler.Syntax.Source;
 using JFomit.Functional.Monads;
 
-namespace Compiler;
+namespace Compiler.Syntax.Lexing;
 
 abstract class TokenStream
 {

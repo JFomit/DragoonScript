@@ -1,4 +1,5 @@
 using System.Buffers;
+using Compiler.Syntax.Lexing;
 using Compiler.Syntax.Source;
 using JFomit.Functional.Monads;
 using static JFomit.Functional.Prelude;

@@ -1,6 +1,6 @@
 using Compiler.Syntax.Source;
 
-namespace Compiler.Syntax;
+namespace Compiler.Syntax.Lexing;
 
 enum TokenKind
 {
