@@ -51,7 +51,7 @@ abstract class PrattParser(TokenStream lexer, List<Diagnostic> diagnostics)
             TokenKind.Operator or TokenKind.Pipe or TokenKind.SignatureArrow => PrefixOperator(current),
             TokenKind.LParen => Parenthesis(current),
             TokenKind.RParen => UnexpectedRightParenthesis(current),
-            _ => new ParseTree(TreeKind.Error).PushBack(new TokenTree(current))
+            _ => UnexpectedToken(current)
         };
 
         while (true)
@@ -79,8 +79,18 @@ abstract class PrattParser(TokenStream lexer, List<Diagnostic> diagnostics)
     private ParseTree PrefixOperator(Token current) => PrefixBindingPower(current).Match(
         (self: this, current),
         some: static (rbp, tuple) => tuple.self.ConstructTree(tuple.current, tuple.self.ParseExpression(rbp)),
-        none: static tuple => new ParseTree(TreeKind.Error).PushBack(new TokenTree(tuple.current))
+        none: static tuple => tuple.self.UnexpectedToken(tuple.current)
     );
+    private ParseTree UnexpectedToken(Token current)
+    {
+        var tree = new ParseTree(TreeKind.Error).PushBack(new TokenTree(current));
+        PushDiagnostic(Diagnostic.Create(DiagnosticLabel.Create(current))
+            .WithSeverity(DiagnosticSeverity.Error)
+            .WhitMessage("Unexpected token.")
+            .Build()
+        );
+        return tree;
+    }
     private ParseTree UnexpectedRightParenthesis(Token rparen)
     {
         var tree = new ParseTree(TreeKind.Error);
