@@ -1,15 +1,21 @@
+using Compiler.Diagnostics;
 using System.Diagnostics;
-using System.Reflection.Metadata;
-using Compiler.Syntax;
+using Compiler.Syntax.Source;
 
 namespace Compiler.Syntax;
 
 class Parser(TokenStream lexer)
 {
     public TokenStream Lexer { get; } = lexer;
+    public SourceDocument Document => Lexer.Document;
 
     private int Fuel { get; set; } = 256;
-    public List<string> Diagnostics { get; } = [];
+    public List<Diagnostic> Diagnostics { get; } = [];
+
+    private void PushDiagnostic(Diagnostic diagnostic)
+    {
+        Diagnostics.Add(diagnostic);
+    }
 
     private static ParseTree EnterRule()
     {
@@ -31,6 +37,18 @@ class Parser(TokenStream lexer)
         return Peek(skipWs: skipWs).Kind == kind;
     }
     private bool Eof(bool skipWs = true) => At(TokenKind.EoF, skipWs: skipWs);
+    private ParseTree Error(string message)
+    {
+        var tree = EnterRule();
+        var error = Eat();
+        tree.AddChild(error);
+        var diagnostic = Diagnostic.Create(DiagnosticLabel.Create(Document, error.Token.View.Pos, error.Token.View.Length))
+            .WithSeverity(DiagnosticSeverity.Error)
+            .WhitMessage(message).Build();
+
+        PushDiagnostic(diagnostic);
+        return ExitRule(tree, TreeKind.Error);
+    }
     private ParseTree Expect(TokenKind kind, bool skipWs = true)
     {
         if (At(kind, skipWs: skipWs))
@@ -39,7 +57,12 @@ class Parser(TokenStream lexer)
         }
         else
         {
-            Console.WriteLine($"Invalid token, expected {kind}.");
+            var diagnostic = Diagnostic.Create(DiagnosticLabel.Create(Peek()))
+                .WithSeverity(DiagnosticSeverity.Error)
+                .WhitMessage("Invalid token.")
+                .WithNote($"Expected {kind}.")
+                .Build();
+            PushDiagnostic(diagnostic);
             return new ParseTree(TreeKind.Error);
         }
     }
@@ -111,14 +134,6 @@ class Parser(TokenStream lexer)
         tree.AddChild(Eat(TokenKind.EoF));
 
         return ExitRule(tree, TreeKind.File);
-    }
-
-    private ParseTree Error(string message)
-    {
-        var tree = EnterRule();
-        tree.AddChild(Eat());
-        Diagnostics.Add(message);
-        return ExitRule(tree, TreeKind.Error);
     }
 
     // FunctionDeclaration ::= 'fn' ID parameterList '='

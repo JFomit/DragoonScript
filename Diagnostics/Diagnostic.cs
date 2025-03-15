@@ -2,7 +2,7 @@ using Compiler.Syntax.Source;
 using JFomit.Functional.Monads;
 using static JFomit.Functional.Prelude;
 
-namespace Compiler.Diagnostic;
+namespace Compiler.Diagnostics;
 
 sealed record Diagnostic(DiagnosticLabel DiagnosticSource)
 {

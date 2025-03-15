@@ -9,7 +9,7 @@ internal class Lexer(SourceDocument inputString) : TokenStream
 {
     private int _pos = 0;
     private int _start = -1;
-    private readonly SourceDocument _document = inputString;
+    public override SourceDocument Document { get; } = inputString;
 
     private static readonly SearchValues<char> OperatorChars = SearchValues.Create(@"!#$%&*+./<=>?@^|-~");
 
@@ -35,7 +35,7 @@ internal class Lexer(SourceDocument inputString) : TokenStream
             return token;
         }
 
-        var input = _document.Contents.AsSpan();
+        var input = Document.Contents.AsSpan();
         var span = Slice(input, _pos..);
         _start = _pos;
         if (span.Length == 0)
@@ -148,6 +148,6 @@ internal class Lexer(SourceDocument inputString) : TokenStream
             return span[range];
         }
     }
-    private Token Emit(TokenKind type) => new(type, new SourceSpan(_document.Contents, _start, _pos - _start));
-    private Token EmitEof() => new(TokenKind.EoF, new SourceSpan(_document.Contents, _document.Length - 1, 0));
+    private Token Emit(TokenKind type) => new(type, new SourceSpan(Document, _start, _pos - _start));
+    private Token EmitEof() => new(TokenKind.EoF, new SourceSpan(Document, Document.Length - 1, 0));
 }

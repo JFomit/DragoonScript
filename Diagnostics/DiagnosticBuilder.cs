@@ -2,11 +2,10 @@ using Compiler.Syntax.Source;
 using JFomit.Functional.Monads;
 using static JFomit.Functional.Prelude;
 
-namespace Compiler.Diagnostic;
+namespace Compiler.Diagnostics;
 
 record struct DiagnosticBuilder(DiagnosticLabel Document);
 record struct DSeverityBuilder(DiagnosticLabel Document, DiagnosticSeverity Severity);
-record struct DMessageBuilder(DiagnosticLabel Document, DiagnosticSeverity Severity, string Message);
 record struct DLabelBuilder(DiagnosticLabel Document,
                             DiagnosticSeverity Severity,
                             string Message,
@@ -17,10 +16,8 @@ public static class DiagnosticBuilderExtensions
 {
     internal static DSeverityBuilder WithSeverity(this DiagnosticBuilder builder, DiagnosticSeverity severity)
         => new(builder.Document, severity);
-    internal static DMessageBuilder WhitMessage(this DSeverityBuilder builder, string message)
-        => new(builder.Document, builder.Severity, message);
-    internal static DLabelBuilder WithLabel(this DMessageBuilder builder, DiagnosticLabel label)
-        => new(builder.Document, builder.Severity, builder.Message, [label]);
+    internal static DLabelBuilder WhitMessage(this DSeverityBuilder builder, string message)
+        => new(builder.Document, builder.Severity, message, []);
     internal static DLabelBuilder WithLabel(this DLabelBuilder builder, DiagnosticLabel label)
     {
         builder.Labels.Add(label);

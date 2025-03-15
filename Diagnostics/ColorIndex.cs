@@ -1,4 +1,4 @@
-namespace Compiler.Diagnostic;
+namespace Compiler.Diagnostics;
 
 enum ColorIndex
 {

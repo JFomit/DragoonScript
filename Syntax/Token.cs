@@ -31,6 +31,8 @@ enum TokenKind
 
 readonly struct Token(TokenKind type, SourceSpan view)
 {
+    public readonly SourceDocument Source => View.Source;
+
     public readonly TokenKind Kind = type;
 
     public readonly SourceSpan View = view;
