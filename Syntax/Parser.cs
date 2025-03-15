@@ -107,9 +107,12 @@ class Parser(TokenStream lexer)
         return ExitRule(tree, TreeKind.FnDecl);
     }
 
+    // TypeExpressions ::= ...
     private ParseTree TypeExpression()
     {
-        throw new NotImplementedException();
+        var tree = EnterRule();
+
+        return ExitRule(tree, TreeKind.TypeExpr);
     }
 
     // ParameterList ::= Parameter*

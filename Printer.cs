@@ -20,6 +20,13 @@ class Printer : ParseTreeVisitor
 
     public override void Visit(TokenTree tokenTree)
     {
-        Console.WriteLine($"{new string(' ', _indent)}{tokenTree.Token.Kind}");
+        if (tokenTree.Token.Kind == TokenKind.EoF)
+        {
+            Console.WriteLine($"{new string(' ', _indent)}{tokenTree.Token.Kind}");
+        }
+        else
+        {
+            Console.WriteLine($"{new string(' ', _indent)}{tokenTree.Token.Kind} '{tokenTree.Token.View.AsSpan()}'");
+        }
     }
 }

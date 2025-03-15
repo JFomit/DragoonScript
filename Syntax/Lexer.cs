@@ -66,13 +66,13 @@ internal class Lexer(StringDocument inputString) : TokenStream
                 span = Slice(input, _pos..);
                 if (span.Length < 1 || span[0] != ')')
                 {
-                    return Emit(TokenKind.LeftParenthesis);
+                    return Emit(TokenKind.LParen);
                 }
                 _pos++;
                 return Emit(TokenKind.Unit);
             case ')':
                 _pos++;
-                return Emit(TokenKind.RightParenthesis);
+                return Emit(TokenKind.RParen);
             case '\\':
                 _pos++;
                 throw new NotImplementedException();

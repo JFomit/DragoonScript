@@ -9,8 +9,8 @@ enum TokenKind
 
     NewLine,
     WhiteSpace,
-    LeftParenthesis,
-    RightParenthesis,
+    LParen,
+    RParen,
 
     SignatureArrow,
     Colon,
