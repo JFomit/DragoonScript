@@ -1,7 +1,10 @@
-﻿using Compiler;
+﻿using System.Diagnostics;
+using Compiler;
+using Compiler.Diagnostics;
 using Compiler.Syntax;
 using Compiler.Syntax.Source;
 using Compiler.Syntax.Utils;
+using JFomit.Functional.Extensions;
 
 var s = """
 let x =
@@ -16,19 +19,7 @@ var tree = parser.File();
 var printer = new Printer();
 printer.Visit((IParseTreeItem)tree);
 
-parser.Diagnostics.ForEach(Console.WriteLine);
-
-// var s = """
-// ->
-// fn
-// """;
-// var doc = new StringDocument("stdin", s);
-// var lexer = new Lexer(doc);
-
-// var pratt = new PrattParser(new NoWS(lexer));
-// var result = pratt.TypeExpression();
-// var printer = new Printer();
-// printer.Visit((IParseTreeItem)result);
+parser.Diagnostics.ForEach(d => d.Print());
 
 file static class Extensions
 {
@@ -38,5 +29,32 @@ file static class Extensions
         {
             action(item);
         }
+    }
+    internal static void Print(this Diagnostic diagnostic)
+    {
+        var label = diagnostic.Severity switch
+        {
+            DiagnosticSeverity.Info => "INF",
+            DiagnosticSeverity.Warning => "WRN",
+            DiagnosticSeverity.Error => "ERR",
+            DiagnosticSeverity.Fatal => "FTL",
+
+            _ => throw new UnreachableException()
+        };
+        var pos = diagnostic.DiagnosticSource.Pos;
+        var length = diagnostic.DiagnosticSource.Length;
+        var text = diagnostic.DiagnosticSource.Document.Contents.AsSpan().Slice(pos, length);
+        Console.WriteLine($"[{label}] in {diagnostic.DiagnosticSource.Document.Identifier} {pos}..{pos + length}:");
+        Console.WriteLine($" {text} ");
+        if (text.Length == 0)
+        {
+            Console.WriteLine("<Unexpected EoF>");
+        }
+        else
+        {
+            Console.WriteLine($" ^{new string('~', Math.Max(0, text.Length - 1))} HERE");
+        }
+        Console.WriteLine(diagnostic.Message);
+        diagnostic.Note.Select(s => $"NOTE: {s}").IfSome(Console.WriteLine);
     }
 }
