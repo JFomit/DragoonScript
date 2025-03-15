@@ -7,8 +7,7 @@ using Compiler.Syntax.Utils;
 using JFomit.Functional.Extensions;
 
 var s = """
-let x =
-fn s x x: =
+fn sqr x: int -> int =
 """;
 var doc = new SourceDocument("test", s);
 

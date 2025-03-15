@@ -13,6 +13,8 @@ class Parser(TokenStream lexer)
     private int Fuel { get; set; } = 256;
     public List<Diagnostic> Diagnostics { get; } = [];
 
+    private readonly TypeExpressionParser _typeExpressions = new(lexer);
+
     private void PushDiagnostic(Diagnostic diagnostic)
     {
         Diagnostics.Add(diagnostic);
@@ -157,10 +159,10 @@ class Parser(TokenStream lexer)
     }
 
     // TypeExpressions ::= ...
-    private static ParseTree TypeExpression()
+    private ParseTree TypeExpression()
     {
         var tree = EnterRule();
-
+        tree.AddChild(_typeExpressions.ParseExpression());
         return ExitRule(tree, TreeKind.TypeExpr);
     }
 
