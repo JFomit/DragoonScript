@@ -34,9 +34,14 @@ class ParseTree(TreeKind kind = TreeKind.Error) : IParseTreeItem
     public TreeKind Kind { get; set; } = kind;
     public List<ParseTree> Children { get; } = [];
 
-    public ParseTree AddChild(ParseTree child)
+    public ParseTree PushBack(ParseTree child)
     {
         Children.Add(child);
+        return this;
+    }
+    public ParseTree PushFront(ParseTree child)
+    {
+        Children.Insert(0, child);
         return this;
     }
 

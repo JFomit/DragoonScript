@@ -4,9 +4,10 @@ using Compiler.Syntax.Utils;
 
 namespace Compiler;
 
-class Printer : ParseTreeVisitor
+class Printer(bool minify) : ParseTreeVisitor
 {
     private int _indent = 0;
+    private readonly bool _minify = minify;
 
     public override void Visit(ParseTree tree)
     {
@@ -24,11 +25,11 @@ class Printer : ParseTreeVisitor
     {
         if (tokenTree.Token.Kind == TokenKind.EoF)
         {
-            Console.WriteLine($"{new string(' ', _indent)}{tokenTree.Token.Kind}");
+            Console.WriteLine($"{new string(' ', _indent)}{(_minify ? "T" : tokenTree.Token.Kind)}");
         }
         else
         {
-            Console.WriteLine($"{new string(' ', _indent)}{tokenTree.Token.Kind} '{tokenTree.Token.View.AsSpan()}'");
+            Console.WriteLine($"{new string(' ', _indent)}{(_minify ? "T" : tokenTree.Token.Kind)} '{tokenTree.Token.View.AsSpan()}'");
         }
     }
 }

@@ -5,15 +5,22 @@ using Compiler.Syntax.Lexing;
 
 namespace Compiler.Syntax;
 
-class Parser(TokenStream lexer)
+class Parser
 {
-    public TokenStream Lexer { get; } = lexer;
+    public TokenStream Lexer { get; }
     public SourceDocument Document => Lexer.Document;
 
     private int Fuel { get; set; } = 256;
-    public List<Diagnostic> Diagnostics { get; } = [];
+    public List<Diagnostic> Diagnostics { get; }
 
-    private readonly TypeExpressionParser _typeExpressions = new(lexer);
+    private readonly TypeExpressionParser _typeExpressions;
+
+    public Parser(TokenStream lexer)
+    {
+        Lexer = lexer;
+        Diagnostics = [];
+        _typeExpressions = new(lexer, Diagnostics);
+    }
 
     private void PushDiagnostic(Diagnostic diagnostic)
     {
@@ -44,7 +51,7 @@ class Parser(TokenStream lexer)
     {
         var tree = EnterRule();
         var error = Eat();
-        tree.AddChild(error);
+        tree.PushBack(error);
         var diagnostic = Diagnostic.Create(DiagnosticLabel.Create(Document, error.Token.View.Pos, error.Token.View.Length))
             .WithSeverity(DiagnosticSeverity.Error)
             .WhitMessage(message).Build();
@@ -120,7 +127,7 @@ class Parser(TokenStream lexer)
         {
             if (At(TokenKind.Fn))
             {
-                tree.AddChild(FunctionDeclaration());
+                tree.PushBack(FunctionDeclaration());
             }
             else if (At(TokenKind.Type))
             {
@@ -128,14 +135,14 @@ class Parser(TokenStream lexer)
             }
             else if (At(TokenKind.Let))
             {
-                tree.AddChild(LetBinding());
+                tree.PushBack(LetBinding());
             }
             else
             {
-                tree.AddChild(Error("Expected a function, let-binding or type declaration."));
+                tree.PushBack(Error("Expected a function, let-binding or type declaration."));
             }
         }
-        tree.AddChild(Eat(TokenKind.EoF));
+        tree.PushBack(Eat(TokenKind.EoF));
 
         return ExitRule(tree, TreeKind.File);
     }
@@ -144,15 +151,15 @@ class Parser(TokenStream lexer)
     private ParseTree FunctionDeclaration()
     {
         var tree = EnterRule();
-        tree.AddChild(Eat(TokenKind.Fn)); // 'fn'
-        tree.AddChild(Expect(TokenKind.Identifier)); // name
-        tree.AddChild(ParameterList()); // params
+        tree.PushBack(Eat(TokenKind.Fn)); // 'fn'
+        tree.PushBack(Expect(TokenKind.Identifier)); // name
+        tree.PushBack(ParameterList()); // params
         if (At(TokenKind.Colon))
         {
-            tree.AddChild(Eat(TokenKind.Colon));
-            tree.AddChild(TypeExpression());
+            tree.PushBack(Eat(TokenKind.Colon));
+            tree.PushBack(TypeExpression());
         }
-        tree.AddChild(Expect(TokenKind.Is)); // '='
+        tree.PushBack(Expect(TokenKind.Is)); // '='
                                              // TODO: expressions
 
         return ExitRule(tree, TreeKind.FnDecl);
@@ -162,7 +169,7 @@ class Parser(TokenStream lexer)
     private ParseTree TypeExpression()
     {
         var tree = EnterRule();
-        tree.AddChild(_typeExpressions.ParseExpression());
+        tree.PushBack(_typeExpressions.ParseExpression());
         return ExitRule(tree, TreeKind.TypeExpr);
     }
 
@@ -174,7 +181,7 @@ class Parser(TokenStream lexer)
         {
             if (At(TokenKind.Identifier))
             {
-                tree.AddChild(Parameter());
+                tree.PushBack(Parameter());
             }
             else
             {
@@ -187,7 +194,7 @@ class Parser(TokenStream lexer)
     private ParseTree Parameter()
     {
         var tree = EnterRule();
-        tree.AddChild(Eat(TokenKind.Identifier));
+        tree.PushBack(Eat(TokenKind.Identifier));
         return ExitRule(tree, TreeKind.FnParameter);
     }
     // LetBinding ::= 'let' BindingPattern '='
@@ -195,9 +202,9 @@ class Parser(TokenStream lexer)
     {
         var tree = EnterRule();
 
-        tree.AddChild(Eat(TokenKind.Let));   // 'let'
-        tree.AddChild(BindingPattern());     // pattern
-        tree.AddChild(Expect(TokenKind.Is)); // '='
+        tree.PushBack(Eat(TokenKind.Let));   // 'let'
+        tree.PushBack(BindingPattern());     // pattern
+        tree.PushBack(Expect(TokenKind.Is)); // '='
                                              // TODO: expressions
 
         return ExitRule(tree, TreeKind.LetBind);
@@ -207,7 +214,7 @@ class Parser(TokenStream lexer)
     {
         var tree = EnterRule();
 
-        tree.AddChild(Expect(TokenKind.Identifier)); // varName
+        tree.PushBack(Expect(TokenKind.Identifier)); // varName
 
         return ExitRule(tree, TreeKind.LetPattern);
     }

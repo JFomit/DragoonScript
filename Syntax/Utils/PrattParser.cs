@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using Compiler.Diagnostics;
 using Compiler.Syntax.Lexing;
 using JFomit.Functional.Extensions;
 using JFomit.Functional.Monads;
@@ -6,9 +7,12 @@ using static JFomit.Functional.Prelude;
 
 namespace Compiler.Syntax.Utils;
 
-abstract class PrattParser(TokenStream lexer)
+abstract class PrattParser(TokenStream lexer, List<Diagnostic> diagnostics)
 {
-    TokenStream Lexer { get; } = lexer;
+    protected TokenStream Lexer { get; } = lexer;
+    private List<Diagnostic> Diagnostics { get; } = diagnostics;
+
+    protected void PushDiagnostic(Diagnostic diagnostic) => Diagnostics.Add(diagnostic);
 
     private Token Next(bool skipWs = true)
     {
@@ -43,9 +47,11 @@ abstract class PrattParser(TokenStream lexer)
         var current = Next();
         var lhs = current.Kind switch
         {
-            TokenKind.Identifier => new ParseTree(TreeKind.SimpleTypeExpr).AddChild(new TokenTree(current)),
+            TokenKind.Identifier => new ParseTree(TreeKind.SimpleTypeExpr).PushBack(new TokenTree(current)),
             TokenKind.Operator or TokenKind.Pipe or TokenKind.SignatureArrow => PrefixOperator(current),
-            _ => new ParseTree(TreeKind.Error).AddChild(new TokenTree(current))
+            TokenKind.LParen => Parenthesis(current),
+            TokenKind.RParen => UnexpectedRightParenthesis(current),
+            _ => new ParseTree(TreeKind.Error).PushBack(new TokenTree(current))
         };
 
         while (true)
@@ -61,6 +67,7 @@ abstract class PrattParser(TokenStream lexer)
                 Next();
                 var rhs = ParseExpression(operation.rbp);
                 lhs = ConstructTree(lhs, op, rhs);
+                continue;
             }
 
             break;
@@ -69,18 +76,46 @@ abstract class PrattParser(TokenStream lexer)
         return lhs;
     }
 
-    private ParseTree PrefixOperator(Token current)
+    private ParseTree PrefixOperator(Token current) => PrefixBindingPower(current).Match(
+        (self: this, current),
+        some: static (rbp, tuple) => tuple.self.ConstructTree(tuple.current, tuple.self.ParseExpression(rbp)),
+        none: static tuple => new ParseTree(TreeKind.Error).PushBack(new TokenTree(tuple.current))
+    );
+    private ParseTree UnexpectedRightParenthesis(Token rparen)
     {
-        var text = current.View.AsSpan();
-        var c = text[0];
+        var tree = new ParseTree(TreeKind.Error);
+        tree.PushBack(new TokenTree(rparen));
+        var diagnostic = Diagnostic.Create(DiagnosticLabel.Create(rparen))
+            .WithSeverity(DiagnosticSeverity.Error)
+            .WhitMessage("Unexpected ')'.")
+            .Build();
+        PushDiagnostic(diagnostic);
+        return tree;
+    }
+    private ParseTree Parenthesis(Token lparen)
+    {
+        var tree = ConstructTree(ParseExpression(0));
+        tree.PushFront(new TokenTree(lparen));
+        if (Peek().Kind != TokenKind.RParen)
+        {
+            tree.PushBack(new ParseTree(TreeKind.Error));
+            var diagnostic = Diagnostic.Create(DiagnosticLabel.Create(Peek()))
+                .WithSeverity(DiagnosticSeverity.Error)
+                .WhitMessage("Unmatched parenthesis.")
+                .WithLabel(DiagnosticLabel.Create(Peek()).WithMessage("Expected a ')'"))
+                .WithLabel(DiagnosticLabel.Create(lparen).WithMessage("To match this '('"))
+                .Build();
+            PushDiagnostic(diagnostic);
+        }
+        else
+        {
+            tree.PushBack(new TokenTree(Next()));
+        }
 
-        return PrefixBindingPower(current).Match(
-            (self: this, current),
-            some: static (rbp, tuple) => tuple.self.ConstructTree(tuple.current, tuple.self.ParseExpression(rbp)),
-            none: static tuple => new ParseTree(TreeKind.Error).AddChild(new TokenTree(tuple.current))
-        );
+        return tree;
     }
 
+    protected abstract ParseTree ConstructTree(ParseTree inner);
     protected abstract ParseTree ConstructTree(Token token, ParseTree rhs);
     protected abstract ParseTree ConstructTree(ParseTree lhs, Token token, ParseTree rhs);
 

@@ -7,7 +7,7 @@ using Compiler.Syntax.Utils;
 using JFomit.Functional.Extensions;
 
 var s = """
-fn sqr x: int -> int =
+fn test x y: (a -> b) -> c -> d -> e =
 """;
 var doc = new SourceDocument("test", s);
 
@@ -15,7 +15,7 @@ var lexer = new Lexer(doc);
 var parser = new Parser(lexer);
 
 var tree = parser.File();
-var printer = new Printer();
+var printer = new Printer(false);
 printer.Visit((IParseTreeItem)tree);
 
 parser.Diagnostics.ForEach(d => d.Print());
