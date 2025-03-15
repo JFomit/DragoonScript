@@ -7,7 +7,7 @@ using Compiler.Syntax.Utils;
 using JFomit.Functional.Extensions;
 
 var s = """
-fn bind o f: Option int -> (int -> Option int) -> int =
+fn bind o f: Result -> int =
 """;
 var doc = new SourceDocument("test", s);
 

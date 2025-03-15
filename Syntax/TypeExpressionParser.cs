@@ -22,6 +22,11 @@ class TypeExpressionParser(TokenStream lexer, List<Diagnostic> diagnostics) : Pr
         return new ParseTree(TreeKind.TypeExpr).PushBack(inner);
     }
 
+    protected override ParseTree Identifier(Token current)
+    {
+        return new ParseTree(TreeKind.TypeConstructor).PushBack(new TokenTree(current));
+    }
+
     protected override Option<(int lbp, int rbp)> InfixBindingPower(Token token) => token.Kind switch
     {
         TokenKind.SignatureArrow => Some((2, 1)),

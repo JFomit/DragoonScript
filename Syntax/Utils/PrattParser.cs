@@ -14,7 +14,7 @@ abstract class PrattParser(TokenStream lexer, List<Diagnostic> diagnostics)
 
     protected void PushDiagnostic(Diagnostic diagnostic) => Diagnostics.Add(diagnostic);
 
-    private Token Next(bool skipWs = true)
+    protected Token Next(bool skipWs = true)
     {
         while (true)
         {
@@ -27,7 +27,7 @@ abstract class PrattParser(TokenStream lexer, List<Diagnostic> diagnostics)
             return next;
         }
     }
-    private Token Peek(bool skipWs = true)
+    protected Token Peek(bool skipWs = true)
     {
         while (true)
         {
@@ -44,13 +44,13 @@ abstract class PrattParser(TokenStream lexer, List<Diagnostic> diagnostics)
 
     public ParseTree ParseExpression(int rbp = 0)
     {
-        var current = Next();
+        var current = Peek();
         var lhs = current.Kind switch
         {
-            TokenKind.Identifier => new ParseTree(TreeKind.SimpleTypeExpr).PushBack(new TokenTree(current)),
-            TokenKind.Operator or TokenKind.Pipe or TokenKind.SignatureArrow => PrefixOperator(current),
-            TokenKind.LParen => Parenthesis(current),
-            TokenKind.RParen => UnexpectedRightParenthesis(current),
+            TokenKind.Identifier => Identifier(Next()),
+            TokenKind.Operator or TokenKind.Pipe or TokenKind.SignatureArrow => PrefixOperator(Next()),
+            TokenKind.LParen => Parenthesis(Next()),
+            TokenKind.RParen => UnexpectedRightParenthesis(Next()),
             _ => UnexpectedToken(current)
         };
 
@@ -111,7 +111,7 @@ abstract class PrattParser(TokenStream lexer, List<Diagnostic> diagnostics)
             tree.PushBack(new ParseTree(TreeKind.Error));
             var diagnostic = Diagnostic.Create(DiagnosticLabel.Create(Peek()))
                 .WithSeverity(DiagnosticSeverity.Error)
-                .WhitMessage("Unmatched parenthesis.")
+                .WhitMessage("Unmatched parentheses.")
                 .WithLabel(DiagnosticLabel.Create(Peek()).WithMessage("Expected a ')'"))
                 .WithLabel(DiagnosticLabel.Create(lparen).WithMessage("To match this '('"))
                 .Build();
@@ -125,6 +125,7 @@ abstract class PrattParser(TokenStream lexer, List<Diagnostic> diagnostics)
         return tree;
     }
 
+    protected abstract ParseTree Identifier(Token current);
     protected abstract ParseTree ConstructTree(ParseTree inner);
     protected abstract ParseTree ConstructTree(Token token, ParseTree rhs);
     protected abstract ParseTree ConstructTree(ParseTree lhs, Token token, ParseTree rhs);
