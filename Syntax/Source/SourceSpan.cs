@@ -1,4 +1,4 @@
-namespace Compiler.Syntax;
+namespace Compiler.Syntax.Source;
 
 public readonly record struct SourceSpan(string Source, int Pos, int Length)
 {

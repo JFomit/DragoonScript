@@ -1,4 +1,4 @@
-using Pixie.Code;
+using Compiler.Syntax.Source;
 
 namespace Compiler.Syntax;
 

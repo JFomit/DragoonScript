@@ -9,6 +9,8 @@ class Parser(TokenStream lexer)
     public TokenStream Lexer { get; } = lexer;
 
     private int Fuel { get; set; } = 256;
+    public List<string> Diagnostics { get; } = [];
+
     private static ParseTree EnterRule()
     {
         return new ParseTree(TreeKind.Error);
@@ -18,7 +20,7 @@ class Parser(TokenStream lexer)
         tree.Kind = kind;
         return tree;
     }
-    private bool At(TokenKind kind)
+    private bool At(TokenKind kind, bool skipWs = true)
     {
         if (Fuel == 0)
         {
@@ -26,14 +28,14 @@ class Parser(TokenStream lexer)
         }
 
         Fuel -= 1;
-        return Lexer.Peek().Kind == kind;
+        return Peek(skipWs: skipWs).Kind == kind;
     }
-    private bool Eof() => At(TokenKind.EoF);
-    private ParseTree Expect(TokenKind kind)
+    private bool Eof(bool skipWs = true) => At(TokenKind.EoF, skipWs: skipWs);
+    private ParseTree Expect(TokenKind kind, bool skipWs = true)
     {
-        if (At(kind))
+        if (At(kind, skipWs: skipWs))
         {
-            return Eat(kind);
+            return Eat(kind, skipWs: skipWs);
         }
         else
         {
@@ -41,9 +43,9 @@ class Parser(TokenStream lexer)
             return new ParseTree(TreeKind.Error);
         }
     }
-    private TokenTree Eat(TokenKind? expectedKind = null)
+    private TokenTree Eat(TokenKind? expectedKind = null, bool skipWs = true)
     {
-        var next = Lexer.Next();
+        var next = Next(skipWs: skipWs);
 #if DEBUG
         if (expectedKind is TokenKind expected)
         {
@@ -53,6 +55,35 @@ class Parser(TokenStream lexer)
         Fuel = 256;
         return new(next);
     }
+
+    private Token Next(bool skipWs = true)
+    {
+        while (true)
+        {
+            var next = Lexer.Next();
+            if (skipWs && (next.Kind is TokenKind.NewLine or TokenKind.WhiteSpace))
+            {
+                continue;
+            }
+
+            return next;
+        }
+    }
+    private Token Peek(bool skipWs = true)
+    {
+        while (true)
+        {
+            var peeked = Lexer.Peek();
+            if (skipWs && (peeked.Kind is TokenKind.NewLine or TokenKind.WhiteSpace))
+            {
+                Lexer.Next();
+                continue;
+            }
+
+            return peeked;
+        }
+    }
+
     // File ::= (FunctionDeclaration | TypeDeclaration | LetBinding)* EOF;
     public ParseTree File()
     {
@@ -86,7 +117,7 @@ class Parser(TokenStream lexer)
     {
         var tree = EnterRule();
         tree.AddChild(Eat());
-        Console.WriteLine(message);
+        Diagnostics.Add(message);
         return ExitRule(tree, TreeKind.Error);
     }
 
@@ -99,10 +130,11 @@ class Parser(TokenStream lexer)
         tree.AddChild(ParameterList()); // params
         if (At(TokenKind.Colon))
         {
+            tree.AddChild(Eat(TokenKind.Colon));
             tree.AddChild(TypeExpression());
         }
         tree.AddChild(Expect(TokenKind.Is)); // '='
-        // TODO: expressions
+                                             // TODO: expressions
 
         return ExitRule(tree, TreeKind.FnDecl);
     }
@@ -133,9 +165,11 @@ class Parser(TokenStream lexer)
         return ExitRule(tree, TreeKind.FnParameterList);
     }
     // Parameter ::= ID
-    private TokenTree Parameter()
+    private ParseTree Parameter()
     {
-        return Eat(TokenKind.Identifier);
+        var tree = EnterRule();
+        tree.AddChild(Eat(TokenKind.Identifier));
+        return ExitRule(tree, TreeKind.FnParameter);
     }
     // LetBinding ::= 'let' BindingPattern '='
     private ParseTree LetBinding()
@@ -145,7 +179,7 @@ class Parser(TokenStream lexer)
         tree.AddChild(Eat(TokenKind.Let)); // 'let'
         tree.AddChild(BindingPattern()); // pattern
         tree.AddChild(Expect(TokenKind.Is)); // '='
-        // TODO: expressions
+                                             // TODO: expressions
 
         return ExitRule(tree, TreeKind.LetBind);
     }

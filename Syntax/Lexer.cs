@@ -1,15 +1,15 @@
 using System.Buffers;
+using Compiler.Syntax.Source;
 using JFomit.Functional.Monads;
-using Pixie.Code;
 using static JFomit.Functional.Prelude;
 
 namespace Compiler.Syntax;
 
-internal class Lexer(StringDocument inputString) : TokenStream
+internal class Lexer(SourceDocument inputString) : TokenStream
 {
     private int _pos = 0;
     private int _start = -1;
-    private readonly StringDocument _document = inputString;
+    private readonly SourceDocument _document = inputString;
 
     private static readonly SearchValues<char> OperatorChars = SearchValues.Create(@"!#$%&*+./<=>?@^|-~");
 

@@ -1,29 +1,42 @@
 ﻿using Compiler;
 using Compiler.Syntax;
+using Compiler.Syntax.Source;
 using Compiler.Syntax.Utils;
-using Pixie.Code;
-
-// var s = """
-// let x =
-// fn s x x = x * x
-// """;
-// var doc = new StringDocument("stdin", s);
-
-// var lexer = new Lexer(doc);
-// var parser = new Parser(new NoWS(lexer));
-
-// var tree = parser.File();
-// var printer = new Printer();
-// printer.Visit((IParseTreeItem)tree);
 
 var s = """
-->
-fn
+let x =
+fn s x x: =
 """;
-var doc = new StringDocument("stdin", s);
-var lexer = new Lexer(doc);
+var doc = new SourceDocument("stdin", s);
 
-var pratt = new PrattParser(new NoWS(lexer));
-var result = pratt.TypeExpression();
+var lexer = new Lexer(doc);
+var parser = new Parser(lexer);
+
+var tree = parser.File();
 var printer = new Printer();
-printer.Visit((IParseTreeItem)result);
+printer.Visit((IParseTreeItem)tree);
+
+parser.Diagnostics.ForEach(Console.WriteLine);
+
+// var s = """
+// ->
+// fn
+// """;
+// var doc = new StringDocument("stdin", s);
+// var lexer = new Lexer(doc);
+
+// var pratt = new PrattParser(new NoWS(lexer));
+// var result = pratt.TypeExpression();
+// var printer = new Printer();
+// printer.Visit((IParseTreeItem)result);
+
+file static class Extensions
+{
+    internal static void ForEach<T>(this IEnumerable<T> self, Action<T> action)
+    {
+        foreach (var item in self)
+        {
+            action(item);
+        }
+    }
+}

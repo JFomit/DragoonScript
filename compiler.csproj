@@ -12,7 +12,6 @@
 
   <ItemGroup>
     <PackageReference Include="JFomit.Functional" Version="2.1.2" />
-    <PackageReference Include="Pixie" Version="0.1.9" />
   </ItemGroup>
 
 </Project>
