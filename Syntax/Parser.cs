@@ -57,9 +57,10 @@ class Parser(TokenStream lexer)
         }
         else
         {
-            var diagnostic = Diagnostic.Create(DiagnosticLabel.Create(Peek()))
+            var token = Peek();
+            var diagnostic = Diagnostic.Create(DiagnosticLabel.Create(token))
                 .WithSeverity(DiagnosticSeverity.Error)
-                .WhitMessage("Invalid token.")
+                .WhitMessage(token.Kind == TokenKind.EoF ? "Unexpected end-of-file." : "Invalid token.")
                 .WithNote($"Expected {kind}.")
                 .Build();
             PushDiagnostic(diagnostic);
@@ -155,7 +156,7 @@ class Parser(TokenStream lexer)
     }
 
     // TypeExpressions ::= ...
-    private ParseTree TypeExpression()
+    private static ParseTree TypeExpression()
     {
         var tree = EnterRule();
 

@@ -8,7 +8,7 @@ using JFomit.Functional.Extensions;
 
 var s = """
 let x =
-fn s x x: =
+fn s x x: = fn
 """;
 var doc = new SourceDocument("stdin", s);
 
@@ -45,13 +45,9 @@ file static class Extensions
         var length = diagnostic.DiagnosticSource.Length;
         var text = diagnostic.DiagnosticSource.Document.Contents.AsSpan().Slice(pos, length);
         Console.WriteLine($"[{label}] in {diagnostic.DiagnosticSource.Document.Identifier} {pos}..{pos + length}:");
-        Console.WriteLine($" {text} ");
-        if (text.Length == 0)
+        if (text.Length != 0)
         {
-            Console.WriteLine("<Unexpected EoF>");
-        }
-        else
-        {
+            Console.WriteLine($" {text} ");
             Console.WriteLine($" ^{new string('~', Math.Max(0, text.Length - 1))} HERE");
         }
         Console.WriteLine(diagnostic.Message);
