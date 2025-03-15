@@ -14,7 +14,7 @@ abstract class PrattParser(TokenStream lexer, List<Diagnostic> diagnostics)
 
     protected void PushDiagnostic(Diagnostic diagnostic) => Diagnostics.Add(diagnostic);
 
-    private Token Next(bool skipWs = true)
+    protected Token Next(bool skipWs = true)
     {
         while (true)
         {
@@ -27,7 +27,7 @@ abstract class PrattParser(TokenStream lexer, List<Diagnostic> diagnostics)
             return next;
         }
     }
-    private Token Peek(bool skipWs = true)
+    protected Token Peek(bool skipWs = true)
     {
         while (true)
         {
@@ -42,12 +42,16 @@ abstract class PrattParser(TokenStream lexer, List<Diagnostic> diagnostics)
         }
     }
 
-    public ParseTree ParseExpression(int rbp = 0)
+    public Option<ParseTree> ParseExpression(int rbp = 0)
     {
+        if (!IsValidExpressionStart(Peek()))
+        {
+            return None;
+        }
         var current = Next();
         var lhs = current.Kind switch
         {
-            TokenKind.Identifier => new ParseTree(TreeKind.SimpleTypeExpr).PushBack(new TokenTree(current)),
+            TokenKind.Identifier => Identifier(current),
             TokenKind.Operator or TokenKind.Pipe or TokenKind.SignatureArrow => PrefixOperator(current),
             TokenKind.LParen => Parenthesis(current),
             TokenKind.RParen => UnexpectedRightParenthesis(current),
@@ -66,19 +70,22 @@ abstract class PrattParser(TokenStream lexer, List<Diagnostic> diagnostics)
                 }
                 Next();
                 var rhs = ParseExpression(operation.rbp);
-                lhs = ConstructTree(lhs, op, rhs);
+                lhs = ConstructTree(lhs, op, rhs.UnwrapOr(new ParseTree()));
                 continue;
             }
 
             break;
         }
 
-        return lhs;
+        return Some(lhs);
     }
+
+    protected abstract ParseTree Identifier(Token current);
+    protected abstract bool IsValidExpressionStart(Token peeked);
 
     private ParseTree PrefixOperator(Token current) => PrefixBindingPower(current).Match(
         (self: this, current),
-        some: static (rbp, tuple) => tuple.self.ConstructTree(tuple.current, tuple.self.ParseExpression(rbp)),
+        some: static (rbp, tuple) => tuple.self.ConstructTree(tuple.current, tuple.self.ParseExpression(rbp).UnwrapOr(new ParseTree())),
         none: static tuple => tuple.self.UnexpectedToken(tuple.current)
     );
     private ParseTree UnexpectedToken(Token current)
@@ -104,18 +111,11 @@ abstract class PrattParser(TokenStream lexer, List<Diagnostic> diagnostics)
     }
     private ParseTree Parenthesis(Token lparen)
     {
-        var tree = ConstructTree(ParseExpression(0));
+        var tree = ConstructTree(ParseExpression(0).UnwrapOr(new ParseTree()));
         tree.PushFront(new TokenTree(lparen));
         if (Peek().Kind != TokenKind.RParen)
         {
-            tree.PushBack(new ParseTree(TreeKind.Error));
-            var diagnostic = Diagnostic.Create(DiagnosticLabel.Create(Peek()))
-                .WithSeverity(DiagnosticSeverity.Error)
-                .WhitMessage("Unmatched parenthesis.")
-                .WithLabel(DiagnosticLabel.Create(Peek()).WithMessage("Expected a ')'"))
-                .WithLabel(DiagnosticLabel.Create(lparen).WithMessage("To match this '('"))
-                .Build();
-            PushDiagnostic(diagnostic);
+            tree.PushBack(UnmatchedParenthesis(lparen, Peek()));
         }
         else
         {
@@ -123,6 +123,17 @@ abstract class PrattParser(TokenStream lexer, List<Diagnostic> diagnostics)
         }
 
         return tree;
+    }
+    protected ParseTree UnmatchedParenthesis(Token lparen, Token peeked)
+    {
+        var diagnostic = Diagnostic.Create(DiagnosticLabel.Create(peeked))
+                .WithSeverity(DiagnosticSeverity.Error)
+                .WhitMessage("Unmatched parenthesis.")
+                .WithLabel(DiagnosticLabel.Create(peeked).WithMessage("Expected a ')'"))
+                .WithLabel(DiagnosticLabel.Create(lparen).WithMessage("To match this '('"))
+                .Build();
+        PushDiagnostic(diagnostic);
+        return new ParseTree();
     }
 
     protected abstract ParseTree ConstructTree(ParseTree inner);

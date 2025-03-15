@@ -169,7 +169,7 @@ class Parser
     private ParseTree TypeExpression()
     {
         var tree = EnterRule();
-        tree.PushBack(_typeExpressions.ParseExpression());
+        tree.PushBack(_typeExpressions.ParseExpression().UnwrapOr(new ParseTree()));
         return ExitRule(tree, TreeKind.TypeExpr);
     }
 

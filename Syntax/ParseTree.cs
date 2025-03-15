@@ -14,7 +14,7 @@ enum TreeKind
     RecordTypeDecl,
 
     TypeExpr,
-    SimpleTypeExpr,
+    TypeConstructor,
     TypeArrowExpr,
 
     FnDecl,
