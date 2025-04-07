@@ -7,8 +7,9 @@ using Compiler.Syntax.Utils;
 using JFomit.Functional.Extensions;
 
 var s = """
-fn bind o f: Result -> int =
+fn apply x f: A -> B -> C =
 """;
+
 var doc = new SourceDocument("test", s);
 
 var lexer = new Lexer(doc);

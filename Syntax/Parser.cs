@@ -147,7 +147,7 @@ class Parser
         return ExitRule(tree, TreeKind.File);
     }
 
-    // FunctionDeclaration ::= 'fn' ID parameterList '='
+    // FunctionDeclaration ::= 'fn' ID parameterList (':' typeExpression)? '='
     private ParseTree FunctionDeclaration()
     {
         var tree = EnterRule();
@@ -165,12 +165,52 @@ class Parser
         return ExitRule(tree, TreeKind.FnDecl);
     }
 
-    // TypeExpressions ::= ...
+    // TypeExpressions ::= '(' type_expression ')' | type_expression '->' type_expression | ID | ID type_expression
     private ParseTree TypeExpression()
     {
-        var tree = EnterRule();
-        tree.PushBack(_typeExpressions.ParseExpression());
-        return ExitRule(tree, TreeKind.TypeExpr);
+        var head = SimpleTypeExpression();
+
+        while (At(TokenKind.SignatureArrow))
+        {
+            var tree = EnterRule();
+            tree.PushBack(head);
+            tree.PushBack(Eat(TokenKind.SignatureArrow));
+            tree.PushBack(TypeExpression());
+            head = ExitRule(tree, TreeKind.TypeArrowExpr);
+        }
+
+        return head;
+
+        ParseTree SimpleTypeExpression()
+        {
+            if (At(TokenKind.LParen))
+            {
+                var tree = EnterRule();
+                tree.PushBack(Eat(TokenKind.LParen));
+                tree.PushBack(TypeExpression());
+                tree.PushBack(Expect(TokenKind.RParen));
+                return ExitRule(tree, TreeKind.TypeExpr);
+            }
+            else if (At(TokenKind.Identifier))
+            {
+                var tree = EnterRule();
+                tree.PushBack(Eat(TokenKind.Identifier));
+                while (At(TokenKind.Identifier) || At(TokenKind.LParen))
+                {
+                    if (At(TokenKind.Identifier))
+                    {
+                        tree.PushBack(Eat(TokenKind.Identifier));
+                    }
+                    else // At(TokenKind.LParen)
+                    {
+                        tree.PushBack(SimpleTypeExpression());
+                    }
+                }
+
+                return ExitRule(tree, TreeKind.TypeConstructor);
+            }
+            return Error("Expected a type.");
+        }
     }
 
     // ParameterList ::= Parameter*
