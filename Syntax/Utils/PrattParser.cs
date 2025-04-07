@@ -44,17 +44,13 @@ abstract class PrattParser(TokenStream lexer, List<Diagnostic> diagnostics)
 
     public Option<ParseTree> ParseExpression(int rbp = 0)
     {
-        if (!IsValidExpressionStart(Peek()))
-        {
-            return None;
-        }
-        var current = Next();
+        var current = Peek();
         var lhs = current.Kind switch
         {
-            TokenKind.Identifier => Identifier(current),
-            TokenKind.Operator or TokenKind.Pipe or TokenKind.SignatureArrow => PrefixOperator(current),
-            TokenKind.LParen => Parenthesis(current),
-            TokenKind.RParen => UnexpectedRightParenthesis(current),
+            TokenKind.Identifier => Identifier(Next()),
+            TokenKind.Operator or TokenKind.Pipe or TokenKind.SignatureArrow => PrefixOperator(Next()),
+            TokenKind.LParen => Parenthesis(Next()),
+            TokenKind.RParen => UnexpectedRightParenthesis(Next()),
             _ => UnexpectedToken(current)
         };
 
@@ -115,7 +111,14 @@ abstract class PrattParser(TokenStream lexer, List<Diagnostic> diagnostics)
         tree.PushFront(new TokenTree(lparen));
         if (Peek().Kind != TokenKind.RParen)
         {
-            tree.PushBack(UnmatchedParenthesis(lparen, Peek()));
+            tree.PushBack(new ParseTree(TreeKind.Error));
+            var diagnostic = Diagnostic.Create(DiagnosticLabel.Create(Peek()))
+                .WithSeverity(DiagnosticSeverity.Error)
+                .WhitMessage("Unmatched parentheses.")
+                .WithLabel(DiagnosticLabel.Create(Peek()).WithMessage("Expected a ')'"))
+                .WithLabel(DiagnosticLabel.Create(lparen).WithMessage("To match this '('"))
+                .Build();
+            PushDiagnostic(diagnostic);
         }
         else
         {
@@ -124,18 +127,8 @@ abstract class PrattParser(TokenStream lexer, List<Diagnostic> diagnostics)
 
         return tree;
     }
-    protected ParseTree UnmatchedParenthesis(Token lparen, Token peeked)
-    {
-        var diagnostic = Diagnostic.Create(DiagnosticLabel.Create(peeked))
-                .WithSeverity(DiagnosticSeverity.Error)
-                .WhitMessage("Unmatched parenthesis.")
-                .WithLabel(DiagnosticLabel.Create(peeked).WithMessage("Expected a ')'"))
-                .WithLabel(DiagnosticLabel.Create(lparen).WithMessage("To match this '('"))
-                .Build();
-        PushDiagnostic(diagnostic);
-        return new ParseTree();
-    }
 
+    protected abstract ParseTree Identifier(Token current);
     protected abstract ParseTree ConstructTree(ParseTree inner);
     protected abstract ParseTree ConstructTree(Token token, ParseTree rhs);
     protected abstract ParseTree ConstructTree(ParseTree lhs, Token token, ParseTree rhs);

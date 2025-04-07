@@ -30,17 +30,17 @@ let_binding:
 pattern: variable = IDENTIFIER # variable;
 
 // **************** * TYPES * ****************
+type_expression
+  : type=IDENTIFIER args=type_expression*
+  | LEFT_PARENTHESIS inner=type_expression RIGHT_PARENTHESIS
+  | type_expression SIGNATURE_ARROW type_expression
+  ;
 
-type_expression:
-  LEFT_PARENTHESIS type_expression RIGHT_PARENTHESIS # parenthisised_type
-  | type_expression SIGNATURE_ARROW type_expression # function_signature_type
-  | type_expression MULTIPLY type_expression # tuple_type
-  | simple_type # primitive_type;
 simple_type: IDENTIFIER;
 
 NEW_LINE: '\n';
 
-WS: [ \t]; // whitespace
+WS: [ \t]+; // whitespace
 
 LEFT_PARENTHESIS: '(';
 RIGHT_PARENTHESIS: ')';
