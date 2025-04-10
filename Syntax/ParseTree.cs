@@ -1,5 +1,8 @@
 using Compiler.Syntax.Lexing;
 using Compiler.Syntax.Utils;
+using JFomit.Functional.Monads;
+using JFomit.Functional.Extensions;
+using static JFomit.Functional.Prelude;
 
 namespace Compiler.Syntax;
 
@@ -22,8 +25,16 @@ enum TreeKind
     FnParameter,
 
     FnApply,
+
     LiteralExpr,
     VariableRefExpr,
+
+    Expr,
+
+    InfixExpr,
+    PrefixExpr,
+    PostfixExpr,
+
     LetBind,
 
     LetPattern,
@@ -32,16 +43,54 @@ enum TreeKind
 class ParseTree(TreeKind kind = TreeKind.Error) : IParseTreeItem
 {
     public TreeKind Kind { get; set; } = kind;
-    public List<ParseTree> Children { get; } = [];
+
+    public IReadOnlyList<ParseTree> Children => _children;
+    private readonly List<ParseTree> _children = [];
+    private Option<Dictionary<string, ParseTree>> NamedChildren { get; set; } = None;
 
     public ParseTree PushBack(ParseTree child)
     {
-        Children.Add(child);
+        _children.Add(child);
         return this;
     }
     public ParseTree PushFront(ParseTree child)
     {
-        Children.Insert(0, child);
+        _children.Insert(0, child);
+        return this;
+    }
+
+    public ParseTree PushBack(ParseTree child, string name)
+    {
+        if (NamedChildren.TryUnwrap(out var dict))
+        {
+            dict.Add(name, child);
+        }
+        else
+        {
+            NamedChildren = Some(new Dictionary<string, ParseTree>()
+            {
+                [name] = child
+            });
+        }
+
+        _children.Add(child);
+        return this;
+    }
+    public ParseTree PushFront(ParseTree child, string name)
+    {
+        if (NamedChildren.TryUnwrap(out var dict))
+        {
+            dict.Add(name, child);
+        }
+        else
+        {
+            NamedChildren = Some(new Dictionary<string, ParseTree>()
+            {
+                [name] = child
+            });
+        }
+
+        _children.Insert(0, child);
         return this;
     }
 
@@ -49,6 +98,11 @@ class ParseTree(TreeKind kind = TreeKind.Error) : IParseTreeItem
     {
         visitor.Visit(this);
     }
+
+    public Option<ParseTree> GetNamedChild(string name)
+        => NamedChildren
+            .SelectMany(name, (d, n) => d.GetValue(n))
+            .Flatten();
 }
 sealed class TokenTree(Token token) : ParseTree(TreeKind.Token), IParseTreeItem
 {

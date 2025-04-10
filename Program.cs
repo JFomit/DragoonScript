@@ -7,7 +7,8 @@ using Compiler.Syntax.Utils;
 using JFomit.Functional.Extensions;
 
 var s = """
-fn bind o f: Result (Option int) (Option string) -> int =
+fn (.) f g x = 5 >>= (6 ** 2) / 2 . ddfdg
+fn compose f g h = h . g . f
 """;
 
 var doc = new SourceDocument("test", s);

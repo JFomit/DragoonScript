@@ -2,8 +2,8 @@ grammar lang;
 
 file: declaration* EOF;
 
-declaration:
-  type_declaration
+declaration
+  : type_declaration
   | function_declaration
   | let_binding;
 
@@ -18,13 +18,22 @@ parameter_list: head = parameter tail = parameter_list?;
 parameter: IDENTIFIER;
 
 // **************** * EXPRESSIONS * ****************
-
-primary_expression:
-  LEFT_PARENTHESIS primary_expression RIGHT_PARENTHESIS # parenthisised_expression
+primary_expression
+  : primary_expression primary_expression+ # application
+  | LEFT_PARENTHESIS primary_expression RIGHT_PARENTHESIS # parenthisised_expression
   | literal # literal_expression
-  | variable_reference # variable_expression;
+  | variable_reference # variable_expression
+  | let_binding # binding
+  | lhs=primary_expression infix=OPERATOR rhs=primary_expression # infix_operator
+  | prefix=OPERATOR rhs=primary_expression # prefix_operator
+  | lhs=primary_expression postfix=OPERATOR # postfix_operator
+  ;
+
 variable_reference: name = IDENTIFIER;
-literal: INTEGER # int | FLOAT # float;
+literal
+  : INTEGER # int
+  | FLOAT # float
+  ;
 let_binding:
   LET binding_pattern = pattern IS value = primary_expression;
 pattern: variable = IDENTIFIER # variable;

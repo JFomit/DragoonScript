@@ -2,25 +2,20 @@ using Compiler.Diagnostics;
 using System.Diagnostics;
 using Compiler.Syntax.Source;
 using Compiler.Syntax.Lexing;
+using Compiler.Syntax.Utils;
+using JFomit.Functional.Extensions;
+using JFomit.Functional.Monads;
+using static JFomit.Functional.Prelude;
 
 namespace Compiler.Syntax;
 
-class Parser
+class Parser(TokenStream lexer)
 {
-    public TokenStream Lexer { get; }
+    public TokenStream Lexer { get; } = lexer;
     public SourceDocument Document => Lexer.Document;
 
     private int Fuel { get; set; } = 256;
-    public List<Diagnostic> Diagnostics { get; }
-
-    private readonly TypeExpressionParser _typeExpressions;
-
-    public Parser(TokenStream lexer)
-    {
-        Lexer = lexer;
-        Diagnostics = [];
-        _typeExpressions = new(lexer, Diagnostics);
-    }
+    public List<Diagnostic> Diagnostics { get; } = [];
 
     private void PushDiagnostic(Diagnostic diagnostic)
     {
@@ -47,11 +42,22 @@ class Parser
         return Peek(skipWs: skipWs).Kind == kind;
     }
     private bool Eof(bool skipWs = true) => At(TokenKind.EoF, skipWs: skipWs);
-    private ParseTree Error(string message)
+    private ParseTree SwallowError(string message)
     {
         var tree = EnterRule();
         var error = Eat();
         tree.PushBack(error);
+        var diagnostic = Diagnostic.Create(DiagnosticLabel.Create(Document, error.Token.View.Pos, error.Token.View.Length))
+            .WithSeverity(DiagnosticSeverity.Error)
+            .WhitMessage(message).Build();
+
+        PushDiagnostic(diagnostic);
+        return ExitRule(tree, TreeKind.Error);
+    }
+    private ParseTree GobbleError(string message)
+    {
+        var tree = EnterRule();
+        var error = new TokenTree(Peek());
         var diagnostic = Diagnostic.Create(DiagnosticLabel.Create(Document, error.Token.View.Pos, error.Token.View.Length))
             .WithSeverity(DiagnosticSeverity.Error)
             .WhitMessage(message).Build();
@@ -125,7 +131,7 @@ class Parser
 
         while (!Eof())
         {
-            if (At(TokenKind.Fn))
+            if (At(TokenKind.Fn) || At(TokenKind.Identifier))
             {
                 tree.PushBack(FunctionDeclaration());
             }
@@ -139,7 +145,7 @@ class Parser
             }
             else
             {
-                tree.PushBack(Error("Expected a function, let-binding or type declaration."));
+                tree.PushBack(SwallowError("Expected a function, let-binding or type declaration."));
             }
         }
         tree.PushBack(Eat(TokenKind.EoF));
@@ -151,16 +157,39 @@ class Parser
     private ParseTree FunctionDeclaration()
     {
         var tree = EnterRule();
-        tree.PushBack(Eat(TokenKind.Fn)); // 'fn'
-        tree.PushBack(Expect(TokenKind.Identifier)); // name
+        tree.PushBack(Expect(TokenKind.Fn)); // 'fn'
+        if (At(TokenKind.LParen)) // operator
+        {
+            tree.PushBack(Eat(TokenKind.LParen));
+            if (At(TokenKind.Operator) || At(TokenKind.Pipe))
+            {
+                tree.PushBack(Eat());
+            }
+            else if (At(TokenKind.RParen))
+            {
+                tree.PushBack(GobbleError("Expected operator."));
+            }
+
+            tree.PushBack(Expect(TokenKind.RParen));
+        }
+        else
+        {
+            tree.PushBack(Expect(TokenKind.Identifier)); // name
+        }
         tree.PushBack(ParameterList()); // params
         if (At(TokenKind.Colon))
         {
             tree.PushBack(Eat(TokenKind.Colon));
             tree.PushBack(TypeExpression());
         }
+        else if (At(TokenKind.SignatureArrow))
+        {
+            tree.PushBack(Expect(TokenKind.Colon));
+            tree.PushBack(TypeExpression());
+        }
+
         tree.PushBack(Expect(TokenKind.Is)); // '='
-                                             // TODO: expressions
+        tree.PushBack(Expression());
 
         return ExitRule(tree, TreeKind.FnDecl);
     }
@@ -209,7 +238,7 @@ class Parser
 
                 return ExitRule(tree, TreeKind.TypeConstructor);
             }
-            return Error("Expected a type.");
+            return GobbleError("Expected a type.");
         }
     }
 
@@ -257,5 +286,90 @@ class Parser
         tree.PushBack(Expect(TokenKind.Identifier)); // varName
 
         return ExitRule(tree, TreeKind.LetPattern);
+    }
+
+    private ParseTree Expression()
+    {
+        return Expression(0);
+
+        ParseTree Expression(int minPrecedence)
+        {
+            var result = PrimaryExpression();
+
+            while (true)
+            {
+                var next = Peek();
+
+                if (next.Kind != TokenKind.Operator && next.Kind != TokenKind.Pipe)
+                {
+                    break;
+                }
+
+                var (precedence, accosiativity) = GetPrecedence(next).Unwrap();
+                if (precedence < minPrecedence)
+                {
+                    break;
+                }
+
+                var nextMinPrecedence = accosiativity == Associativity.Left ? precedence + 1 : precedence;
+                var op = Eat();
+                var rhs = Expression(nextMinPrecedence);
+
+                var tree = EnterRule();
+
+                tree.PushBack(result).PushBack(op).PushBack(rhs);
+
+                result = ExitRule(tree, TreeKind.InfixExpr);
+            }
+
+            return result;
+        }
+
+        Option<CustomInfixOperator> GetPrecedence(Token op)
+        {
+            if (op.Kind == TokenKind.EoF)
+            {
+                return None;
+            }
+
+            var result = CustomInfixOperator.CreateFromToken(op);
+
+            return result.ToOption();
+        }
+    }
+
+    private ParseTree PrimaryExpression()
+    {
+        if (At(TokenKind.Identifier)) // Variable Reference
+        {
+            var tree = EnterRule();
+            tree.PushBack(Eat(TokenKind.Identifier));
+            return ExitRule(tree, TreeKind.VariableRefExpr);
+        }
+        else if (At(TokenKind.Integer)) // Literal
+        {
+            var tree = EnterRule();
+            tree.PushBack(Eat(TokenKind.Integer));
+            return ExitRule(tree, TreeKind.LiteralExpr);
+        }
+        else if (At(TokenKind.LParen)) // Parenthesised Expression
+        {
+            var tree = EnterRule();
+            tree.PushBack(Eat(TokenKind.LParen));
+            tree.PushBack(Expression());
+            tree.PushBack(Expect(TokenKind.RParen));
+            return ExitRule(tree, TreeKind.Expr);
+        }
+        else if (At(TokenKind.Operator) || At(TokenKind.Pipe)) // prefix operator
+        {
+            var tree = EnterRule();
+            tree.PushBack(Eat());
+            tree.PushBack(PrimaryExpression());
+            return ExitRule(tree, TreeKind.PrefixExpr); // right associative
+        }
+        else
+        {
+            return SwallowError("Expected primary expression.");
+        }
     }
 }
