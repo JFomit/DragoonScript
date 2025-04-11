@@ -47,7 +47,7 @@ class Parser(TokenStream lexer)
         var tree = EnterRule();
         var error = Eat();
         tree.PushBack(error);
-        var diagnostic = Diagnostic.Create(DiagnosticLabel.Create(Document, error.Token.View.Pos, error.Token.View.Length))
+        var diagnostic = Diagnostic.Create(DiagnosticLabel.Create(error.Token))
             .WithSeverity(DiagnosticSeverity.Error)
             .WhitMessage(message).Build();
 
@@ -58,7 +58,7 @@ class Parser(TokenStream lexer)
     {
         var tree = EnterRule();
         var error = new TokenTree(Peek());
-        var diagnostic = Diagnostic.Create(DiagnosticLabel.Create(Document, error.Token.View.Pos, error.Token.View.Length))
+        var diagnostic = Diagnostic.Create(DiagnosticLabel.Create(error.Token))
             .WithSeverity(DiagnosticSeverity.Error)
             .WhitMessage(message).Build();
 

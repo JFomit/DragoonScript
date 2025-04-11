@@ -7,8 +7,7 @@ using Compiler.Syntax.Utils;
 using JFomit.Functional.Extensions;
 
 var s = """
-fn (.) f g x = 5 >>= (6 ** 2) / 2 . ddfdg
-fn compose f g h = h . g . f
+fn bind m f = 7 + 6
 """;
 
 var doc = new SourceDocument("test", s);
@@ -44,8 +43,10 @@ file static class Extensions
         };
         var pos = diagnostic.DiagnosticSource.Pos;
         var length = diagnostic.DiagnosticSource.Length;
+        var line = diagnostic.DiagnosticSource.Line;
+        var column = diagnostic.DiagnosticSource.Column;
         var text = diagnostic.DiagnosticSource.Document.Contents.AsSpan().Slice(pos, length);
-        Console.WriteLine($"[{label}] in {diagnostic.DiagnosticSource.Document.Identifier} {pos}..{pos + length}:");
+        Console.WriteLine($"[{label}] in {diagnostic.DiagnosticSource.Document.Identifier} Ln {line},Col {column}:");
         if (text.Length != 0)
         {
             Console.WriteLine($" {text} ");

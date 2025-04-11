@@ -16,6 +16,11 @@ internal class Lexer(SourceDocument inputString) : TokenStream
 
     private Option<Token> buffer_ = None;
 
+    private Stack<int> _offsideColumns = [];
+
+    private int _line = 1;
+    private int _column = 1;
+
     public override Token Peek()
     {
         if (buffer_.TryUnwrap(out var peek))
@@ -74,9 +79,9 @@ internal class Lexer(SourceDocument inputString) : TokenStream
             case ')':
                 _pos++;
                 return Emit(TokenKind.RParen);
-            case '\\':
-                _pos++;
-                throw new NotImplementedException();
+                // case '\\':
+                //     _pos++;
+                //     throw new NotImplementedException();
         }
 
         var first = Slice(input, _pos..(_pos + 1));
@@ -105,7 +110,7 @@ internal class Lexer(SourceDocument inputString) : TokenStream
                 return result switch
                 {
                     "->" => Emit(TokenKind.SignatureArrow),
-                    "=" => Emit(TokenKind.Is),
+                    "=" => EmitIs(),
                     "|" => Emit(TokenKind.Pipe),
 
                     _ => Emit(TokenKind.Operator)
@@ -138,6 +143,14 @@ internal class Lexer(SourceDocument inputString) : TokenStream
         return first.Length == 0 ? EmitEof() : Emit(TokenKind.Error);
     }
 
+    private Token EmitIs()
+    {
+        var toEmit = Emit(TokenKind.Is);
+        var next = Peek();
+        var offset = next.View.Pos;
+        return toEmit;
+    }
+
     private static ReadOnlySpan<char> Slice(ReadOnlySpan<char> span, Range range)
     {
         if (range.End.Value > span.Length)
@@ -149,6 +162,21 @@ internal class Lexer(SourceDocument inputString) : TokenStream
             return span[range];
         }
     }
-    private Token Emit(TokenKind type) => new(type, new SourceSpan(Document, _start, _pos - _start));
-    private Token EmitEof() => new(TokenKind.EoF, new SourceSpan(Document, Document.Length - 1, 0));
+
+    private Token Emit(TokenKind type)
+    {
+        var token = new Token(type, new SourceSpan(Document, _start, _pos - _start, _line, _column));
+        _column += token.View.Length;
+
+        // next line
+        if (type == TokenKind.NewLine)
+        {
+            _line++;
+            _column = 1;
+        }
+
+        return token;
+    }
+
+    private Token EmitEof() => new(TokenKind.EoF, new SourceSpan(Document, Document.Length - 1, 0, _line, _column));
 }

@@ -27,6 +27,11 @@ enum TokenKind
 
     Identifier,
     Integer,
+
+    VBegin,
+    VEnd,
+
+    VSemi,
 }
 
 readonly struct Token(TokenKind type, SourceSpan view)

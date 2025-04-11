@@ -17,6 +17,11 @@ readonly record struct CustomInfixOperator(Token Token, int Precedence, Associat
 {
     public static Result<CustomInfixOperator, Diagnostic> CreateFromToken(Token token)
     {
+        if (token.Kind == TokenKind.WhiteSpace)
+        {
+            return Ok(new CustomInfixOperator(token, 10, Associativity.Left));
+        }
+
         if (token.Kind != TokenKind.Operator && token.Kind != TokenKind.Pipe)
         {
             var diagnostic = Diagnostic
