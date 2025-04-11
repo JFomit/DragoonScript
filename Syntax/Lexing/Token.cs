@@ -27,6 +27,7 @@ enum TokenKind
 
     Identifier,
     Integer,
+    Float,
 
     VBegin,
     VEnd,

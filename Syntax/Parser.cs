@@ -266,7 +266,7 @@ class Parser(TokenStream lexer)
         tree.PushBack(Eat(TokenKind.Identifier));
         return ExitRule(tree, TreeKind.FnParameter);
     }
-    // LetBinding ::= 'let' BindingPattern '='
+    // LetBinding ::= 'let' BindingPattern '=' expr
     private ParseTree LetBinding()
     {
         var tree = EnterRule();
@@ -274,7 +274,7 @@ class Parser(TokenStream lexer)
         tree.PushBack(Eat(TokenKind.Let));   // 'let'
         tree.PushBack(BindingPattern());     // pattern
         tree.PushBack(Expect(TokenKind.Is)); // '='
-                                             // TODO: expressions
+        tree.PushBack(Expression());         // expression
 
         return ExitRule(tree, TreeKind.LetBind);
     }
@@ -346,10 +346,10 @@ class Parser(TokenStream lexer)
             tree.PushBack(Eat(TokenKind.Identifier));
             return ExitRule(tree, TreeKind.VariableRefExpr);
         }
-        else if (At(TokenKind.Integer)) // Literal
+        else if (At(TokenKind.Integer) || At(TokenKind.Float)) // Literal
         {
             var tree = EnterRule();
-            tree.PushBack(Eat(TokenKind.Integer));
+            tree.PushBack(Eat());
             return ExitRule(tree, TreeKind.LiteralExpr);
         }
         else if (At(TokenKind.LParen)) // Parenthesised Expression

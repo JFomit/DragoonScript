@@ -16,8 +16,6 @@ internal class Lexer(SourceDocument inputString) : TokenStream
 
     private Option<Token> buffer_ = None;
 
-    private Stack<int> _offsideColumns = [];
-
     private int _line = 1;
     private int _column = 1;
 
@@ -88,12 +86,24 @@ internal class Lexer(SourceDocument inputString) : TokenStream
 
         if (first.ContainsAnyInRange('0', '9'))
         {
+            bool isFloat = false;
         numberPart:
             _pos++;
             first = Slice(input, _pos..(_pos + 1));
-            if (first.Length < 1 || first.ContainsAnyExceptInRange('0', '9'))
+            if (first.Length < 1)
             {
-                return Emit(TokenKind.Integer);
+                return Emit(isFloat ? TokenKind.Float : TokenKind.Integer);
+            }
+
+            if (first[0] == '.')
+            {
+                isFloat = true;
+                goto numberPart;
+            }
+
+            if (first.ContainsAnyExceptInRange('0', '9'))
+            {
+                return Emit(isFloat ? TokenKind.Float : TokenKind.Integer);
             }
             goto numberPart;
         }
@@ -146,8 +156,6 @@ internal class Lexer(SourceDocument inputString) : TokenStream
     private Token EmitIs()
     {
         var toEmit = Emit(TokenKind.Is);
-        var next = Peek();
-        var offset = next.View.Pos;
         return toEmit;
     }
 
