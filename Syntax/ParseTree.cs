@@ -103,6 +103,9 @@ class ParseTree(TreeKind kind = TreeKind.Error) : IParseTreeItem
         => NamedChildren
             .SelectMany(name, (d, n) => d.GetValue(n))
             .Flatten();
+
+    public string Stringify()
+        => Children.Select(c => c.Stringify()).Aggregate((p, n) => string.Join(p, n));
 }
 sealed class TokenTree(Token token) : ParseTree(TreeKind.Token), IParseTreeItem
 {

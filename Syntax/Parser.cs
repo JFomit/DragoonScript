@@ -119,9 +119,20 @@ class Parser(TokenStream lexer)
                 Lexer.Next();
                 continue;
             }
+            Fuel--;
 
             return peeked;
         }
+    }
+    private Token WhitespaceLookahead(int lookahead)
+    {
+        if (Fuel == 0)
+        {
+            throw new InvalidOperationException("Parser is stuck.");
+        }
+
+        Fuel -= lookahead + 1;
+        return Lexer.Peek(lookahead);
     }
 
     // File ::= (FunctionDeclaration | TypeDeclaration | LetBinding)* EOF;
@@ -154,6 +165,7 @@ class Parser(TokenStream lexer)
     }
 
     // FunctionDeclaration ::= 'fn' ID parameterList (':' typeExpression)? '='
+    //                       | 'fn' (operator) parameterList (':' typeExpression)? '='
     private ParseTree FunctionDeclaration()
     {
         var tree = EnterRule();
@@ -163,7 +175,7 @@ class Parser(TokenStream lexer)
             tree.PushBack(Eat(TokenKind.LParen));
             if (At(TokenKind.Operator) || At(TokenKind.Pipe))
             {
-                tree.PushBack(Eat());
+                tree.PushBack(Eat(), "NAME");
             }
             else if (At(TokenKind.RParen))
             {
@@ -174,13 +186,13 @@ class Parser(TokenStream lexer)
         }
         else
         {
-            tree.PushBack(Expect(TokenKind.Identifier)); // name
+            tree.PushBack(Expect(TokenKind.Identifier), "NAME");
         }
         tree.PushBack(ParameterList()); // params
         if (At(TokenKind.Colon))
         {
             tree.PushBack(Eat(TokenKind.Colon));
-            tree.PushBack(TypeExpression());
+            tree.PushBack(TypeExpression(), "TYPE");
         }
         else if (At(TokenKind.SignatureArrow))
         {
@@ -189,7 +201,7 @@ class Parser(TokenStream lexer)
         }
 
         tree.PushBack(Expect(TokenKind.Is)); // '='
-        tree.PushBack(Expression());
+        tree.PushBack(Expression(), "BODY");
 
         return ExitRule(tree, TreeKind.FnDecl);
     }
@@ -340,36 +352,90 @@ class Parser(TokenStream lexer)
 
     private ParseTree PrimaryExpression()
     {
-        if (At(TokenKind.Identifier)) // Variable Reference
+        var list = new List<ParseTree>();
+        while (AtPrimaryExpressionStart())
         {
-            var tree = EnterRule();
-            tree.PushBack(Eat(TokenKind.Identifier));
-            return ExitRule(tree, TreeKind.VariableRefExpr);
+            list.Add(SimplePrimaryExpression());
         }
-        else if (At(TokenKind.Integer) || At(TokenKind.Float)) // Literal
+
+        if (list.Count == 0)
         {
-            var tree = EnterRule();
-            tree.PushBack(Eat());
-            return ExitRule(tree, TreeKind.LiteralExpr);
+            return SwallowError("Expected primary expression");
         }
-        else if (At(TokenKind.LParen)) // Parenthesised Expression
+        if (list.Count == 1)
         {
-            var tree = EnterRule();
-            tree.PushBack(Eat(TokenKind.LParen));
-            tree.PushBack(Expression());
-            tree.PushBack(Expect(TokenKind.RParen));
-            return ExitRule(tree, TreeKind.Expr);
-        }
-        else if (At(TokenKind.Operator) || At(TokenKind.Pipe)) // prefix operator
-        {
-            var tree = EnterRule();
-            tree.PushBack(Eat());
-            tree.PushBack(PrimaryExpression());
-            return ExitRule(tree, TreeKind.PrefixExpr); // right associative
+            return list[0];
         }
         else
         {
-            return SwallowError("Expected primary expression.");
+            var tree = EnterRule();
+            tree.PushBack(list[0], "FUNCTION");
+            for (int i = 1; i < list.Count; i++)
+            {
+                tree.PushBack(list[i]);
+            }
+
+            return ExitRule(tree, TreeKind.FnApply);
         }
+
+        ParseTree SimplePrimaryExpression()
+        {
+            var tree = EnterRule();
+            TreeKind kind;
+
+            if (At(TokenKind.Identifier)) // Variable Reference
+            {
+                tree.PushBack(Eat(TokenKind.Identifier));
+                kind = TreeKind.VariableRefExpr;
+            }
+            else if (At(TokenKind.Integer) || At(TokenKind.Float)) // Literal
+            {
+                tree.PushBack(Eat());
+                kind = TreeKind.LiteralExpr;
+            }
+            else if (At(TokenKind.LParen)) // Parenthesised Expression
+            {
+                tree.PushBack(Eat(TokenKind.LParen));
+                tree.PushBack(Expression());
+                tree.PushBack(Expect(TokenKind.RParen));
+                kind = TreeKind.Expr;
+            }
+            else if (At(TokenKind.Operator) || At(TokenKind.Pipe)) // prefix operator
+            {
+                tree.PushBack(Eat());
+                tree.PushBack(PrimaryExpression());
+                kind = TreeKind.PrefixExpr; // right associative
+            }
+            else
+            {
+                return SwallowError("Expected primary expression.");
+            }
+
+            return ExitRule(tree, kind);
+        }
+    }
+
+    bool AtPrimaryExpressionStart()
+    {
+        var simpleStart = At(TokenKind.Identifier) || At(TokenKind.Integer) || At(TokenKind.Float) || At(TokenKind.LParen);
+        if (simpleStart)
+        {
+            return true;
+        }
+
+        if (At(TokenKind.Operator) || At(TokenKind.Pipe))
+        {
+            var afterNext = WhitespaceLookahead(1);
+            if (afterNext.Kind == TokenKind.WhiteSpace || afterNext.Kind == TokenKind.NewLine)
+            {
+                return false; // binary expression
+            }
+            else
+            {
+                return true; // prefix operation
+            }
+        }
+
+        return false;
     }
 }

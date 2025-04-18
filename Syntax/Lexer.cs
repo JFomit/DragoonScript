@@ -14,31 +14,25 @@ internal class Lexer(SourceDocument inputString) : TokenStream
 
     private static readonly SearchValues<char> OperatorChars = SearchValues.Create(@"!#$%&*+./<=>?@^|-~");
 
-    private Option<Token> buffer_ = None;
+    private Queue<Token> buffer_ = [];
 
     private int _line = 1;
     private int _column = 1;
 
-    public override Token Peek()
+    public override Token Peek() => Peek(0);
+    public override Token Peek(int lookahed)
     {
-        if (buffer_.TryUnwrap(out var peek))
+        while (buffer_.Count <= lookahed)
         {
-            return peek;
+            var next = NextInternal();
+            buffer_.Enqueue(next);
         }
 
-        var next = Next();
-        buffer_ = Some(next);
-        return next;
+        return buffer_.ElementAt(lookahed);
     }
 
-    public override Token Next()
+    private Token NextInternal()
     {
-        if (buffer_.TryUnwrap(out var token))
-        {
-            buffer_ = None;
-            return token;
-        }
-
         var input = Document.Contents.AsSpan();
         var span = Slice(input, _pos..);
         _start = _pos;
@@ -151,6 +145,16 @@ internal class Lexer(SourceDocument inputString) : TokenStream
         }
         _pos++;
         return first.Length == 0 ? EmitEof() : Emit(TokenKind.Error);
+    }
+
+    public override Token Next()
+    {
+        if (buffer_.Count > 0)
+        {
+            return buffer_.Dequeue();
+        }
+
+        return NextInternal();
     }
 
     private Token EmitIs()

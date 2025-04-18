@@ -61,7 +61,7 @@ readonly record struct CustomInfixOperator(Token Token, int Precedence, Associat
         {
         ['.', ..] => Ok(new CustomInfixOperator(token, 9, Associativity.Right)), // composition group
 
-        ['*', '*', ..] => Ok(new CustomInfixOperator(token, 8, Associativity.Right)), // power group
+        ['^', ..] => Ok(new CustomInfixOperator(token, 8, Associativity.Right)), // power group
         ['*' or '/' or '%', ..] => Ok(new CustomInfixOperator(token, 7, Associativity.Left)), // multiplicative group
         ['+' or '-', ..] => Ok(new CustomInfixOperator(token, 6, Associativity.Left)), // additive group
 

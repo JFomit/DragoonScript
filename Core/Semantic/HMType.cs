@@ -5,5 +5,4 @@ namespace Compiler.Core.Semantic;
 /// </summary>
 abstract class HMType
 {
-
 }

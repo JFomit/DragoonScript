@@ -9,4 +9,5 @@ abstract class TokenStream
 
     public abstract Token Next();
     public abstract Token Peek();
+    public abstract Token Peek(int lookahead);
 }

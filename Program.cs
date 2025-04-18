@@ -7,9 +7,7 @@ using Compiler.Syntax.Utils;
 using JFomit.Functional.Extensions;
 
 var s = """
-let Pi = 3.14159265358
-let E  = 2.71828182846
-fn Add a b = a + b
+fn Test f x = (f . g) x y (z + 1) + 2
 """;
 
 var doc = new SourceDocument("test", s);
