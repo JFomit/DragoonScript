@@ -396,7 +396,7 @@ class Parser(TokenStream lexer)
             else if (At(TokenKind.LParen)) // Parenthesised Expression
             {
                 tree.PushBack(Eat(TokenKind.LParen));
-                tree.PushBack(Expression());
+                tree.PushBack(Expression(), "INNER");
                 tree.PushBack(Expect(TokenKind.RParen));
                 kind = TreeKind.Expr;
             }
