@@ -1,6 +1,6 @@
 namespace Compiler.Core;
 
-class IR
+class Ast
 {
 
 }

@@ -7,7 +7,7 @@ using Compiler.Syntax.Utils;
 using JFomit.Functional.Extensions;
 
 var s = """
-fn Test f x = (f . g) x y (z + 1) + 2
+fn ($) f x = 1 2 3 4 5
 """;
 
 var doc = new SourceDocument("test", s);
@@ -30,6 +30,7 @@ file static class Extensions
             action(item);
         }
     }
+
     internal static void Print(this Diagnostic diagnostic)
     {
         var label = diagnostic.Severity switch
