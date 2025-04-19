@@ -1,4 +1,6 @@
 using System.Runtime.InteropServices;
+using JFomit.Functional.Monads;
+using static JFomit.Functional.Prelude;
 
 namespace Compiler.Runtime;
 
@@ -30,4 +32,16 @@ readonly struct Instruction(OpCode code)
     public static Instruction Sub() => new(OpCode.Sub);
     public static Instruction Mul() => new(OpCode.Mul);
     public static Instruction Div() => new(OpCode.Div);
+
+    public readonly byte ToByte() => (byte)OpCode;
+    public static Option<Instruction> FromByte(ReadOnlySpan<byte> code)
+    {
+        if (code.Length == 0)
+        {
+            return None;
+        }
+
+        return Some(new Instruction(code: (OpCode)code[0]));
+    }
+    public static Instruction FromByteUnsafe(ReadOnlySpan<byte> code) => new((OpCode)code[0]);
 }

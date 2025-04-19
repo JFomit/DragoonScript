@@ -2,5 +2,5 @@ namespace Compiler.Runtime;
 
 class VM
 {
-    private Stack<Value> Stack { get; } = [];
+    public Stack<Value> EvaluationStack { get; } = [];
 }

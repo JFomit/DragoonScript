@@ -448,7 +448,7 @@ class Parser(TokenStream lexer)
                 tree.PushBack(Expect(TokenKind.Then));
                 tree.PushBack(BlockExpression(), "THEN");
                 tree.PushBack(Expect(TokenKind.Else));
-                tree.PushBack(BlockExpression(), "ELSE");
+                tree.PushBack(Expression(), "ELSE");
                 kind = TreeKind.IfExpr;
             }
             else
