@@ -321,9 +321,9 @@ class Parser(TokenStream lexer)
         var tree = EnterRule();
 
         tree.PushBack(Eat(TokenKind.Let));   // 'let'
-        tree.PushBack(BindingPattern());     // pattern
+        tree.PushBack(BindingPattern(), "PATTERN");     // pattern
         tree.PushBack(Expect(TokenKind.Is)); // '='
-        tree.PushBack(Expression());         // expression
+        tree.PushBack(Expression(), "VALUE");         // expression
         tree.PushBack(Expect(TokenKind.In)); // 'in'
 
         return ExitRule(tree, TreeKind.LetBind);
@@ -426,7 +426,7 @@ class Parser(TokenStream lexer)
                 tree.PushBack(Eat(TokenKind.Identifier));
                 kind = TreeKind.VariableRefExpr;
             }
-            else if (At(TokenKind.Integer) || At(TokenKind.Float)) // Literal
+            else if (At(TokenKind.Integer) || At(TokenKind.Float) || At(TokenKind.String)) // Literal
             {
                 tree.PushBack(Eat());
                 kind = TreeKind.LiteralExpr;
@@ -470,6 +470,7 @@ class Parser(TokenStream lexer)
             || At(TokenKind.Integer)
             || At(TokenKind.Float)
             || At(TokenKind.LParen)
+            || At(TokenKind.String)
             || At(TokenKind.If);
 
         if (simpleStart)

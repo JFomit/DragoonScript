@@ -57,13 +57,17 @@ readonly record struct CustomInfixOperator(Token Token, int Precedence, Associat
             }
         }
 
+        // For some reason the formatter chokes on this and refuses to format patterns consistently
+        // and instead puts some first few patterns with the same indentation, as the brace, but all the rest
+        // are indented. It just looks wrong tbh
+        #pragma warning disable format
         return decider switch
         {
-        ['.', ..] => Ok(new CustomInfixOperator(token, 9, Associativity.Right)), // composition group
+            ['.', ..] => Ok(new CustomInfixOperator(token, 9, Associativity.Right)), // composition group
 
-        ['^', ..] => Ok(new CustomInfixOperator(token, 8, Associativity.Right)), // power group
-        ['*' or '/' or '%', ..] => Ok(new CustomInfixOperator(token, 7, Associativity.Left)), // multiplicative group
-        ['+' or '-', ..] => Ok(new CustomInfixOperator(token, 6, Associativity.Left)), // additive group
+            ['^', ..] => Ok(new CustomInfixOperator(token, 8, Associativity.Right)), // power group
+            ['*' or '/' or '%', ..] => Ok(new CustomInfixOperator(token, 7, Associativity.Left)), // multiplicative group
+            ['+' or '-', ..] => Ok(new CustomInfixOperator(token, 6, Associativity.Left)), // additive group
 
             ">" or "<" or ">=" or "==" or "!=" => Ok(new CustomInfixOperator(token, 5, Associativity.Left)), // relational group
 
@@ -75,6 +79,7 @@ readonly record struct CustomInfixOperator(Token Token, int Precedence, Associat
 
             _ => Ok(new CustomInfixOperator(token, 1, Associativity.None)) // wildcard group with almost no powers
         };
+        #pragma warning restore format
     }
 
     public void Deconstruct(out int precedence, out Associativity associativity)

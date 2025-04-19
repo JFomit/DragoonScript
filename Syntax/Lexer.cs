@@ -74,6 +74,32 @@ internal class Lexer(SourceDocument inputString) : TokenStream
         }
 
         var first = Slice(input, _pos..(_pos + 1));
+        if (first.Contains('"'))
+        {
+            while (true)
+            {
+                _pos++;
+                first = Slice(input, _pos..(_pos + 1));
+                if (first.Contains('"'))
+                {
+                    _pos++;
+                    return Emit(TokenKind.String);
+                }
+                if (first.Length < 1 || first.Contains('\n'))
+                {
+                    return Emit(TokenKind.Error);
+                }
+                if (first.Contains('\\'))
+                {
+                    _pos++;
+                    first = Slice(input, _pos..(_pos + 1));
+                    if (first.Contains('"'))
+                    {
+                        continue;
+                    }
+                }
+            }
+        }
 
         if (first.ContainsAnyInRange('0', '9'))
         {

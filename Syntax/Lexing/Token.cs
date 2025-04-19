@@ -33,6 +33,7 @@ enum TokenKind
     Identifier,
     Integer,
     Float,
+    String,
 }
 
 readonly struct Token(TokenKind type, SourceSpan view)
