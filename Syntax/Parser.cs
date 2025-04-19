@@ -124,6 +124,9 @@ class Parser(TokenStream lexer)
             return peeked;
         }
     }
+    /// <summary>
+    /// </summary>
+    /// <param name="lookahead"><c>0</c> just peeks the next token with whitespaces.</param>
     private Token WhitespaceLookahead(int lookahead)
     {
         if (Fuel == 0)
@@ -479,11 +482,11 @@ class Parser(TokenStream lexer)
             var afterNext = WhitespaceLookahead(1);
             if (afterNext.Kind == TokenKind.WhiteSpace || afterNext.Kind == TokenKind.NewLine)
             {
-                return false; // binary expression
+                return false; // binary expression, e. g. f - 2 -> (- f 2)
             }
             else
             {
-                return true; // prefix operation
+                return true; // prefix operation, e. g. f -2 -> (f (-2))
             }
         }
 

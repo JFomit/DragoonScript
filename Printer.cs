@@ -1,6 +1,7 @@
 using Compiler.Syntax;
 using Compiler.Syntax.Lexing;
 using Compiler.Syntax.Utils;
+using Compiler.Utils;
 
 namespace Compiler;
 

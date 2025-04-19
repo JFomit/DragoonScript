@@ -3,6 +3,7 @@ using Compiler.Syntax.Utils;
 using JFomit.Functional.Monads;
 using JFomit.Functional.Extensions;
 using static JFomit.Functional.Prelude;
+using Compiler.Utils;
 
 namespace Compiler.Syntax;
 
