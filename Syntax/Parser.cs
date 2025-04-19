@@ -191,7 +191,7 @@ class Parser(TokenStream lexer)
         {
             tree.PushBack(Expect(TokenKind.Identifier), "NAME");
         }
-        tree.PushBack(ParameterList()); // params
+        tree.PushBack(ParameterList(), "PARAMS"); // params
         if (At(TokenKind.Colon))
         {
             tree.PushBack(Eat(TokenKind.Colon));
@@ -367,7 +367,7 @@ class Parser(TokenStream lexer)
 
                 var tree = EnterRule();
 
-                tree.PushBack(result).PushBack(op).PushBack(rhs);
+                tree.PushBack(result, "LHS").PushBack(op, "OP").PushBack(rhs, "RHS");
 
                 result = ExitRule(tree, TreeKind.InfixExpr);
             }

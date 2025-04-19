@@ -37,7 +37,7 @@ var parser = new Parser(lexer);
 
 var tree = parser.File();
 var printer = new Printer(false);
-printer.Visit((IParseTreeItem)tree);
+printer.VisitTree(tree);
 
 parser.Diagnostics.ForEach(d => d.Print());
 

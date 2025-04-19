@@ -101,6 +101,7 @@ class ParseTree(TreeKind kind = TreeKind.Error) : IParseTreeItem
     {
         visitor.Visit(this);
     }
+    public virtual TResult Accept<TResult>(ParseTreeVisitor<TResult> visitor) => visitor.Visit(this);
 
     public Option<ParseTree> GetNamedChild(string name)
         => NamedChildren
@@ -117,4 +118,5 @@ sealed class TokenTree(Token token) : ParseTree(TreeKind.Token), IParseTreeItem
     {
         visitor.Visit(this);
     }
+    public override TResult Accept<TResult>(ParseTreeVisitor<TResult> visitor) => visitor.Visit(this);
 }

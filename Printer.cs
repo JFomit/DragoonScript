@@ -17,7 +17,7 @@ class Printer(bool minify) : ParseTreeVisitor
         _indent += 2;
         foreach (IParseTreeItem item in tree.Children)
         {
-            Visit(item);
+            VisitTree(item);
         }
         _indent -= 2;
     }
