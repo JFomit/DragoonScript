@@ -9,11 +9,25 @@ using JFomit.Functional.Extensions;
 var s = """
 fn (|>) f x = f x
 
-fn main =
-    let x = 5
-    let y = 6
+fn main m = m
+    |> map
+    |> filter
+    |> collect
 
-    return x + y
+fn y =
+    let x = 5 in
+    let y = 42 * x in
+    x + y
+
+fn test =
+    let x = 5 in
+    let q =
+        if x == 5 then
+            let y = 18 in
+            x + y
+        else
+            -1
+    in q * x
 """;
 
 var doc = new SourceDocument("test", s);

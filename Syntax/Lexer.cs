@@ -16,8 +16,6 @@ internal class Lexer(SourceDocument inputString) : TokenStream
     private static readonly SearchValues<char> OperatorChars = SearchValues.Create(@"!#$%&*+./<=>?@^|-~");
     private readonly Queue<Token> _buffer = [];
 
-    private readonly Stack<int> _offsideColumns = [];
-
     public override Token Peek() => Peek(0);
     public override Token Peek(int lookahed)
     {
@@ -140,6 +138,7 @@ internal class Lexer(SourceDocument inputString) : TokenStream
                     "if" => Emit(TokenKind.If),
                     "then" => Emit(TokenKind.Then),
                     "else" => Emit(TokenKind.Else),
+                    "in" => Emit(TokenKind.In),
 
                     _ => Emit(TokenKind.Identifier)
                 };
@@ -160,11 +159,7 @@ internal class Lexer(SourceDocument inputString) : TokenStream
         return NextInternal();
     }
 
-    private Token EmitIs()
-    {
-        var toEmit = Emit(TokenKind.Is);
-        return toEmit;
-    }
+    private Token EmitIs() => Emit(TokenKind.Is);
 
     private static ReadOnlySpan<char> Slice(ReadOnlySpan<char> span, Range range)
     {
@@ -193,5 +188,5 @@ internal class Lexer(SourceDocument inputString) : TokenStream
         return token;
     }
 
-    private Token EmitEof() => new(TokenKind.EoF, new SourceSpan(Document, Document.Length - 1, 0, _line, _column));
+    private Token EmitEof() => Emit(TokenKind.EoF);//new(TokenKind.EoF, new SourceSpan(Document, Document.Length - 1, 0, _line, _column));
 }

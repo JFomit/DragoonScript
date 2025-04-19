@@ -28,6 +28,7 @@ enum TokenKind
     If,
     Then,
     Else,
+    In,
 
     Identifier,
     Integer,
