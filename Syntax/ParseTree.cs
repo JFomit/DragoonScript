@@ -30,10 +30,12 @@ enum TreeKind
     VariableRefExpr,
 
     Expr,
-
+    IfExpr,
     InfixExpr,
     PrefixExpr,
     PostfixExpr,
+    BlockExpr,
+    ReturnExpr,
 
     LetBind,
 

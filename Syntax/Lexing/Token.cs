@@ -25,15 +25,13 @@ enum TokenKind
     Fn,
     Type,
     Return,
+    If,
+    Then,
+    Else,
 
     Identifier,
     Integer,
     Float,
-
-    VBegin,
-    VEnd,
-
-    VSemi,
 }
 
 readonly struct Token(TokenKind type, SourceSpan view)

@@ -201,9 +201,52 @@ class Parser(TokenStream lexer)
         }
 
         tree.PushBack(Expect(TokenKind.Is)); // '='
-        tree.PushBack(Expression(), "BODY");
+        if (IsAtExpressionStart())
+        {
+            tree.PushBack(Expression(), "BODY");
+        }
+        else
+        {
+            tree.PushBack(BlockExpression(), "BLOCK");
+        }
 
         return ExitRule(tree, TreeKind.FnDecl);
+    }
+
+    private ParseTree BlockExpression()
+    {
+        var tree = EnterRule();
+
+        if (!At(TokenKind.Let) && !At(TokenKind.Return))
+        {
+            tree.PushBack(GobbleError("Expected a let-biniding or return standalone expression."));
+        }
+
+        while (true)
+        {
+            if (At(TokenKind.Let))
+            {
+                tree.PushBack(LetBinding());
+            }
+            else if (At(TokenKind.Return))
+            {
+                tree.PushBack(ReturnExpression());
+            }
+            else
+            {
+                break;
+            }
+        }
+
+        return ExitRule(tree, TreeKind.BlockExpr);
+    }
+
+    private ParseTree ReturnExpression()
+    {
+        var tree = EnterRule();
+        tree.PushBack(Eat(TokenKind.Return));
+        tree.PushBack(Expression(), "TO_RETURN");
+        return ExitRule(tree, TreeKind.ReturnExpr);
     }
 
     // TypeExpressions ::= '(' type_expression ')' | type_expression '->' type_expression | ID | ID type_expression
@@ -353,7 +396,7 @@ class Parser(TokenStream lexer)
     private ParseTree PrimaryExpression()
     {
         var list = new List<ParseTree>();
-        while (AtPrimaryExpressionStart())
+        while (IsAtExpressionStart())
         {
             list.Add(SimplePrimaryExpression());
         }
@@ -406,6 +449,16 @@ class Parser(TokenStream lexer)
                 tree.PushBack(PrimaryExpression());
                 kind = TreeKind.PrefixExpr; // right associative
             }
+            else if (At(TokenKind.If)) // If expression
+            {
+                tree.PushBack(Eat(TokenKind.If));
+                tree.PushBack(Expression(), "CONDITION");
+                tree.PushBack(Expect(TokenKind.Then));
+                tree.PushBack(Expression(), "THEN");
+                tree.PushBack(Expect(TokenKind.Else));
+                tree.PushBack(Expression(), "ELSE");
+                kind = TreeKind.IfExpr;
+            }
             else
             {
                 return SwallowError("Expected primary expression.");
@@ -415,9 +468,15 @@ class Parser(TokenStream lexer)
         }
     }
 
-    bool AtPrimaryExpressionStart()
+    bool IsAtExpressionStart()
     {
-        var simpleStart = At(TokenKind.Identifier) || At(TokenKind.Integer) || At(TokenKind.Float) || At(TokenKind.LParen);
+        var simpleStart =
+            At(TokenKind.Identifier)
+            || At(TokenKind.Integer)
+            || At(TokenKind.Float)
+            || At(TokenKind.LParen)
+            || At(TokenKind.If);
+
         if (simpleStart)
         {
             return true;

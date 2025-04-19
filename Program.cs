@@ -10,7 +10,10 @@ var s = """
 fn (|>) f x = f x
 
 fn main =
-    return 0
+    let x = 5
+    let y = 6
+
+    return x + y
 """;
 
 var doc = new SourceDocument("test", s);

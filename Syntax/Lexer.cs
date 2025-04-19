@@ -10,25 +10,24 @@ internal class Lexer(SourceDocument inputString) : TokenStream
 {
     private int _pos = 0;
     private int _start = -1;
-    public override SourceDocument Document { get; } = inputString;
-
-    private static readonly SearchValues<char> OperatorChars = SearchValues.Create(@"!#$%&*+./<=>?@^|-~");
-
-    private Queue<Token> buffer_ = [];
-
     private int _line = 1;
     private int _column = 1;
+    public override SourceDocument Document { get; } = inputString;
+    private static readonly SearchValues<char> OperatorChars = SearchValues.Create(@"!#$%&*+./<=>?@^|-~");
+    private readonly Queue<Token> _buffer = [];
+
+    private readonly Stack<int> _offsideColumns = [];
 
     public override Token Peek() => Peek(0);
     public override Token Peek(int lookahed)
     {
-        while (buffer_.Count <= lookahed)
+        while (_buffer.Count <= lookahed)
         {
             var next = NextInternal();
-            buffer_.Enqueue(next);
+            _buffer.Enqueue(next);
         }
 
-        return buffer_.ElementAt(lookahed);
+        return _buffer.ElementAt(lookahed);
     }
 
     private Token NextInternal()
@@ -138,6 +137,9 @@ internal class Lexer(SourceDocument inputString) : TokenStream
                     "let" => Emit(TokenKind.Let),
                     "type" => Emit(TokenKind.Type),
                     "return" => Emit(TokenKind.Return),
+                    "if" => Emit(TokenKind.If),
+                    "then" => Emit(TokenKind.Then),
+                    "else" => Emit(TokenKind.Else),
 
                     _ => Emit(TokenKind.Identifier)
                 };
@@ -150,9 +152,9 @@ internal class Lexer(SourceDocument inputString) : TokenStream
 
     public override Token Next()
     {
-        if (buffer_.Count > 0)
+        if (_buffer.Count > 0)
         {
-            return buffer_.Dequeue();
+            return _buffer.Dequeue();
         }
 
         return NextInternal();
