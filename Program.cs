@@ -7,7 +7,10 @@ using Compiler.Syntax.Utils;
 using JFomit.Functional.Extensions;
 
 var s = """
-fn ($) f x = 1 2 3 4 5
+fn (|>) f x = f x
+
+fn main =
+    return 0
 """;
 
 var doc = new SourceDocument("test", s);

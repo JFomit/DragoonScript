@@ -24,6 +24,7 @@ enum TokenKind
     Let,
     Fn,
     Type,
+    Return,
 
     Identifier,
     Integer,

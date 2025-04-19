@@ -137,6 +137,7 @@ internal class Lexer(SourceDocument inputString) : TokenStream
                     "fn" => Emit(TokenKind.Fn),
                     "let" => Emit(TokenKind.Let),
                     "type" => Emit(TokenKind.Type),
+                    "return" => Emit(TokenKind.Return),
 
                     _ => Emit(TokenKind.Identifier)
                 };
