@@ -1,5 +1,5 @@
 
-namespace Compiler.Core.Ast;
+namespace DragoonScript.Core.Ast;
 
 enum FunctionKind
 {

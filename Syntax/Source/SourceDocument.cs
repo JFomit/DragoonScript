@@ -1,4 +1,4 @@
-namespace Compiler.Syntax.Source;
+namespace DragoonScript.Syntax.Source;
 
 class SourceDocument(string identifier, string contents)
 {

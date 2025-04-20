@@ -1,9 +1,8 @@
 ﻿using System.Diagnostics;
-using Compiler;
-using Compiler.Core;
-using Compiler.Diagnostics;
-using Compiler.Syntax;
-using Compiler.Syntax.Source;
+using DragoonScript.Core;
+using DragoonScript.Diagnostics;
+using DragoonScript.Syntax;
+using DragoonScript.Syntax.Source;
 using JFomit.Functional.Extensions;
 
 var s = """

@@ -1,9 +1,9 @@
-using Compiler.Syntax.Lexing;
-using Compiler.Syntax.Source;
+using DragoonScript.Syntax.Lexing;
+using DragoonScript.Syntax.Source;
 using JFomit.Functional.Monads;
 using static JFomit.Functional.Prelude;
 
-namespace Compiler.Diagnostics;
+namespace DragoonScript.Diagnostics;
 
 record struct DiagnosticLabel(SourceDocument Document, int Pos, int Length, int Line, int Column, ColorIndex Color = ColorIndex.Default)
 {

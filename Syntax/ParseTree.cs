@@ -1,11 +1,11 @@
-using Compiler.Syntax.Lexing;
-using Compiler.Syntax.Utils;
+using DragoonScript.Syntax.Lexing;
+using DragoonScript.Syntax.Utils;
 using JFomit.Functional.Monads;
 using JFomit.Functional.Extensions;
 using static JFomit.Functional.Prelude;
-using Compiler.Utils;
+using DragoonScript.Utils;
 
-namespace Compiler.Syntax;
+namespace DragoonScript.Syntax;
 
 enum TreeKind
 {

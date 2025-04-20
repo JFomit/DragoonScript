@@ -1,6 +1,6 @@
 using System.Runtime.CompilerServices;
 
-namespace Compiler.Core.Ast;
+namespace DragoonScript.Core.Ast;
 
 abstract record AstNode
 {

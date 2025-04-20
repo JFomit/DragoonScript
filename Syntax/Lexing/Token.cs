@@ -1,6 +1,6 @@
-using Compiler.Syntax.Source;
+using DragoonScript.Syntax.Source;
 
-namespace Compiler.Syntax.Lexing;
+namespace DragoonScript.Syntax.Lexing;
 
 enum TokenKind
 {

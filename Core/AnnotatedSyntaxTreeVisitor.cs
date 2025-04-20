@@ -1,12 +1,12 @@
-using Compiler.Syntax;
-using Compiler.Syntax.Lexing;
-using Compiler.Syntax.Utils;
-using Compiler.Utils;
+using DragoonScript.Syntax;
+using DragoonScript.Syntax.Lexing;
+using DragoonScript.Syntax.Utils;
+using DragoonScript.Utils;
 using JFomit.Functional.Monads;
 using JFomit.Functional.Extensions;
 using static JFomit.Functional.Prelude;
 
-namespace Compiler.Core;
+namespace DragoonScript.Core;
 
 abstract class AnnotatedSyntaxTreeVisitor<T> : ParseTreeVisitor<T>
     where T : class

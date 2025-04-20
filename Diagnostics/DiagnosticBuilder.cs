@@ -1,8 +1,8 @@
-using Compiler.Syntax.Source;
+using DragoonScript.Syntax.Source;
 using JFomit.Functional.Monads;
 using static JFomit.Functional.Prelude;
 
-namespace Compiler.Diagnostics;
+namespace DragoonScript.Diagnostics;
 
 record struct DiagnosticBuilder(DiagnosticLabel Document);
 record struct DSeverityBuilder(DiagnosticLabel Document, DiagnosticSeverity Severity);

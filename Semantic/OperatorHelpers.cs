@@ -1,7 +1,7 @@
-using Compiler.Syntax;
-using Compiler.Syntax.Lexing;
+using DragoonScript.Syntax;
+using DragoonScript.Syntax.Lexing;
 
-namespace Compiler.Semantic;
+namespace DragoonScript.Semantic;
 
 static class OperatorHelpers
 {
