@@ -40,6 +40,9 @@ internal class Lexer(SourceDocument inputString) : TokenStream
 
         switch (span[0])
         {
+            // case ';':
+            //     _pos++;
+            //     return Emit(TokenKind.Semi);
             case '\n':
                 _pos++;
                 return Emit(TokenKind.NewLine);
@@ -136,7 +139,7 @@ internal class Lexer(SourceDocument inputString) : TokenStream
 
                 return result switch
                 {
-                    "->" => Emit(TokenKind.SignatureArrow),
+                    "->" => Emit(TokenKind.Arrow),
                     "=" => EmitIs(),
                     "|" => Emit(TokenKind.Pipe),
 
@@ -160,11 +163,12 @@ internal class Lexer(SourceDocument inputString) : TokenStream
                     "fn" => Emit(TokenKind.Fn),
                     "let" => Emit(TokenKind.Let),
                     "type" => Emit(TokenKind.Type),
-                    "return" => Emit(TokenKind.Return),
                     "if" => Emit(TokenKind.If),
                     "then" => Emit(TokenKind.Then),
                     "else" => Emit(TokenKind.Else),
                     "in" => Emit(TokenKind.In),
+                    "match" => Emit(TokenKind.Match),
+                    "with" => Emit(TokenKind.With),
 
                     _ => Emit(TokenKind.Identifier)
                 };

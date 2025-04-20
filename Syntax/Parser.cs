@@ -197,7 +197,7 @@ class Parser(TokenStream lexer)
             tree.PushBack(Eat(TokenKind.Colon));
             tree.PushBack(TypeExpression(), "TYPE");
         }
-        else if (At(TokenKind.SignatureArrow))
+        else if (At(TokenKind.Arrow))
         {
             tree.PushBack(Expect(TokenKind.Colon));
             tree.PushBack(TypeExpression());
@@ -213,7 +213,7 @@ class Parser(TokenStream lexer)
     {
         var tree = EnterRule();
 
-        if (!At(TokenKind.Let) && !At(TokenKind.Return) && !IsAtExpressionStart())
+        if (!At(TokenKind.Let) && !IsAtExpressionStart())
         {
             tree.PushBack(GobbleError("Expected a let-biniding or expression."));
         }
@@ -244,11 +244,11 @@ class Parser(TokenStream lexer)
     {
         var head = SimpleTypeExpression();
 
-        while (At(TokenKind.SignatureArrow))
+        while (At(TokenKind.Arrow))
         {
             var tree = EnterRule();
             tree.PushBack(head);
-            tree.PushBack(Eat(TokenKind.SignatureArrow));
+            tree.PushBack(Eat(TokenKind.Arrow));
             tree.PushBack(TypeExpression());
             head = ExitRule(tree, TreeKind.TypeArrowExpr);
         }
@@ -335,7 +335,7 @@ class Parser(TokenStream lexer)
 
         tree.PushBack(Expect(TokenKind.Identifier)); // varName
 
-        return ExitRule(tree, TreeKind.LetPattern);
+        return ExitRule(tree, TreeKind.BindingPattern);
     }
 
     private ParseTree Expression()
@@ -418,6 +418,15 @@ class Parser(TokenStream lexer)
 
         ParseTree SimplePrimaryExpression()
         {
+            if (At(TokenKind.Match)) // match expression
+            {
+                return MatchExpression();
+            }
+            else if (At(TokenKind.If)) // if expression
+            {
+                return IfExpression();
+            }
+
             var tree = EnterRule();
             TreeKind kind;
 
@@ -444,22 +453,49 @@ class Parser(TokenStream lexer)
                 tree.PushBack(PrimaryExpression(), "RHS");
                 kind = TreeKind.PrefixExpr; // right associative
             }
-            else if (At(TokenKind.If)) // If expression
-            {
-                tree.PushBack(Eat(TokenKind.If));
-                tree.PushBack(Expression(), "CONDITION");
-                tree.PushBack(Expect(TokenKind.Then));
-                tree.PushBack(BlockExpression(), "THEN");
-                tree.PushBack(Expect(TokenKind.Else));
-                tree.PushBack(Expression(), "ELSE");
-                kind = TreeKind.IfExpr;
-            }
             else
             {
                 return SwallowError("Expected primary expression.");
             }
 
             return ExitRule(tree, kind);
+        }
+    }
+    private ParseTree IfExpression()
+    {
+        var tree = EnterRule();
+        tree.PushBack(Expect(TokenKind.If));
+        tree.PushBack(Expression(), "CONDITION");
+        tree.PushBack(Expect(TokenKind.Then));
+        tree.PushBack(BlockExpression(), "THEN");
+        tree.PushBack(Expect(TokenKind.Else));
+        tree.PushBack(Expression(), "ELSE");
+
+        return ExitRule(tree, TreeKind.IfExpr);
+    }
+    private ParseTree MatchExpression()
+    {
+        var tree = EnterRule();
+        tree.PushBack(Expect(TokenKind.Match));
+        tree.PushBack(Expression(), "VALUE");
+        tree.PushBack(Expect(TokenKind.With));
+        tree.PushBack(MatchPatternList());
+
+        return ExitRule(tree, TreeKind.MatchExpr);
+
+        ParseTree MatchPatternList()
+        {
+            var tree = EnterRule();
+            while (At(TokenKind.Pipe))
+            {
+                tree.PushBack(Eat(TokenKind.Pipe));
+                tree.PushBack(BindingPattern());
+                tree.PushBack(Expect(TokenKind.Arrow));
+                tree.PushBack(Expression());
+                tree.PushBack(Expect(TokenKind.In));
+            }
+
+            return ExitRule(tree, TreeKind.MatchPatternList);
         }
     }
 
@@ -470,7 +506,8 @@ class Parser(TokenStream lexer)
         var simpleStart =
             At(TokenKind.Identifier)
             || IsAtLiteral()
-            || At(TokenKind.If);
+            || At(TokenKind.If)
+            || At(TokenKind.Match);
 
         if (simpleStart)
         {

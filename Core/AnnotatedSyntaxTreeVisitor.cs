@@ -68,7 +68,7 @@ abstract class AnnotatedSyntaxTreeVisitor<T> : ParseTreeVisitor<T>
                 tree.GetNamedChild("NAME"),
                 tree.GetNamedChild("PARAMS"),
                 tree.GetNamedChild("BODY")),
-            TreeKind.LetPattern => VisitLetPattern(tree, tree.Children[0].AsToken()),
+            TreeKind.BindingPattern => VisitLetPattern(tree, tree.Children[0].AsToken()),
 
             TreeKind.Expr or
             TreeKind.InfixExpr or

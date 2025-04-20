@@ -7,7 +7,11 @@ using DragoonScript.Syntax.Source;
 using JFomit.Functional.Extensions;
 
 var s = """
-fn ignore x = ()
+fn ignore x =
+    match x with
+    | A -> 2;
+    | B -> 3;
+    ;
 """;
 
 // fn main () = 2
@@ -35,9 +39,9 @@ var parser = new Parser(lexer);
 var tree = parser.File();
 var printer = new Printer(false);
 printer.VisitTree(tree);
-var visitor = new FunctionBodyVisitor();
-var value = visitor.VisitFunctionBody(tree.Children[0]);
-Console.WriteLine(value.Stringify());
+// var visitor = new FunctionBodyVisitor();
+// var value = visitor.VisitFunctionBody(tree.Children[0]);
+// Console.WriteLine(value.Stringify());
 
 parser.Diagnostics.ForEach(d => d.Print());
 

@@ -12,7 +12,7 @@ enum TokenKind
     LParen,
     RParen,
 
-    SignatureArrow,
+    Arrow,
     Colon,
     Unit,
 
@@ -24,16 +24,19 @@ enum TokenKind
     Let,
     Fn,
     Type,
-    Return,
     If,
     Then,
     Else,
     In,
+    Match,
+    With,
 
     Identifier,
     Integer,
     Float,
     String,
+
+    Semi,
 }
 
 readonly struct Token(TokenKind type, SourceSpan view)

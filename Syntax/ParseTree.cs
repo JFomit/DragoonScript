@@ -36,11 +36,13 @@ enum TreeKind
     PrefixExpr,
     PostfixExpr,
     BlockExpr,
-    ReturnExpr,
+
+    MatchExpr,
+    MatchPatternList,
 
     LetBind,
 
-    LetPattern,
+    BindingPattern,
 }
 
 class ParseTree(TreeKind kind = TreeKind.Error) : IParseTreeItem
