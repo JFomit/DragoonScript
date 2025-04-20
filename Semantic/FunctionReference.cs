@@ -1,4 +1,4 @@
-namespace Compiler.Semantic;
+namespace DragoonScript.Semantic;
 
 enum FunctionKind
 {

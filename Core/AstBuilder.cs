@@ -1,6 +1,6 @@
-using Compiler.Core.Ast;
+using DragoonScript.Core.Ast;
 
-namespace Compiler.Core;
+namespace DragoonScript.Core;
 
 class AstBuilder : AnnotatedSyntaxTreeVisitor<AstNode>
 {

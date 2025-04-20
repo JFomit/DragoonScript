@@ -1,8 +1,8 @@
-using Compiler.Semantic;
+using DragoonScript.Semantic;
 using JFomit.Functional.Monads;
 using static JFomit.Functional.Prelude;
 
-namespace Compiler.Core.Ast;
+namespace DragoonScript.Core.Ast;
 
 /// <summary>
 /// A-normal form lambda calculus

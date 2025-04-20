@@ -1,10 +1,10 @@
 using System.Buffers;
-using Compiler.Syntax.Lexing;
-using Compiler.Syntax.Source;
+using DragoonScript.Syntax.Lexing;
+using DragoonScript.Syntax.Source;
 using JFomit.Functional.Monads;
 using static JFomit.Functional.Prelude;
 
-namespace Compiler.Syntax;
+namespace DragoonScript.Syntax;
 
 internal class Lexer(SourceDocument inputString) : TokenStream
 {

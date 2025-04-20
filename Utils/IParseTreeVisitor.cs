@@ -1,9 +1,9 @@
-using Compiler.Syntax;
-using Compiler.Syntax.Utils;
+using DragoonScript.Syntax;
+using DragoonScript.Syntax.Utils;
 using JFomit.Functional.Monads;
 using static JFomit.Functional.Prelude;
 
-namespace Compiler.Utils;
+namespace DragoonScript.Utils;
 
 abstract class ParseTreeVisitor
 {

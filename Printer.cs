@@ -1,9 +1,9 @@
-using Compiler.Syntax;
-using Compiler.Syntax.Lexing;
-using Compiler.Syntax.Utils;
-using Compiler.Utils;
+using DragoonScript.Syntax;
+using DragoonScript.Syntax.Lexing;
+using DragoonScript.Syntax.Utils;
+using DragoonScript.Utils;
 
-namespace Compiler;
+namespace DragoonScript;
 
 class Printer(bool minify) : ParseTreeVisitor
 {

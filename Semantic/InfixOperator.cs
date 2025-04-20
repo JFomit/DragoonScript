@@ -1,10 +1,10 @@
-using Compiler.Diagnostics;
-using Compiler.Syntax.Lexing;
+using DragoonScript.Diagnostics;
+using DragoonScript.Syntax.Lexing;
 using JFomit.Functional.Monads;
 
 using static JFomit.Functional.Prelude;
 
-namespace Compiler.Semantic;
+namespace DragoonScript.Semantic;
 
 enum Associativity
 {

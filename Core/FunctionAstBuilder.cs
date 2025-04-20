@@ -1,10 +1,10 @@
-using Compiler.Core.Ast;
-using Compiler.Semantic;
-using Compiler.Syntax;
+using DragoonScript.Core.Ast;
+using DragoonScript.Semantic;
+using DragoonScript.Syntax;
 using JFomit.Functional.Monads;
 using static JFomit.Functional.Prelude;
 
-namespace Compiler.Core;
+namespace DragoonScript.Core;
 
 //
 // fn main x y = 

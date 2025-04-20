@@ -1,4 +1,4 @@
-namespace Compiler.Diagnostics;
+namespace DragoonScript.Diagnostics;
 
 enum ColorIndex
 {

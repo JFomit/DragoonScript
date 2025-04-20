@@ -1,7 +1,7 @@
 using JFomit.Functional.Monads;
 using static JFomit.Functional.Prelude;
 
-namespace Compiler.Syntax.Source;
+namespace DragoonScript.Syntax.Source;
 
 readonly record struct SourceSpan(SourceDocument Source, int Pos, int Length, int Line, int Column)
 {

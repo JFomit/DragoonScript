@@ -1,6 +1,6 @@
-using Compiler.Utils;
+using DragoonScript.Utils;
 
-namespace Compiler.Syntax.Utils;
+namespace DragoonScript.Syntax.Utils;
 
 interface IParseTreeItem
 {

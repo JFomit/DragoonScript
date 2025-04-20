@@ -1,4 +1,4 @@
-namespace Compiler.Core.Ast;
+namespace DragoonScript.Core.Ast;
 
 record File(List<FunctionDeclaration> Functions) : AstNode
 {

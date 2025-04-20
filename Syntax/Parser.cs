@@ -1,13 +1,13 @@
-using Compiler.Diagnostics;
+using DragoonScript.Diagnostics;
 using System.Diagnostics;
-using Compiler.Syntax.Source;
-using Compiler.Syntax.Lexing;
+using DragoonScript.Syntax.Source;
+using DragoonScript.Syntax.Lexing;
 using JFomit.Functional.Extensions;
 using JFomit.Functional.Monads;
 using static JFomit.Functional.Prelude;
-using Compiler.Semantic;
+using DragoonScript.Semantic;
 
-namespace Compiler.Syntax;
+namespace DragoonScript.Syntax;
 
 class Parser(TokenStream lexer)
 {

@@ -1,7 +1,7 @@
-using Compiler.Syntax.Source;
+using DragoonScript.Syntax.Source;
 using JFomit.Functional.Monads;
 
-namespace Compiler.Syntax.Lexing;
+namespace DragoonScript.Syntax.Lexing;
 
 abstract class TokenStream
 {
