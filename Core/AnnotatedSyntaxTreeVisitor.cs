@@ -9,6 +9,7 @@ using static JFomit.Functional.Prelude;
 namespace Compiler.Core;
 
 abstract class AnnotatedSyntaxTreeVisitor<T> : ParseTreeVisitor<T>
+    where T : class
 {
     protected virtual T Default() => default!;
     protected virtual T Aggregate(T before, T next) => next;
@@ -153,7 +154,7 @@ abstract class AnnotatedSyntaxTreeVisitor<T> : ParseTreeVisitor<T>
         => VisitChildren(tree);
 }
 
-file static class Extensions
+internal static class Extensions
 {
     internal static Option<TokenTree> AsToken(this ParseTree tree)
         => tree.Kind switch
