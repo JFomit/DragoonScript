@@ -350,7 +350,7 @@ class Parser(TokenStream lexer)
             {
                 var next = Peek();
 
-                if (next.Kind != TokenKind.Operator && next.Kind != TokenKind.Pipe)
+                if (next.Kind != TokenKind.Operator)
                 {
                     break;
                 }
@@ -491,8 +491,7 @@ class Parser(TokenStream lexer)
                 tree.PushBack(Eat(TokenKind.Pipe));
                 tree.PushBack(BindingPattern());
                 tree.PushBack(Expect(TokenKind.Arrow));
-                tree.PushBack(Expression());
-                tree.PushBack(Expect(TokenKind.In));
+                tree.PushBack(BlockExpression());
             }
 
             return ExitRule(tree, TreeKind.MatchPatternList);
@@ -507,14 +506,15 @@ class Parser(TokenStream lexer)
             At(TokenKind.Identifier)
             || IsAtLiteral()
             || At(TokenKind.If)
-            || At(TokenKind.Match);
+            || At(TokenKind.Match)
+            || At(TokenKind.LParen);
 
         if (simpleStart)
         {
             return true;
         }
 
-        if (At(TokenKind.Operator) || At(TokenKind.Pipe))
+        if (At(TokenKind.Operator))
         {
             var afterNext = WhitespaceLookahead(1);
             if (afterNext.Kind == TokenKind.WhiteSpace || afterNext.Kind == TokenKind.NewLine)

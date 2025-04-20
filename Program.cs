@@ -9,9 +9,10 @@ using JFomit.Functional.Extensions;
 var s = """
 fn ignore x =
     match x with
-    | A -> 2;
-    | B -> 3;
-    ;
+    | A ->
+        let x = 5 in
+        x + 5
+    | B -> 3
 """;
 
 // fn main () = 2
