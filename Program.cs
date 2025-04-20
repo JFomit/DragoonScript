@@ -14,6 +14,23 @@ fn main =
     @"echo \"Hello, world!\""
 """;
 
+// fn main () = 2
+// main ()
+//      ==
+// let main = () => 2 in
+// main ()
+//      ==
+// (\main.(main ()) \().2)
+// --------------------------------
+// let ~@ = \str.system str in
+// let main = ~@ "echo \"Hello, world!\"" in
+// main ()
+//      ==
+// \~@.(
+//   \main.(main ()) (\().~@ "echo \"Hello, world!\"")
+// ) \str.(system str)
+//
+
 var doc = new SourceDocument("test", s);
 
 var lexer = new Lexer(doc);

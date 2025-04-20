@@ -440,8 +440,8 @@ class Parser(TokenStream lexer)
             }
             else if (At(TokenKind.Operator) || At(TokenKind.Pipe)) // prefix operator
             {
-                tree.PushBack(Eat());
-                tree.PushBack(PrimaryExpression());
+                tree.PushBack(Eat(), "OP");
+                tree.PushBack(PrimaryExpression(), "RHS");
                 kind = TreeKind.PrefixExpr; // right associative
             }
             else if (At(TokenKind.If)) // If expression

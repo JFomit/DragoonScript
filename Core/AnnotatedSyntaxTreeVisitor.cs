@@ -41,6 +41,12 @@ abstract class AnnotatedSyntaxTreeVisitor<T> : ParseTreeVisitor<T>
             _ => false,
         };
     }
+    protected static bool ContainsErrors(ParseTree tree) => tree.Kind switch
+    {
+        TreeKind.Token => ((TokenTree)tree).Token.Kind == TokenKind.Error,
+        TreeKind.Error => true,
+        _ => tree.Children.Any(ContainsErrors)
+    };
 
     public override T Visit(ParseTree tree)
     {
@@ -62,7 +68,13 @@ abstract class AnnotatedSyntaxTreeVisitor<T> : ParseTreeVisitor<T>
                 tree.GetNamedChild("PARAMS"),
                 tree.GetNamedChild("BODY")),
             TreeKind.LetPattern => VisitLetPattern(tree, tree.Children[0].AsToken()),
-            TreeKind.Expr or TreeKind.InfixExpr or TreeKind.PrefixExpr or TreeKind.IfExpr => VisitExpression(tree),
+
+            TreeKind.Expr or
+            TreeKind.InfixExpr or
+            TreeKind.PrefixExpr or
+            TreeKind.IfExpr or
+            TreeKind.VariableRefExpr or
+            TreeKind.LiteralExpr => VisitExpression(tree),
 
             _ => VisitError(tree),
         };
@@ -77,17 +89,68 @@ abstract class AnnotatedSyntaxTreeVisitor<T> : ParseTreeVisitor<T>
                 tree.GetNamedChild("LHS"),
                 tree.GetNamedChild("OP").SelectMany(Extensions.AsToken),
                 tree.GetNamedChild("RHS")),
+            TreeKind.PrefixExpr => VisitPrefixExpression(
+                tree,
+                tree.GetNamedChild("OP").SelectMany(Extensions.AsToken),
+                tree.GetNamedChild("RHS")
+            ),
+            TreeKind.IfExpr => VisitIfExpression(
+                tree,
+                tree.GetNamedChild("CONDITION"),
+                tree.GetNamedChild("THEN"),
+                tree.GetNamedChild("ELSE")
+            ),
+            TreeKind.VariableRefExpr => VisitBindingReference(tree, tree.Children[0].AsToken()),
+            TreeKind.LiteralExpr => VisitLiteral(tree, tree.Children[0].AsToken()),
+            TreeKind.BlockExpr => VisitBlock(tree),
+
+            _ => VisitError(tree)
         };
 
-    protected virtual T VisitBinaryExpression(ParseTree tree, Option<ParseTree> lhs, Option<TokenTree> op, Option<ParseTree> rhs)
+    protected virtual T VisitBlock(ParseTree tree)
         => VisitChildren(tree);
-    protected virtual T VisitLetPattern(ParseTree tree, Option<TokenTree> variable)
+    protected virtual T VisitLiteral(
+        ParseTree tree,
+        Option<TokenTree> tokenTrees)
         => VisitChildren(tree);
-    protected virtual T VisitFunctionDeclaration(ParseTree tree, Option<ParseTree> name, Option<ParseTree> parameters, Option<ParseTree> body)
+    protected virtual T VisitBindingReference(
+        ParseTree tree,
+        Option<TokenTree> bindingOption)
+        => VisitChildren(tree);
+    protected virtual T VisitIfExpression(
+        ParseTree tree,
+        Option<ParseTree> condiotionOption,
+        Option<ParseTree> thenBranchOption,
+        Option<ParseTree> elseBranchOption)
+        => VisitChildren(tree);
+    protected virtual T VisitPrefixExpression(
+        ParseTree tree,
+        Option<TokenTree> opOption,
+        Option<ParseTree> rhsOption)
+        => VisitChildren(tree);
+    protected virtual T VisitBinaryExpression(
+        ParseTree tree,
+        Option<ParseTree> lhsOption,
+        Option<TokenTree> opOption,
+        Option<ParseTree> rhsOption)
+        => VisitChildren(tree);
+    protected virtual T VisitLetPattern(
+        ParseTree tree,
+        Option<TokenTree> variableOption)
+        => VisitChildren(tree);
+    protected virtual T VisitFunctionDeclaration(
+        ParseTree tree,
+        Option<ParseTree> nameOption,
+        Option<ParseTree> parametersOption,
+        Option<ParseTree> bodyOption)
         => VisitChildren(tree);
     protected virtual T VisitError(ParseTree tree) => VisitChildren(tree);
     protected virtual T VisitFile(ParseTree tree) => VisitChildren(tree);
-    protected virtual T VisitLetBinding(ParseTree tree, Option<ParseTree> pattern, Option<ParseTree> value) => VisitChildren(tree);
+    protected virtual T VisitLetBinding(
+        ParseTree tree,
+        Option<ParseTree> pattern,
+        Option<ParseTree> value)
+        => VisitChildren(tree);
 }
 
 file static class Extensions
