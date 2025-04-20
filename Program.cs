@@ -9,7 +9,9 @@ using JFomit.Functional.Extensions;
 var s = """
 fn main x y = 
   let q = x * 2 in
-  x + f y - x ^ q
+  let d = q * 4 in
+  let yy = 5 in
+  x + f y - x ^ d
 """;
 
 // fn main () = 2

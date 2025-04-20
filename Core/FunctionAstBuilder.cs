@@ -48,7 +48,6 @@ class FunctionBodyVisitor : AnnotatedSyntaxTreeVisitor<Value>
     public LambdaTerm VisitFunctionBody(ParseTree tree)
     {
         Reset();
-
         var expression = Visit(tree.Children[^1]); // last is returning
 
         return FixExpressions(expression);
