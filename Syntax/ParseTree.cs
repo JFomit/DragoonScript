@@ -108,7 +108,7 @@ class ParseTree(TreeKind kind = TreeKind.Error) : IParseTreeItem
             .SelectMany(name, (d, n) => d.GetValue(n))
             .Flatten();
 
-    public string Stringify()
+    public virtual string Stringify()
         => Children.Select(c => c.Stringify()).Aggregate((p, n) => string.Join(p, n));
 }
 sealed class TokenTree(Token token) : ParseTree(TreeKind.Token), IParseTreeItem
@@ -119,4 +119,5 @@ sealed class TokenTree(Token token) : ParseTree(TreeKind.Token), IParseTreeItem
         visitor.Visit(this);
     }
     public override TResult Accept<TResult>(ParseTreeVisitor<TResult> visitor) => visitor.Visit(this);
+    public override string Stringify() => Token.View.AsSpan().ToString();
 }

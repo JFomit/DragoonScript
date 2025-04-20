@@ -75,6 +75,7 @@ abstract class AnnotatedSyntaxTreeVisitor<T> : ParseTreeVisitor<T>
             TreeKind.PrefixExpr or
             TreeKind.IfExpr or
             TreeKind.VariableRefExpr or
+            TreeKind.FnApply or
             TreeKind.LiteralExpr => VisitExpression(tree),
 
             _ => VisitError(tree),
@@ -104,9 +105,13 @@ abstract class AnnotatedSyntaxTreeVisitor<T> : ParseTreeVisitor<T>
             TreeKind.VariableRefExpr => VisitBindingReference(tree, tree.Children[0].AsToken()),
             TreeKind.LiteralExpr => VisitLiteral(tree, tree.Children[0].AsToken()),
             TreeKind.BlockExpr => VisitBlock(tree),
+            TreeKind.FnApply => VisitApplication(tree),
 
             _ => VisitError(tree)
         };
+
+    protected virtual T VisitApplication(ParseTree tree)
+        => VisitChildren(tree);
 
     protected virtual T VisitBlock(ParseTree tree)
         => VisitChildren(tree);

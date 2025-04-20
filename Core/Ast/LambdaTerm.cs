@@ -1,3 +1,4 @@
+using Compiler.Semantic;
 using JFomit.Functional.Monads;
 using static JFomit.Functional.Prelude;
 
@@ -10,10 +11,17 @@ abstract record LambdaTerm : AstNode;
 //EXP::= VAL 
 //      | let VAR = VAL in EXP
 //      | let VAR = VAL VAL in EXP
-abstract record Value : LambdaTerm;
-record ValueBinding(Variable Variable, Value Value) : LambdaTerm
+abstract record Value : LambdaTerm
+{
+    public static Value From(FunctionReference reference) => new FunctionVariable(reference);
+    public static Value From(string name) => new Variable(name);
+}
+abstract record Binding : LambdaTerm
 {
     public Option<LambdaTerm> Expression { get; set; } = None;
+}
+record ValueBinding(Variable Variable, Value Value) : Binding
+{
     public override IEnumerable<AstNode> Children
     {
         get
@@ -26,12 +34,12 @@ record ValueBinding(Variable Variable, Value Value) : LambdaTerm
             }
         }
     }
+    public override string Stringify()
+        => $"(let {Variable.Stringify()} = {Value.Stringify()} in\n{Expression.Unwrap().Stringify()})";
 }
-
 // TODO: make lambda calculus `correct' by currying right after the parser or *in* the parser
-record ApplicationBinding(Variable Variable, Value Function, Value[] Arguments) : LambdaTerm
+record ApplicationBinding(Variable Variable, Value Function, Value[] Arguments) : Binding
 {
-    public Option<LambdaTerm> Expression { get; set; } = None;
     public override IEnumerable<AstNode> Children
     {
         get
@@ -48,6 +56,8 @@ record ApplicationBinding(Variable Variable, Value Function, Value[] Arguments) 
             }
         }
     }
+    public override string Stringify()
+        => $"(let {Variable.Stringify()} = ({Function.Stringify()} {Arguments.Select(a => a.Stringify()).Aggregate((p, n) => $"{p} {n}")}) in\n{Expression.Unwrap().Stringify()})";
 }
 
 //VAL ::= VAR
@@ -56,10 +66,17 @@ record ApplicationBinding(Variable Variable, Value Function, Value[] Arguments) 
 record Variable(string Name) : Value
 {
     public override IEnumerable<AstNode> Children => Enumerable.Empty<AstNode>();
+    public override string Stringify() => Name;
 }
-record Literal(string Name) : Value
+record FunctionVariable(FunctionReference Function) : Value
 {
     public override IEnumerable<AstNode> Children => Enumerable.Empty<AstNode>();
+    public override string Stringify() => Function.Name;
+}
+record Literal(string Value) : Value
+{
+    public override IEnumerable<AstNode> Children => Enumerable.Empty<AstNode>();
+    public override string Stringify() => Value;
 }
 record Abstraction(Variable Variable, LambdaTerm Expression) : Value
 {
@@ -71,4 +88,5 @@ record Abstraction(Variable Variable, LambdaTerm Expression) : Value
             yield return Expression;
         }
     }
+    public override string Stringify() => $"(\\{Variable.Stringify()}.{Expression.Stringify()})";
 }

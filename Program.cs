@@ -1,17 +1,15 @@
 ﻿using System.Diagnostics;
 using Compiler;
+using Compiler.Core;
 using Compiler.Diagnostics;
 using Compiler.Syntax;
 using Compiler.Syntax.Source;
 using JFomit.Functional.Extensions;
 
 var s = """
-fn (|>) f x = f x
-
-fn (~@) str: String -> int = system str
-
-fn main =
-    @"echo \"Hello, world!\""
+fn main x y = 
+  let q = x * 2 in
+  x + f y - x ^ q
 """;
 
 // fn main () = 2
@@ -37,8 +35,11 @@ var lexer = new Lexer(doc);
 var parser = new Parser(lexer);
 
 var tree = parser.File();
-var printer = new Printer(false);
-printer.VisitTree(tree);
+// var printer = new Printer(false);
+// printer.VisitTree(tree);
+var visitor = new FunctionBodyVisitor();
+var value = visitor.VisitFunctionBody(tree.Children[0]);
+Console.WriteLine(value.Stringify());
 
 parser.Diagnostics.ForEach(d => d.Print());
 
