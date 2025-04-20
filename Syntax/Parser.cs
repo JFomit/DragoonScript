@@ -426,7 +426,7 @@ class Parser(TokenStream lexer)
                 tree.PushBack(Eat(TokenKind.Identifier));
                 kind = TreeKind.VariableRefExpr;
             }
-            else if (At(TokenKind.Integer) || At(TokenKind.Float) || At(TokenKind.String)) // Literal
+            else if (IsAtLiteral()) // Literal
             {
                 tree.PushBack(Eat());
                 kind = TreeKind.LiteralExpr;
@@ -463,14 +463,13 @@ class Parser(TokenStream lexer)
         }
     }
 
+    private bool IsAtLiteral() => At(TokenKind.Integer) || At(TokenKind.Float) || At(TokenKind.String) || At(TokenKind.Unit);
+
     bool IsAtExpressionStart()
     {
         var simpleStart =
             At(TokenKind.Identifier)
-            || At(TokenKind.Integer)
-            || At(TokenKind.Float)
-            || At(TokenKind.LParen)
-            || At(TokenKind.String)
+            || IsAtLiteral()
             || At(TokenKind.If);
 
         if (simpleStart)

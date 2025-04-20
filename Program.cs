@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using DragoonScript;
 using DragoonScript.Core;
 using DragoonScript.Diagnostics;
 using DragoonScript.Syntax;
@@ -6,11 +7,7 @@ using DragoonScript.Syntax.Source;
 using JFomit.Functional.Extensions;
 
 var s = """
-fn main x y = 
-  let q = x * 2 in
-  let d = q * 4 in
-  let yy = 5 in
-  x + f y - x ^ d
+fn ignore x = ()
 """;
 
 // fn main () = 2
@@ -30,14 +27,14 @@ fn main x y =
 // ) \str.(system str)
 //
 
-var doc = new SourceDocument("test", s);
+var doc = new SourceDocument("<stdin>", s);
 
 var lexer = new Lexer(doc);
 var parser = new Parser(lexer);
 
 var tree = parser.File();
-// var printer = new Printer(false);
-// printer.VisitTree(tree);
+var printer = new Printer(false);
+printer.VisitTree(tree);
 var visitor = new FunctionBodyVisitor();
 var value = visitor.VisitFunctionBody(tree.Children[0]);
 Console.WriteLine(value.Stringify());
