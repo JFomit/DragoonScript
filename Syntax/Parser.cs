@@ -226,8 +226,17 @@ class Parser(TokenStream lexer)
             }
             else if (IsAtExpressionStart())
             {
-                tree.PushBack(Expression(), "RETURN");
-                return ExitRule(tree, TreeKind.BlockExpr);
+                var expr = Expression();
+                if (At(TokenKind.Semi))
+                {
+                    tree.PushBack(expr);
+                    tree.PushBack(Eat(TokenKind.Semi));
+                }
+                else
+                {
+                    tree.PushBack(expr, "RETURN");
+                    return ExitRule(tree, TreeKind.BlockExpr);
+                }
             }
             else
             {
@@ -324,7 +333,7 @@ class Parser(TokenStream lexer)
         tree.PushBack(BindingPattern(), "PATTERN");     // pattern
         tree.PushBack(Expect(TokenKind.Is)); // '='
         tree.PushBack(Expression(), "VALUE");         // expression
-        tree.PushBack(Expect(TokenKind.In)); // 'in'
+        tree.PushBack(Expect(TokenKind.Semi)); // ';'
 
         return ExitRule(tree, TreeKind.LetBind);
     }
@@ -492,7 +501,7 @@ class Parser(TokenStream lexer)
                 tree.PushBack(BindingPattern());
                 tree.PushBack(Expect(TokenKind.Arrow));
                 tree.PushBack(Expression());
-                tree.PushBack(Expect(TokenKind.In));
+                tree.PushBack(Expect(TokenKind.Semi));
             }
 
             return ExitRule(tree, TreeKind.MatchPatternList);

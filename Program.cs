@@ -8,10 +8,13 @@ using JFomit.Functional.Extensions;
 
 var s = """
 fn ignore x =
-    match x with
+    let q = x * 2;
+    match q with
     | A -> 2;
     | B -> 3;
     ;
+    print "HI";
+    17
 """;
 
 // fn main () = 2

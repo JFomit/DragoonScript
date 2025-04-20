@@ -40,9 +40,9 @@ internal class Lexer(SourceDocument inputString) : TokenStream
 
         switch (span[0])
         {
-            // case ';':
-            //     _pos++;
-            //     return Emit(TokenKind.Semi);
+            case ';':
+                _pos++;
+                return Emit(TokenKind.Semi);
             case '\n':
                 _pos++;
                 return Emit(TokenKind.NewLine);
