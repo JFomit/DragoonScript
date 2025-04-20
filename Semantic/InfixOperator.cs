@@ -4,7 +4,7 @@ using JFomit.Functional.Monads;
 
 using static JFomit.Functional.Prelude;
 
-namespace Compiler.Syntax.Utils;
+namespace Compiler.Semantic;
 
 enum Associativity
 {
@@ -13,13 +13,13 @@ enum Associativity
     Right
 }
 
-readonly record struct CustomInfixOperator(Token Token, int Precedence, Associativity Associativity = Associativity.None)
+readonly record struct InfixOperator(Token Token, int Precedence, Associativity Associativity = Associativity.None)
 {
-    public static Result<CustomInfixOperator, Diagnostic> CreateFromToken(Token token)
+    public static Result<InfixOperator, Diagnostic> CreateFromToken(Token token)
     {
         if (token.Kind == TokenKind.WhiteSpace)
         {
-            return Ok(new CustomInfixOperator(token, 10, Associativity.Left));
+            return Ok(new InfixOperator(token, 10, Associativity.Left));
         }
 
         if (token.Kind != TokenKind.Operator && token.Kind != TokenKind.Pipe)
@@ -44,7 +44,7 @@ readonly record struct CustomInfixOperator(Token Token, int Precedence, Associat
 
         if (span == "$")
         {
-            return Ok(new CustomInfixOperator(token, 0, Associativity.Right)); // right side application group
+            return Ok(new InfixOperator(token, 0, Associativity.Right)); // right side application group
         }
 
         ReadOnlySpan<char> decider = span[^1..];
@@ -63,21 +63,21 @@ readonly record struct CustomInfixOperator(Token Token, int Precedence, Associat
         #pragma warning disable format
         return decider switch
         {
-            ['.', ..] => Ok(new CustomInfixOperator(token, 9, Associativity.Right)), // composition group
+            ['.', ..] => Ok(new InfixOperator(token, 9, Associativity.Right)), // composition group
 
-            ['^', ..] => Ok(new CustomInfixOperator(token, 8, Associativity.Right)), // power group
-            ['*' or '/' or '%', ..] => Ok(new CustomInfixOperator(token, 7, Associativity.Left)), // multiplicative group
-            ['+' or '-', ..] => Ok(new CustomInfixOperator(token, 6, Associativity.Left)), // additive group
+            ['^', ..] => Ok(new InfixOperator(token, 8, Associativity.Right)), // power group
+            ['*' or '/' or '%', ..] => Ok(new InfixOperator(token, 7, Associativity.Left)), // multiplicative group
+            ['+' or '-', ..] => Ok(new InfixOperator(token, 6, Associativity.Left)), // additive group
 
-            ">" or "<" or ">=" or "==" or "!=" => Ok(new CustomInfixOperator(token, 5, Associativity.Left)), // relational group
+            ">" or "<" or ">=" or "==" or "!=" => Ok(new InfixOperator(token, 5, Associativity.Left)), // relational group
 
-            "&" or "&&" => Ok(new CustomInfixOperator(token, 4, Associativity.Left)), // `and' group
-            "|" or "||" => Ok(new CustomInfixOperator(token, 3, Associativity.Left)), // `or' group
-            ['|' or '&', ..] => Ok(new CustomInfixOperator(token, 3, Associativity.Left)), // custom `logic` group
+            "&" or "&&" => Ok(new InfixOperator(token, 4, Associativity.Left)), // `and' group
+            "|" or "||" => Ok(new InfixOperator(token, 3, Associativity.Left)), // `or' group
+            ['|' or '&', ..] => Ok(new InfixOperator(token, 3, Associativity.Left)), // custom `logic` group
 
-            ['>', '>', ..] or ['<', '<', ..] => Ok(new CustomInfixOperator(token, 2, Associativity.Left)), // bit-shift group
+            ['>', '>', ..] or ['<', '<', ..] => Ok(new InfixOperator(token, 2, Associativity.Left)), // bit-shift group
 
-            _ => Ok(new CustomInfixOperator(token, 1, Associativity.None)) // wildcard group with almost no powers
+            _ => Ok(new InfixOperator(token, 1, Associativity.None)) // wildcard group with almost no powers
         };
         #pragma warning restore format
     }

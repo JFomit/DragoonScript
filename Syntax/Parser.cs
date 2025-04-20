@@ -2,10 +2,10 @@ using Compiler.Diagnostics;
 using System.Diagnostics;
 using Compiler.Syntax.Source;
 using Compiler.Syntax.Lexing;
-using Compiler.Syntax.Utils;
 using JFomit.Functional.Extensions;
 using JFomit.Functional.Monads;
 using static JFomit.Functional.Prelude;
+using Compiler.Semantic;
 
 namespace Compiler.Syntax;
 
@@ -375,14 +375,14 @@ class Parser(TokenStream lexer)
             return result;
         }
 
-        Option<CustomInfixOperator> GetPrecedence(Token op)
+        Option<InfixOperator> GetPrecedence(Token op)
         {
             if (op.Kind == TokenKind.EoF)
             {
                 return None;
             }
 
-            var result = CustomInfixOperator.CreateFromToken(op);
+            var result = InfixOperator.CreateFromToken(op);
 
             return result.ToOption();
         }
