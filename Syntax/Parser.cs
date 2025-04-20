@@ -151,7 +151,7 @@ class Parser(TokenStream lexer)
             }
             else if (At(TokenKind.Type))
             {
-                // tree.AddChild(TypeDeclaration());
+                // tree.PushBack(TypeDeclaration());
             }
             else if (At(TokenKind.Let))
             {
@@ -242,26 +242,26 @@ class Parser(TokenStream lexer)
     // TypeExpressions ::= '(' type_expression ')' | type_expression '->' type_expression | ID | ID type_expression
     private ParseTree TypeExpression()
     {
-        var head = SimpleTypeExpression();
+        var head = PrimaryTypeExpression();
 
         while (At(TokenKind.Arrow))
         {
             var tree = EnterRule();
-            tree.PushBack(head);
+            tree.PushBack(head, "LHS");
             tree.PushBack(Eat(TokenKind.Arrow));
-            tree.PushBack(TypeExpression());
+            tree.PushBack(TypeExpression(), "RHS");
             head = ExitRule(tree, TreeKind.TypeArrowExpr);
         }
 
         return head;
 
-        ParseTree SimpleTypeExpression()
+        ParseTree PrimaryTypeExpression()
         {
             if (At(TokenKind.LParen))
             {
                 var tree = EnterRule();
                 tree.PushBack(Eat(TokenKind.LParen));
-                tree.PushBack(TypeExpression());
+                tree.PushBack(TypeExpression(), "INNER");
                 tree.PushBack(Expect(TokenKind.RParen));
                 return ExitRule(tree, TreeKind.TypeExpr);
             }
@@ -271,13 +271,9 @@ class Parser(TokenStream lexer)
                 tree.PushBack(Eat(TokenKind.Identifier));
                 while (true)
                 {
-                    if (At(TokenKind.Identifier))
+                    if (At(TokenKind.Identifier) || At(TokenKind.LParen))
                     {
-                        tree.PushBack(Eat(TokenKind.Identifier));
-                    }
-                    else if (At(TokenKind.LParen))
-                    {
-                        tree.PushBack(SimpleTypeExpression());
+                        tree.PushBack(PrimaryTypeExpression());
                     }
                     else
                     {
@@ -447,7 +443,7 @@ class Parser(TokenStream lexer)
                 tree.PushBack(Expect(TokenKind.RParen));
                 kind = TreeKind.Expr;
             }
-            else if (At(TokenKind.Operator) || At(TokenKind.Pipe)) // prefix operator
+            else if (At(TokenKind.Operator)) // prefix operator
             {
                 tree.PushBack(Eat(), "OP");
                 tree.PushBack(PrimaryExpression(), "RHS");
@@ -486,6 +482,12 @@ class Parser(TokenStream lexer)
         ParseTree MatchPatternList()
         {
             var tree = EnterRule();
+            if (!At(TokenKind.Pipe))
+            {
+                tree.PushBack(GobbleError("Expected a list of patterns."));
+                return ExitRule(tree, TreeKind.MatchPatternList);
+            }
+
             while (At(TokenKind.Pipe))
             {
                 tree.PushBack(Eat(TokenKind.Pipe));

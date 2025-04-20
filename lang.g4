@@ -3,72 +3,100 @@ grammar lang;
 file: declaration* EOF;
 
 declaration
-  : type_declaration
-  | function_declaration
-  | let_binding;
+  : function_declaration
+  | let_binding
+  // | type_declaration
+  ;
 
-// **************** * DECLARATIONS * ****************
-
-type_declaration: TYPE name = IDENTIFIER;
-function_declaration:
-  FN name = IDENTIFIER params = parameter_list (
-    COLON signature = type_expression
-  )? IS body = primary_expression;
-parameter_list: head = parameter tail = parameter_list?;
-parameter: IDENTIFIER;
-
-// **************** * EXPRESSIONS * ****************
+function_declaration
+  : FN LPAREN name=OPERATOR RPAREN params=parameter_list (COLON type=type_expression) IS body=block_expression
+  | FN name=IDENTIFIER params=parameter_list (COLON type=type_expression) IS body=block_expression
+  ;
+parameter_list
+  : parameter*
+  ;
+parameter
+  : IDENTIFIER
+  ;
+block_expression
+  : let_binding* expression
+  ;
+let_binding
+  : LET pattern=binding_pattern IS value=expression IN
+  ;
+expression
+  : lhs=primary_expression op=OPERATOR rhs=primary_expression
+  | function=expression expression+
+  ;
 primary_expression
-  : primary_expression primary_expression+ # application
-  | LEFT_PARENTHESIS primary_expression RIGHT_PARENTHESIS # parenthisised_expression
-  | literal # literal_expression
-  | variable_reference # variable_expression
-  | let_binding # binding
-  | lhs=primary_expression infix=OPERATOR rhs=primary_expression # infix_operator
-  | prefix=OPERATOR rhs=primary_expression # prefix_operator
-  | lhs=primary_expression postfix=OPERATOR # postfix_operator
+  : match_expression
+  | if_expression
+  | variable_reference
+  | literal
+  | LPAREN inner=expression RPAREN
+  | prefix_operator
   ;
-
-variable_reference: name = IDENTIFIER;
 literal
-  : INTEGER # int
-  | FLOAT # float
+  : INTEGER
+  | FLOAT
+  | STRING
   ;
-let_binding:
-  LET binding_pattern = pattern IS value = primary_expression;
-pattern: variable = IDENTIFIER # variable;
+variable_reference
+  : IDENTIFIER
+  ;
+prefix_operator
+  : op=OPERATOR rhs=expression
+  ;
+if_expression
+  : IF condition=expression THEN then=expression ELSE else_=expression
+  ;
+match_expression
+  : MATCH value=expression WITH match_pattern_list
+  ;
+match_pattern_list
+  : (PIPE binding_pattern ARROW block_expression)+
+  ;
+binding_pattern
+  : IDENTIFIER
+  ;
 
-// **************** * TYPES * ****************
 type_expression
-  : type=IDENTIFIER args=type_expression*
-  | LEFT_PARENTHESIS inner=type_expression RIGHT_PARENTHESIS
-  | type_expression SIGNATURE_ARROW type_expression
+  : primary_type_expression
+  | primary_type_expression ARROW primary_type_expression
   ;
-
-simple_type: IDENTIFIER;
+primary_type_expression
+  : type_constructor
+  | LPAREN inner=type_expression RPAREN
+  ;
+type_constructor
+  : IDENTIFIER primary_type_expression*
+  ;
 
 NEW_LINE: '\n';
 
 WS: [ \t]+; // whitespace
 
-LEFT_PARENTHESIS: '(';
-RIGHT_PARENTHESIS: ')';
+LPAREN: '(';
+RPAREN: ')';
 
-MULTIPLY: '*';
-SIGNATURE_ARROW: '->';
-LAMBDA_ARROW: '=>';
+ARROW: '->';
 COLON: ':';
 FN: 'fn';
 LET: 'let';
 TYPE: 'type';
 IS: '=';
-
-ABSURD: '!';
+PIPE: '|';
+IF: 'if';
+THEN: 'then';
+ELSE: 'else';
+IN: 'in';
+MATCH: 'match';
+WITH: 'with';
 
 IDENTIFIER: [a-zA-Z_][a-zA-Z_0-9]*;
 UNIT: '()';
 INTEGER: [0-9]+;
 FLOAT: [0-9]* '.' [0-9]+;
 
-fragment GRAVE: '`';
-OPERATOR: [!#$%&*+./<=>?@\\^|-~]+ | GRAVE IDENTIFIER GRAVE;
+STRING: '"'.*?'"';
+OPERATOR: [!#$%&*+./<=>?@\\^|-~]+;
