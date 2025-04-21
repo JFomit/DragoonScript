@@ -1,156 +1,197 @@
 using DragoonScript.Core.Ast;
 using DragoonScript.Semantic;
 using DragoonScript.Syntax;
+using DragoonScript.Utils;
 using JFomit.Functional.Monads;
 using static JFomit.Functional.Prelude;
 
-namespace DragoonScript.Core;
-
-//
-// fn main x y = 
-//   let q = x * 2 in
-//   x + f y - x ^ q
-//          =>
-// block
-// |-let q = (*)
-// |          |-x
-// |          |-2
-// |-(-)
-//    |-(+)
-//    |  |-x
-//    |  |-(f)
-//    |     |-y
-//    |-(^)
-//       |-x
-//       |-q
-//          =>
-// let main = \[x y].(
-//   let q = (* x 2) in
-//     let 't0 = (f y) in
-//       let 't1 = (^ x q) in
-//         let 't2 = (+ x 't0) in
-//           let 't3 = (- 't2 't1) in
-//             't3
-// )
-//
-class FunctionBodyVisitor : AnnotatedSyntaxTreeVisitor<Value>
+namespace DragoonScript.Core
 {
-    private int _counter = 0;
-    private readonly Stack<Binding> _terms = [];
+    //
+    // fn main x y = 
+    //   let q = x * 2 in
+    //   x + f y - x ^ q
+    //          =>
+    // block
+    // |-let q = (*)
+    // |          |-x
+    // |          |-2
+    // |-(-)
+    //    |-(+)
+    //    |  |-x
+    //    |  |-(f)
+    //    |     |-y
+    //    |-(^)
+    //       |-x
+    //       |-q
+    //          =>
+    // let main = \[x y].(
+    //   let q = (* x 2) in
+    //     let 't0 = (f y) in
+    //       let 't1 = (^ x q) in
+    //         let 't2 = (+ x 't0) in
+    //           let 't3 = (- 't2 't1) in
+    //             't3
+    // )
+    //
 
-    private Variable GetNextVariable() => new($"'t{_counter++}");
-    public void Reset()
+    internal class FunctionBodyVisitor : AnnotatedSyntaxTreeVisitor<Value>
     {
-        _counter = 0;
-        _terms.Clear();
-    }
+        private int _counter;
+        private ICactusStack<Binding> _terms = CactusStack.CreateRoot<Binding>();
 
-    public LambdaTerm VisitFunctionBody(ParseTree tree)
-    {
-        Reset();
-        var expression = Visit(tree.Children[^1]); // last is returning
+        private Variable GetNextVariable() => new($"'t{_counter++}");
 
-        return FixExpressions(expression);
-    }
-
-    private Binding FixExpressions(Value value)
-    {
-        if (_terms.Count == 0)
+        public void Reset()
         {
-            var v = GetNextVariable();
-            var binding = new ValueBinding(v, value);
-            binding.Expression = Some<LambdaTerm>(value);
-            return binding;
+            _counter = 0;
+            _terms = CactusStack.CreateRoot<Binding>();
         }
 
-        var result = _terms.Pop();
-        result.Expression = Some<LambdaTerm>(value);
-        while (_terms.TryPop(out var term))
+        public LambdaTerm VisitFunctionBody(ParseTree tree)
         {
-            term.Expression = Some<LambdaTerm>(result);
-            result = term;
+            Reset();
+            Value expression = Visit(tree.Children[^1]); // last is returning
+
+            return FixExpressions(expression);
         }
 
-        return result;
-    }
+        private void PushUp(Binding binding)
+        {
+            _terms = _terms.PushUp(binding);
+        }
+        private void PushSide(Binding binding, out ICactusStack<Binding> newNode, out ICactusStack<Binding> stemRoot)
+        {
+            stemRoot = _terms.PushSide(binding, out newNode);
+            _terms = newNode;
+        }
+        private bool TryPop(out Binding item)
+        {
+            if (_terms.IsRoot)
+            {
+                item = default!;
+                return false;
+            }
+            item = _terms.Pop(out var parent);
+            _terms = parent!;
+            return true;
+        }
 
-    protected override Value VisitApplication(ParseTree tree)
-    {
-        var result = GetNextVariable();
-        var function = Visit(tree.Children[0]);
+        private LambdaTerm FixExpressions(Value value)
+        {
+            if (_terms.IsRoot)
+            {
+                return value;
+            }
 
-        _terms.Push(new ApplicationBinding(result, function, tree.Children.Skip(1).Select(Visit).ToArray()));
+            TryPop(out var result);
+            result.Expression = Some<LambdaTerm>(value);
+            while (TryPop(out var term))
+            {
+                term.Expression = Some<LambdaTerm>(result);
+                result = term;
+            }
 
-        return result;
-    }
-    // protected override Value VisitMatchExpression(ParseTree tree, Option<ParseTree> value, Option<ParseTree> patterns)
-    // {
-    // }
-    // protected override Value VisitMatchPatternList(ParseTree tree, (ParseTree bindingPattern, ParseTree expression)[] patterns)
-    // {
-    // }
-    protected override Value VisitBlock(ParseTree tree)
-    {
-        var expression = Visit(tree.Children[^1]); // last is returning
+            return result;
+        }
+        private LambdaTerm FixExpressions(Value value, ICactusStack<Binding> sentinel)
+        {
+            if (_terms.IsRoot)
+            {
+                return value;
+            }
+            if (_terms == sentinel)
+            {
+                return value;
+            }
 
-        return FixExpressions(expression).Variable;
-    }
-    protected override Value VisitIfExpression(
-        ParseTree tree,
-        Option<ParseTree> condiotionOption,
-        Option<ParseTree> thenBranchOption,
-        Option<ParseTree> elseBranchOption)
-    {
-        var condition = Visit(condiotionOption.Unwrap());
-        var then = Visit(thenBranchOption.Unwrap());
-        var @else = Visit(elseBranchOption.Unwrap());
+            TryPop(out var result);
+            result.Expression = Some<LambdaTerm>(value);
+            while (_terms != sentinel && TryPop(out var term))
+            {
+                term.Expression = Some<LambdaTerm>(result);
+                result = term;
+            }
 
-        return new IfValue(condition, then, @else);
-    }
-    protected override Value VisitLetBinding(ParseTree tree, Option<ParseTree> patternOption, Option<ParseTree> value)
-    {
-        var result = (Variable)Visit(patternOption.Unwrap()); // VisitLetPattern (which will be called) always returns a variable for now
-        _terms.Push(new ValueBinding(result, Visit(value.Unwrap())));
-        return result;
-    }
-    protected override Variable VisitLetPattern(ParseTree tree, Option<TokenTree> variableOption)
-    {
-        // TODO: patterns and destructuring
-        return new Variable(variableOption.Unwrap().Stringify());
-    }
-    protected override Value VisitBindingReference(ParseTree tree, Option<TokenTree> bindingOption)
-    {
-        var binding = bindingOption.Unwrap().Stringify();
-        return new Variable(binding);
-    }
-    protected override Value VisitLiteral(ParseTree tree, Option<TokenTree> tokenTrees)
-    {
-        var token = tokenTrees.Unwrap();
-        return new Literal(token.Stringify());
-    }
-    protected override Value VisitPrefixExpression(ParseTree tree, Option<TokenTree> opOption, Option<ParseTree> rhsOption)
-    {
-        var op = OperatorHelpers.GetOperatorFunctionRef(opOption.Unwrap(), isPrefix: true);
-        var rhs = rhsOption.Unwrap();
+            return result;
+        }
 
-        var result = GetNextVariable();
-        _terms.Push(new ApplicationBinding(result, Value.From(op), [Visit(rhs)]));
+        protected override Value VisitApplication(ParseTree tree)
+        {
+            Variable result = GetNextVariable();
+            Value function = Visit(tree.Children[0]);
 
-        return result;
-    }
-    protected override Value VisitBinaryExpression(
-        ParseTree tree,
-        Option<ParseTree> lhsOption,
-        Option<TokenTree> opOption,
-        Option<ParseTree> rhsOption)
-    {
-        var lhs = lhsOption.Unwrap();
-        var op = OperatorHelpers.GetOperatorFunctionRef(opOption.Unwrap(), isPrefix: false);
-        var rhs = rhsOption.Unwrap();
+            PushUp(new ApplicationBinding(result, function, tree.Children.Skip(1).Select(Visit).ToArray()));
 
-        var result = GetNextVariable();
-        _terms.Push(new ApplicationBinding(result, Value.From(op), [Visit(lhs), Visit(rhs)]));
+            return result;
+        }
+        protected new LambdaTerm VisitBlock(ParseTree tree)
+        {
+            PushSide(null!, out var stemRoot, out var root);
+            _terms = stemRoot;
+            Value expression = Visit(tree.Children[^1]); // last is returning
+            var result = FixExpressions(expression, stemRoot);
+            _terms = root;
+            return result;
+        }
+        protected override Value VisitIfExpression(
+            ParseTree tree,
+            Option<ParseTree> condiotionOption,
+            Option<ParseTree> thenBranchOption,
+            Option<ParseTree> elseBranchOption)
+        {
+            var result = GetNextVariable();
+            Value condition = Visit(condiotionOption.Unwrap());
+            var node = new IfExpressionBinding(result, condition, VisitBlock(thenBranchOption.Unwrap()), VisitBlock(elseBranchOption.Unwrap()));
 
-        return result;
+            PushUp(node);
+            return result;
+        }
+        protected override Value VisitLetBinding(ParseTree tree, Option<ParseTree> patternOption, Option<ParseTree> value)
+        {
+            Variable result = (Variable)Visit(patternOption.Unwrap()); // VisitLetPattern (which will be called) always returns a variable for now
+            PushUp(new ValueBinding(result, Visit(value.Unwrap())));
+            return result;
+        }
+        protected override Variable VisitLetPattern(ParseTree tree, Option<TokenTree> variableOption)
+        {
+            // TODO: patterns and destructuring
+            return new Variable(variableOption.Unwrap().Stringify());
+        }
+        protected override Value VisitBindingReference(ParseTree tree, Option<TokenTree> bindingOption)
+        {
+            string binding = bindingOption.Unwrap().Stringify();
+            return new Variable(binding);
+        }
+        protected override Value VisitLiteral(ParseTree tree, Option<TokenTree> tokenTrees)
+        {
+            TokenTree token = tokenTrees.Unwrap();
+            return new Literal(token.Stringify());
+        }
+        protected override Value VisitPrefixExpression(ParseTree tree, Option<TokenTree> opOption, Option<ParseTree> rhsOption)
+        {
+            FunctionReference op = OperatorHelpers.GetOperatorFunctionRef(opOption.Unwrap(), isPrefix: true);
+            ParseTree rhs = rhsOption.Unwrap();
+
+            Variable result = GetNextVariable();
+            PushUp(new ApplicationBinding(result, Value.From(op), [Visit(rhs)]));
+
+            return result;
+        }
+        protected override Value VisitBinaryExpression(
+            ParseTree tree,
+            Option<ParseTree> lhsOption,
+            Option<TokenTree> opOption,
+            Option<ParseTree> rhsOption)
+        {
+            ParseTree lhs = lhsOption.Unwrap();
+            FunctionReference op = OperatorHelpers.GetOperatorFunctionRef(opOption.Unwrap(), isPrefix: false);
+            ParseTree rhs = rhsOption.Unwrap();
+
+            Variable result = GetNextVariable();
+            PushUp(new ApplicationBinding(result, Value.From(op), [Visit(lhs), Visit(rhs)]));
+
+            return result;
+        }
     }
 }

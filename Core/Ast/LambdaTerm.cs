@@ -5,7 +5,7 @@ using static JFomit.Functional.Prelude;
 namespace DragoonScript.Core.Ast;
 
 /// <summary>
-/// A-normal form lambda calculus
+/// A-normal form for lambda calculus
 /// </summary>
 abstract record LambdaTerm : AstNode;
 //EXP::= VAL 
@@ -90,8 +90,12 @@ record Abstraction(Variable Variable, LambdaTerm Expression) : Value
     }
     public override string Stringify() => $"(\\{Variable.Stringify()}.{Expression.Stringify()})";
 }
-record IfValue(Value Condition, Value Then, Value Else) : Value
+record IfExpressionBinding(Variable Variable, Value Condition, LambdaTerm Then, LambdaTerm Else) : Binding(Variable)
 {
+    public Value Condition { get; set; } = Condition;
+    public LambdaTerm Then { get; set; } = Then;
+    public LambdaTerm Else { get; set; } = Else;
+
     public override IEnumerable<AstNode> Children
     {
         get
@@ -99,8 +103,12 @@ record IfValue(Value Condition, Value Then, Value Else) : Value
             yield return Condition;
             yield return Then;
             yield return Else;
+            if (Expression.TryUnwrap(out var e))
+            {
+                yield return e;
+            }
         }
     }
     public override string Stringify()
-        => $"(if ({Condition.Stringify()}) then ({Then.Stringify()}) else ({Else.Stringify()}))";
+        => $"(let {Variable.Stringify()} = if ({Condition.Stringify()}) then ({Then.Stringify()}) else ({Else.Stringify()}) in {Expression.Unwrap().Stringify()})";
 }

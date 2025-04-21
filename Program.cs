@@ -8,9 +8,7 @@ using JFomit.Functional.Extensions;
 
 var s = """
 fn test x =
-    let q = f x in
-    let a = f a q in
-    q + a
+    if x > 0 then 22 else x + 1
 """;
 
 // fn main () = 2
@@ -48,8 +46,8 @@ var lexer = new Lexer(doc);
 var parser = new Parser(lexer);
 
 var tree = parser.File();
-// var printer = new Printer(false);
-// printer.VisitTree(tree);
+var printer = new Printer(false);
+printer.VisitTree(tree);
 var visitor = new FunctionBodyVisitor();
 var value = visitor.VisitFunctionBody(tree.Children[0]);
 Console.WriteLine(value.Stringify());
