@@ -68,6 +68,14 @@ abstract class AnnotatedSyntaxTreeVisitor<T> : ParseTreeVisitor<T>
                 tree.GetNamedChild("NAME"),
                 tree.GetNamedChild("PARAMS"),
                 tree.GetNamedChild("BODY")),
+            TreeKind.MatchPatternList => VisitMatchPatternList(
+                tree,
+                tree
+                    .Children
+                    .Where(t => t.Kind == TreeKind.BindingPattern)
+                    .Zip(tree.Children.Where(t => t.Kind == TreeKind.BlockExpr))
+                    .ToArray()
+                ),
             TreeKind.BindingPattern => VisitLetPattern(tree, tree.Children[0].AsToken()),
 
             TreeKind.Expr or
@@ -76,11 +84,15 @@ abstract class AnnotatedSyntaxTreeVisitor<T> : ParseTreeVisitor<T>
             TreeKind.IfExpr or
             TreeKind.VariableRefExpr or
             TreeKind.FnApply or
+            TreeKind.MatchExpr or
             TreeKind.LiteralExpr => VisitExpression(tree),
 
             _ => VisitError(tree),
         };
     }
+
+    protected virtual T VisitMatchPatternList(ParseTree tree, (ParseTree bindingPattern, ParseTree expression)[] patterns)
+        => VisitChildren(tree);
 
     protected virtual T VisitExpression(ParseTree tree)
         => tree.Kind switch
@@ -102,6 +114,7 @@ abstract class AnnotatedSyntaxTreeVisitor<T> : ParseTreeVisitor<T>
                 tree.GetNamedChild("THEN"),
                 tree.GetNamedChild("ELSE")
             ),
+            TreeKind.MatchExpr => VisitMatchExpression(tree, tree.GetNamedChild("VALUE"), tree.GetNamedChild("PATTERNS")),
             TreeKind.VariableRefExpr => VisitBindingReference(tree, tree.Children[0].AsToken()),
             TreeKind.LiteralExpr => VisitLiteral(tree, tree.Children[0].AsToken()),
             TreeKind.BlockExpr => VisitBlock(tree),
@@ -110,6 +123,8 @@ abstract class AnnotatedSyntaxTreeVisitor<T> : ParseTreeVisitor<T>
             _ => VisitError(tree)
         };
 
+    protected virtual T VisitMatchExpression(ParseTree tree, Option<ParseTree> value, Option<ParseTree> patterns)
+        => VisitChildren(tree);
     protected virtual T VisitApplication(ParseTree tree)
         => VisitChildren(tree);
 

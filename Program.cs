@@ -7,10 +7,9 @@ using DragoonScript.Syntax.Source;
 using JFomit.Functional.Extensions;
 
 var s = """
-fn ignore x =
-    match x with
-    | A -> if x > 5 then 2 else 4
-    | B -> 3
+fn test x =
+    let q = f (if x > 3 then 42 else x + 2) 17 in
+    q
 """;
 
 // fn main () = 2
@@ -28,7 +27,6 @@ fn ignore x =
 // \~@.(
 //   \main.(main ()) (\().~@ "echo \"Hello, world!\"")
 // ) \str.(system str)
-//
 
 var doc = new SourceDocument("<stdin>", s);
 
@@ -36,11 +34,11 @@ var lexer = new Lexer(doc);
 var parser = new Parser(lexer);
 
 var tree = parser.File();
-var printer = new Printer(false);
-printer.VisitTree(tree);
-// var visitor = new FunctionBodyVisitor();
-// var value = visitor.VisitFunctionBody(tree.Children[0]);
-// Console.WriteLine(value.Stringify());
+// var printer = new Printer(false);
+// printer.VisitTree(tree);
+var visitor = new FunctionBodyVisitor();
+var value = visitor.VisitFunctionBody(tree.Children[0]);
+Console.WriteLine(value.Stringify());
 
 parser.Diagnostics.ForEach(d => d.Print());
 

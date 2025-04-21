@@ -475,7 +475,7 @@ class Parser(TokenStream lexer)
         tree.PushBack(Expect(TokenKind.Match));
         tree.PushBack(Expression(), "VALUE");
         tree.PushBack(Expect(TokenKind.With));
-        tree.PushBack(MatchPatternList());
+        tree.PushBack(MatchPatternList(), "PATTERNS");
 
         return ExitRule(tree, TreeKind.MatchExpr);
 

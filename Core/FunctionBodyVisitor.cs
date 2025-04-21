@@ -62,7 +62,7 @@ class FunctionBodyVisitor : AnnotatedSyntaxTreeVisitor<Value>
 
         var result = _terms.Pop();
         result.Expression = Some<LambdaTerm>(value);
-        while (_terms.TryPop(out var term))
+        while (_terms.TryPop(out var term) && term is not null)
         {
             term.Expression = Some<LambdaTerm>(result);
             result = term;
@@ -80,7 +80,29 @@ class FunctionBodyVisitor : AnnotatedSyntaxTreeVisitor<Value>
 
         return result;
     }
+    // protected override Value VisitMatchExpression(ParseTree tree, Option<ParseTree> value, Option<ParseTree> patterns)
+    // {
 
+    // }
+    // protected override Value VisitMatchPatternList(ParseTree tree, (ParseTree bindingPattern, ParseTree expression)[] patterns)
+    // {
+
+    // }
+    protected override Value VisitIfExpression(
+        ParseTree tree,
+        Option<ParseTree> condiotionOption,
+        Option<ParseTree> thenBranchOption,
+        Option<ParseTree> elseBranchOption)
+    {
+        var condition = Visit(condiotionOption.Unwrap());
+        var then = Visit(thenBranchOption.Unwrap());
+        var @else = Visit(elseBranchOption.Unwrap());
+
+        var result = GetNextVariable();
+        _terms.Push(new IfBinding(result, condition, then, @else));
+
+        return result;
+    }
     protected override Value VisitLetBinding(ParseTree tree, Option<ParseTree> patternOption, Option<ParseTree> value)
     {
         var result = (Variable)Visit(patternOption.Unwrap()); // VisitLetPattern (which will be called) always returns a variable for now

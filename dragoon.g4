@@ -1,4 +1,4 @@
-grammar lang;
+grammar dragoon;
 
 file: declaration* EOF;
 
