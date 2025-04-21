@@ -53,16 +53,19 @@ class FunctionBodyVisitor : AnnotatedSyntaxTreeVisitor<Value>
         return FixExpressions(expression);
     }
 
-    private LambdaTerm FixExpressions(Value value)
+    private Binding FixExpressions(Value value)
     {
         if (_terms.Count == 0)
         {
-            return value;
+            var v = GetNextVariable();
+            var binding = new ValueBinding(v, value);
+            binding.Expression = Some<LambdaTerm>(value);
+            return binding;
         }
 
         var result = _terms.Pop();
         result.Expression = Some<LambdaTerm>(value);
-        while (_terms.TryPop(out var term) && term is not null)
+        while (_terms.TryPop(out var term))
         {
             term.Expression = Some<LambdaTerm>(result);
             result = term;
@@ -82,12 +85,16 @@ class FunctionBodyVisitor : AnnotatedSyntaxTreeVisitor<Value>
     }
     // protected override Value VisitMatchExpression(ParseTree tree, Option<ParseTree> value, Option<ParseTree> patterns)
     // {
-
     // }
     // protected override Value VisitMatchPatternList(ParseTree tree, (ParseTree bindingPattern, ParseTree expression)[] patterns)
     // {
-
     // }
+    protected override Value VisitBlock(ParseTree tree)
+    {
+        var expression = Visit(tree.Children[^1]); // last is returning
+
+        return FixExpressions(expression).Variable;
+    }
     protected override Value VisitIfExpression(
         ParseTree tree,
         Option<ParseTree> condiotionOption,
@@ -98,10 +105,7 @@ class FunctionBodyVisitor : AnnotatedSyntaxTreeVisitor<Value>
         var then = Visit(thenBranchOption.Unwrap());
         var @else = Visit(elseBranchOption.Unwrap());
 
-        var result = GetNextVariable();
-        _terms.Push(new IfBinding(result, condition, then, @else));
-
-        return result;
+        return new IfValue(condition, then, @else);
     }
     protected override Value VisitLetBinding(ParseTree tree, Option<ParseTree> patternOption, Option<ParseTree> value)
     {

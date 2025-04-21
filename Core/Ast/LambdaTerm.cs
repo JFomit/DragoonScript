@@ -16,11 +16,11 @@ abstract record Value : LambdaTerm
     public static Value From(FunctionReference reference) => new FunctionVariable(reference);
     public static Value From(string name) => new Variable(name);
 }
-abstract record Binding : LambdaTerm
+abstract record Binding(Variable Variable) : LambdaTerm
 {
     public Option<LambdaTerm> Expression { get; set; } = None;
 }
-record ValueBinding(Variable Variable, Value Value) : Binding
+record ValueBinding(Variable Variable, Value Value) : Binding(Variable)
 {
     public override IEnumerable<AstNode> Children
     {
@@ -38,7 +38,7 @@ record ValueBinding(Variable Variable, Value Value) : Binding
         => $"(let {Variable.Stringify()} = {Value.Stringify()} in\n{Expression.Unwrap().Stringify()})";
 }
 // TODO: make lambda calculus `correct' by currying right after the parser or *in* the parser
-record ApplicationBinding(Variable Variable, Value Function, Value[] Arguments) : Binding
+record ApplicationBinding(Variable Variable, Value Function, Value[] Arguments) : Binding(Variable)
 {
     public override IEnumerable<AstNode> Children
     {
@@ -58,25 +58,6 @@ record ApplicationBinding(Variable Variable, Value Function, Value[] Arguments) 
     }
     public override string Stringify()
         => $"(let {Variable.Stringify()} = ({Function.Stringify()} {Arguments.Select(a => a.Stringify()).Aggregate((p, n) => $"{p} {n}")}) in\n{Expression.Unwrap().Stringify()})";
-}
-record IfBinding(Variable Variable, Value Condition, Value Then, Value Else) : Binding
-{
-    public override IEnumerable<AstNode> Children
-    {
-        get
-        {
-            yield return Variable;
-            yield return Condition;
-            yield return Then;
-            yield return Else;
-            if (Expression.TryUnwrap(out var e))
-            {
-                yield return e;
-            }
-        }
-    }
-    public override string Stringify()
-        => $"(let {Variable.Stringify()} = if ({Condition.Stringify()}) then ({Then.Stringify()}) else ({Else.Stringify()}) in \n{Expression.Unwrap().Stringify()})";
 }
 
 //VAL ::= VAR
@@ -108,4 +89,18 @@ record Abstraction(Variable Variable, LambdaTerm Expression) : Value
         }
     }
     public override string Stringify() => $"(\\{Variable.Stringify()}.{Expression.Stringify()})";
+}
+record IfValue(Value Condition, Value Then, Value Else) : Value
+{
+    public override IEnumerable<AstNode> Children
+    {
+        get
+        {
+            yield return Condition;
+            yield return Then;
+            yield return Else;
+        }
+    }
+    public override string Stringify()
+        => $"(if ({Condition.Stringify()}) then ({Then.Stringify()}) else ({Else.Stringify()}))";
 }

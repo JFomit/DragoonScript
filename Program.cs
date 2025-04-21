@@ -8,8 +8,9 @@ using JFomit.Functional.Extensions;
 
 var s = """
 fn test x =
-    let q = f (if x > 3 then 42 else x + 2) 17 in
-    q
+    let q = f x in
+    let a = f a q in
+    q + a
 """;
 
 // fn main () = 2
@@ -27,6 +28,19 @@ fn test x =
 // \~@.(
 //   \main.(main ()) (\().~@ "echo \"Hello, world!\"")
 // ) \str.(system str)
+//
+// if x > 3 then
+//   let q = x + 3 in
+//   q
+// else
+//   42
+//      ==
+// let 't0 = x + 3 in
+//   let q = 't0 in
+//     q
+// let 't1 = x > 3 in
+//   let 't2 = if 't1 then 't0 else 42 in
+//     't2
 
 var doc = new SourceDocument("<stdin>", s);
 
