@@ -3,9 +3,9 @@ using DragoonScript.Syntax.Lexing;
 using DragoonScript.Syntax.Utils;
 using DragoonScript.Utils;
 
-namespace DragoonScript;
+namespace DragoonScript.Debugging;
 
-class Printer(bool minify) : ParseTreeVisitor
+class ParseTreePrinter(bool minify) : ParseTreeVisitor
 {
     private int _indent = 0;
     private readonly bool _minify = minify;

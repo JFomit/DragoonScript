@@ -1,6 +1,7 @@
 ﻿using System.Diagnostics;
 using DragoonScript;
 using DragoonScript.Core;
+using DragoonScript.Debugging;
 using DragoonScript.Diagnostics;
 using DragoonScript.Syntax;
 using DragoonScript.Syntax.Source;
@@ -46,11 +47,10 @@ var lexer = new Lexer(doc);
 var parser = new Parser(lexer);
 
 var tree = parser.File();
-var printer = new Printer(false);
-printer.VisitTree(tree);
+// var printer = new ParseTreePrinter(false);
+// printer.VisitTree(tree);
 var visitor = new FunctionBodyVisitor();
 var value = visitor.VisitFunctionBody(tree.Children[0]);
-// Console.WriteLine(value.Stringify());
 
 parser.Diagnostics.ForEach(d => d.Print());
 
