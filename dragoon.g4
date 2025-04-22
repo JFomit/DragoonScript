@@ -48,7 +48,7 @@ prefix_operator
   : op=OPERATOR rhs=expression
   ;
 if_expression
-  : IF condition=expression THEN then=expression ELSE else_=expression
+  : IF condition=expression THEN then=block_expression ELSE else_=block_expression
   ;
 match_expression
   : MATCH value=expression WITH match_pattern_list
