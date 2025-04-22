@@ -3,13 +3,14 @@ using DragoonScript;
 using DragoonScript.Core;
 using DragoonScript.Debugging;
 using DragoonScript.Diagnostics;
+using DragoonScript.Runtime.Interpreter;
 using DragoonScript.Syntax;
 using DragoonScript.Syntax.Source;
 using JFomit.Functional.Extensions;
 
 var s = """
 fn test x =
-    if x > 0 then 22 else x + 1
+    print 4
 """;
 
 // fn main () = 2
@@ -51,6 +52,9 @@ var tree = parser.File();
 // printer.VisitTree(tree);
 var visitor = new FunctionBodyVisitor();
 var value = visitor.VisitFunctionBody(tree.Children[0]);
+
+var exec = new ExecutionVisitor(new());
+exec.Visit(value);
 
 parser.Diagnostics.ForEach(d => d.Print());
 
