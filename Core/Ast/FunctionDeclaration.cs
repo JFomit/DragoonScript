@@ -1,4 +1,6 @@
 
+using DragoonScript.Utils;
+
 namespace DragoonScript.Core.Ast;
 
 enum FunctionKind
@@ -17,4 +19,5 @@ record FunctionDeclaration(string Name, LambdaTerm Body) : AstNode
             yield return Body;
         }
     }
+    public override TResult Accept<TResult>(AstNodeVisitor<TResult> visitor) => visitor.VisitFunctionDeclaration(this);
 }

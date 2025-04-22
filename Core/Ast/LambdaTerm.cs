@@ -1,4 +1,5 @@
 using DragoonScript.Semantic;
+using DragoonScript.Utils;
 using JFomit.Functional.Monads;
 using static JFomit.Functional.Prelude;
 
@@ -34,8 +35,7 @@ record ValueBinding(Variable Variable, Value Value) : Binding(Variable)
             }
         }
     }
-    public override string Stringify()
-        => $"(let {Variable.Stringify()} = {Value.Stringify()} in\n{Expression.Unwrap().Stringify()})";
+    public override TResult Accept<TResult>(AstNodeVisitor<TResult> visitor) => visitor.VisitValueBinding(this);
 }
 // TODO: make lambda calculus `correct' by currying right after the parser or *in* the parser
 record ApplicationBinding(Variable Variable, Value Function, Value[] Arguments) : Binding(Variable)
@@ -56,8 +56,7 @@ record ApplicationBinding(Variable Variable, Value Function, Value[] Arguments) 
             }
         }
     }
-    public override string Stringify()
-        => $"(let {Variable.Stringify()} = ({Function.Stringify()} {Arguments.Select(a => a.Stringify()).Aggregate((p, n) => $"{p} {n}")}) in\n{Expression.Unwrap().Stringify()})";
+    public override TResult Accept<TResult>(AstNodeVisitor<TResult> visitor) => visitor.VisitApplicationBinding(this);
 }
 
 //VAL ::= VAR
@@ -66,17 +65,17 @@ record ApplicationBinding(Variable Variable, Value Function, Value[] Arguments) 
 record Variable(string Name) : Value
 {
     public override IEnumerable<AstNode> Children => [];
-    public override string Stringify() => Name;
+    public override TResult Accept<TResult>(AstNodeVisitor<TResult> visitor) => visitor.VisitVariable(this);
 }
 record FunctionVariable(FunctionReference Function) : Value
 {
     public override IEnumerable<AstNode> Children => [];
-    public override string Stringify() => Function.Name;
+    public override TResult Accept<TResult>(AstNodeVisitor<TResult> visitor) => visitor.VisitFunctionVariable(this);
 }
 record Literal(string Value) : Value
 {
     public override IEnumerable<AstNode> Children => [];
-    public override string Stringify() => Value;
+    public override TResult Accept<TResult>(AstNodeVisitor<TResult> visitor) => visitor.VisitLiteral(this);
 }
 record Abstraction(Variable Variable, LambdaTerm Expression) : Value
 {
@@ -88,14 +87,10 @@ record Abstraction(Variable Variable, LambdaTerm Expression) : Value
             yield return Expression;
         }
     }
-    public override string Stringify() => $"(\\{Variable.Stringify()}.{Expression.Stringify()})";
+    public override TResult Accept<TResult>(AstNodeVisitor<TResult> visitor) => visitor.VisitAbstraction(this);
 }
 record IfExpressionBinding(Variable Variable, Value Condition, LambdaTerm Then, LambdaTerm Else) : Binding(Variable)
 {
-    public Value Condition { get; set; } = Condition;
-    public LambdaTerm Then { get; set; } = Then;
-    public LambdaTerm Else { get; set; } = Else;
-
     public override IEnumerable<AstNode> Children
     {
         get
@@ -109,6 +104,5 @@ record IfExpressionBinding(Variable Variable, Value Condition, LambdaTerm Then, 
             }
         }
     }
-    public override string Stringify()
-        => $"(let {Variable.Stringify()} = if ({Condition.Stringify()}) then ({Then.Stringify()}) else ({Else.Stringify()}) in {Expression.Unwrap().Stringify()})";
+    public override TResult Accept<TResult>(AstNodeVisitor<TResult> visitor) => visitor.VisitIfExpressionBinding(this);
 }

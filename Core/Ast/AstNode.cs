@@ -1,10 +1,10 @@
 using System.Runtime.CompilerServices;
+using DragoonScript.Utils;
 
 namespace DragoonScript.Core.Ast;
 
 abstract record AstNode
 {
     public abstract IEnumerable<AstNode> Children { get; }
-
-    public virtual string Stringify() => $"({Children.Select(c => c.Stringify()).Aggregate((p, n) => $"{p} {n}")})";
+    public abstract TResult Accept<TResult>(AstNodeVisitor<TResult> visitor);
 }

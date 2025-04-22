@@ -50,7 +50,7 @@ var printer = new Printer(false);
 printer.VisitTree(tree);
 var visitor = new FunctionBodyVisitor();
 var value = visitor.VisitFunctionBody(tree.Children[0]);
-Console.WriteLine(value.Stringify());
+// Console.WriteLine(value.Stringify());
 
 parser.Diagnostics.ForEach(d => d.Print());
 
