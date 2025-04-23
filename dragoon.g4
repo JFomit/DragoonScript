@@ -23,6 +23,11 @@ block_expression
   ;
 let_binding
   : LET pattern=binding_pattern IS value=expression IN
+  // TODO: implement proper offside support
+  | LET pattern=binding_pattern IS value=expression NEW_LINE // And rules:
+                                                             // - if line ends with operator, line is continued
+                                                             // - if line ends with identifier, line is continued if next token is operator
+                                                             // - otherwise, this is the end of let pattern
   ;
 expression
   : lhs=primary_expression op=OPERATOR rhs=primary_expression
