@@ -319,8 +319,11 @@ class Parser(TokenStream lexer)
         tree.PushBack(Eat(TokenKind.Let));   // 'let'
         tree.PushBack(BindingPattern(), "PATTERN");     // pattern
         tree.PushBack(Expect(TokenKind.Is)); // '='
-        tree.PushBack(Expression(), "VALUE");         // expression
-        tree.PushBack(Expect(TokenKind.In)); // 'in'
+        tree.PushBack(DelimitedExpression(), "VALUE");         // expression
+        if (At(TokenKind.In))
+        {
+            tree.PushBack(Eat(TokenKind.In)); // 'in'
+        }
 
         return ExitRule(tree, TreeKind.LetBind);
     }
@@ -334,60 +337,60 @@ class Parser(TokenStream lexer)
         return ExitRule(tree, TreeKind.BindingPattern);
     }
 
+    private ParseTree DelimitedExpression() => Expression(0, true);
+
     private ParseTree Expression()
     {
         return Expression(0);
-
-        ParseTree Expression(int minPrecedence)
+    }
+    private static Option<InfixOperator> GetPrecedence(Token op)
+    {
+        if (op.Kind == TokenKind.EoF)
         {
-            var result = PrimaryExpression();
-
-            while (true)
-            {
-                var next = Peek();
-
-                if (next.Kind != TokenKind.Operator)
-                {
-                    break;
-                }
-
-                var (precedence, accosiativity) = GetPrecedence(next).Unwrap();
-                if (precedence < minPrecedence)
-                {
-                    break;
-                }
-
-                var nextMinPrecedence = accosiativity == Associativity.Left ? precedence + 1 : precedence;
-                var op = Eat();
-                var rhs = Expression(nextMinPrecedence);
-
-                var tree = EnterRule();
-
-                tree.PushBack(result, "LHS").PushBack(op, "OP").PushBack(rhs, "RHS");
-
-                result = ExitRule(tree, TreeKind.InfixExpr);
-            }
-
-            return result;
+            return None;
         }
 
-        Option<InfixOperator> GetPrecedence(Token op)
+        var result = InfixOperator.CreateFromToken(op);
+
+        return result.ToOption();
+    }
+    private ParseTree Expression(int minPrecedence, bool isDelimited = false)
+    {
+        var result = PrimaryExpression(isDelimited);
+
+        while (true)
         {
-            if (op.Kind == TokenKind.EoF)
+            var next = Peek();
+
+            if (next.Kind != TokenKind.Operator)
             {
-                return None;
+                break;
             }
 
-            var result = InfixOperator.CreateFromToken(op);
+            var (precedence, accosiativity) = GetPrecedence(next).Unwrap();
+            if (precedence < minPrecedence)
+            {
+                break;
+            }
 
-            return result.ToOption();
+            var nextMinPrecedence = accosiativity == Associativity.Left ? precedence + 1 : precedence;
+            var op = Eat();
+            var rhs = Expression(nextMinPrecedence);
+
+            var tree = EnterRule();
+
+            tree.PushBack(result, "LHS").PushBack(op, "OP").PushBack(rhs, "RHS");
+
+            result = ExitRule(tree, TreeKind.InfixExpr);
         }
+
+        return result;
     }
 
-    private ParseTree PrimaryExpression()
+    private ParseTree PrimaryExpression(bool isDelimited = false)
     {
         var list = new List<ParseTree>();
-        while (IsAtExpressionStart())
+        while (IsAtExpressionStart(isDelimited))
         {
             list.Add(SimplePrimaryExpression());
         }
@@ -502,8 +505,16 @@ class Parser(TokenStream lexer)
 
     private bool IsAtLiteral() => At(TokenKind.Integer) || At(TokenKind.Float) || At(TokenKind.String) || At(TokenKind.Unit);
 
-    bool IsAtExpressionStart()
+    bool IsAtExpressionStart(bool isDelimited = false)
     {
+        if (isDelimited)
+        {
+            if (At(TokenKind.Let) || At(TokenKind.Match) || At(TokenKind.Fn) || At(TokenKind.In) || At(TokenKind.Type))
+            {
+                return false;
+            }
+        }
+
         var simpleStart =
             At(TokenKind.Identifier)
             || IsAtLiteral()
