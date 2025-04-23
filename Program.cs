@@ -5,11 +5,22 @@ using DragoonScript.Debugging;
 using DragoonScript.Diagnostics;
 using DragoonScript.Syntax;
 using DragoonScript.Syntax.Source;
+using JFomit.Functional;
 using JFomit.Functional.Extensions;
 
 var s = """
-fn test x =
-    if x > 0 then 22 else x + 1
+fn (|>) f x = f x
+
+fn run command = shellRun command stdin
+fn run command stdin = shellRunFromPipe command stdin
+
+fn ignore x = ()
+
+fn main =
+  run "echo \"Hello, world!\""
+  |> run "cat"
+  |> run "grep \"world\""
+  |> idgnore
 """;
 
 // fn main () = 2
@@ -47,10 +58,12 @@ var lexer = new Lexer(doc);
 var parser = new Parser(lexer);
 
 var tree = parser.File();
-// var printer = new ParseTreePrinter(false);
-// printer.VisitTree(tree);
-var visitor = new FunctionBodyVisitor();
-var value = visitor.VisitFunctionBody(tree.Children[0]);
+var printer = new ParseTreePrinter(false);
+printer.VisitTree(tree);
+// var visitor = new FunctionBodyVisitor();
+// var value = visitor.VisitFunctionBody(tree.Children[0]);
+// var printer = new AstPrinter();
+// Console.WriteLine(printer.Visit(value));
 
 parser.Diagnostics.ForEach(d => d.Print());
 
