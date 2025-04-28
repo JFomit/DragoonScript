@@ -40,23 +40,15 @@ namespace DragoonScript.Core;
 internal class FunctionBodyVisitor : AnnotatedSyntaxTreeVisitor<Value>
 {
     private int _counter;
-    private ICactusStack<Binding> _terms = CactusStack.CreateRoot<Binding>();
+    private readonly Stack<Binding> _terms = [];
 
     private Variable GetNextVariable() => new($"'t{_counter++}");
 
     public void Reset()
     {
         _counter = 0;
-        _terms = CactusStack.CreateRoot<Binding>();
+        _terms.Clear();
     }
-
-    // public LambdaTerm VisitFunctionBody(ParseTree tree)
-    // {
-    //     Reset();
-    //     Value expression = Visit(tree.Children[^1]); // last is returning
-    //     var body = FixExpressions(expression);
-    //     return new Abstraction(tree.Children.SkipLast(1).Select(Visit).OfType<Variable>().ToArray(), body);
-    // }
 
     protected override Value VisitFunctionDeclaration(ParseTree tree,
         Option<ParseTree> nameOption,
@@ -65,7 +57,7 @@ internal class FunctionBodyVisitor : AnnotatedSyntaxTreeVisitor<Value>
     {
         Reset();
         var body = bodyOption.Unwrap();
-        var expression = FixExpressions(Visit(body));
+        var expression = FixExpressions(VisitBlock(body));
 
         var parametersTree = parametersOption.Unwrap();
         var parameters = parametersTree.Children.Select(VisitFunctionParameter).OfType<Variable>().ToArray();
@@ -75,37 +67,16 @@ internal class FunctionBodyVisitor : AnnotatedSyntaxTreeVisitor<Value>
 
     protected override Value VisitFunctionParameter(ParseTree tree) => new Variable(tree.Stringify());
 
-    private void PushUp(Binding binding)
+    private LambdaTerm FixExpressions(LambdaTerm value)
     {
-        _terms = _terms.PushUp(binding);
-    }
-    private void PushSide(Binding binding, out ICactusStack<Binding> newNode, out ICactusStack<Binding> stemRoot)
-    {
-        stemRoot = _terms.PushSide(binding, out newNode);
-        _terms = newNode;
-    }
-    private bool TryPop(out Binding item)
-    {
-        if (_terms.IsRoot)
-        {
-            item = default!;
-            return false;
-        }
-        item = _terms.Pop(out var parent);
-        _terms = parent!;
-        return true;
-    }
-
-    private LambdaTerm FixExpressions(Value value)
-    {
-        if (_terms.IsRoot)
+        if (_terms.Count == 0)
         {
             return value;
         }
 
-        TryPop(out var result);
-        result.Expression = Some<LambdaTerm>(value);
-        while (TryPop(out var term))
+        var result = _terms.Pop();
+        result.Expression = Some(value);
+        while (_terms.TryPop(out var term))
         {
             term.Expression = Some<LambdaTerm>(result);
             result = term;
@@ -113,20 +84,20 @@ internal class FunctionBodyVisitor : AnnotatedSyntaxTreeVisitor<Value>
 
         return result;
     }
-    private LambdaTerm FixExpressions(Value value, ICactusStack<Binding> sentinel)
+    private LambdaTerm FixExpressions(LambdaTerm value, Binding sentinel)
     {
-        if (_terms.IsRoot)
+        if (_terms.Count == 0)
         {
             return value;
         }
-        if (_terms == sentinel)
+        if (_terms.Peek() == sentinel)
         {
             return value;
         }
 
-        TryPop(out var result);
-        result.Expression = Some<LambdaTerm>(value);
-        while (_terms != sentinel && TryPop(out var term))
+        var result = _terms.Pop();
+        result.Expression = Some(value);
+        while (_terms.Peek() != sentinel && _terms.TryPop(out var term))
         {
             term.Expression = Some<LambdaTerm>(result);
             result = term;
@@ -140,17 +111,18 @@ internal class FunctionBodyVisitor : AnnotatedSyntaxTreeVisitor<Value>
         Variable result = GetNextVariable();
         Value function = Visit(tree.Children[0]);
 
-        PushUp(new ApplicationBinding(result, function, tree.Children.Skip(1).Select(Visit).ToArray()));
+        _terms.Push(new ApplicationBinding(result, function, tree.Children.Skip(1).Select(Visit).ToArray()));
 
         return result;
     }
     protected new LambdaTerm VisitBlock(ParseTree tree)
     {
-        PushSide(null!, out var stemRoot, out var root);
-        _terms = stemRoot;
-        Value expression = Visit(tree.Children[^1]); // last is returning
-        var result = FixExpressions(expression, stemRoot);
-        _terms = root;
+        var nullBinding = new NullBinding();
+        _terms.Push(nullBinding);
+        Value value = Visit(tree.Children[^1]); // last is returning
+        // var expression = new Halt(value);
+        var result = FixExpressions(value, nullBinding);
+        _terms.Pop();
         return result;
     }
     protected override Value VisitIfExpression(
@@ -163,13 +135,13 @@ internal class FunctionBodyVisitor : AnnotatedSyntaxTreeVisitor<Value>
         Value condition = Visit(condiotionOption.Unwrap());
         var node = new IfExpressionBinding(result, condition, VisitBlock(thenBranchOption.Unwrap()), VisitBlock(elseBranchOption.Unwrap()));
 
-        PushUp(node);
+        _terms.Push(node);
         return result;
     }
     protected override Value VisitLetBinding(ParseTree tree, Option<ParseTree> patternOption, Option<ParseTree> value)
     {
         Variable result = (Variable)Visit(patternOption.Unwrap()); // VisitLetPattern (which will be called) always returns a variable for now
-        PushUp(new ValueBinding(result, Visit(value.Unwrap())));
+        _terms.Push(new ValueBinding(result, Visit(value.Unwrap())));
         return result;
     }
     protected override Variable VisitLetPattern(ParseTree tree, Option<TokenTree> variableOption)
@@ -193,7 +165,7 @@ internal class FunctionBodyVisitor : AnnotatedSyntaxTreeVisitor<Value>
         ParseTree rhs = rhsOption.Unwrap();
 
         Variable result = GetNextVariable();
-        PushUp(new ApplicationBinding(result, Value.From(op), [Visit(rhs)]));
+        _terms.Push(new ApplicationBinding(result, Value.From(op), [Visit(rhs)]));
 
         return result;
     }
@@ -208,8 +180,24 @@ internal class FunctionBodyVisitor : AnnotatedSyntaxTreeVisitor<Value>
         ParseTree rhs = rhsOption.Unwrap();
 
         Variable result = GetNextVariable();
-        PushUp(new ApplicationBinding(result, Value.From(op), [Visit(lhs), Visit(rhs)]));
+        _terms.Push(new ApplicationBinding(result, Value.From(op), [Visit(lhs), Visit(rhs)]));
 
         return result;
+    }
+}
+
+file record NullBinding() : Binding((Variable)null!)
+{
+    public override IEnumerable<AstNode> Children
+    {
+        get
+        {
+            throw new InvalidOperationException("Tried to walk a null-binding.");
+        }
+    }
+
+    public override TResult Accept<TResult>(AstNodeVisitor<TResult> visitor)
+    {
+        throw new InvalidOperationException("Tried to visit a null-binding.");
     }
 }
