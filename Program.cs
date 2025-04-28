@@ -15,6 +15,9 @@ fn (||>) pipe command = shellExecuteFromPipe command pipe
 fn run str = shellExecute str
 fn ignore x = ()
 
+fn max x y =
+    if x > y then x else y
+
 fn main = (run "echo \"Hello, world!\"")
   ||> "cat"
   ||> "grep \"world\""
@@ -68,8 +71,8 @@ foreach (var item in tree.Children)
     }
 
     var value = visitor.Visit(item);
-    var printer = new AstPrinter();
-    Console.WriteLine(printer.Visit(value));
+    var printer = new AstConsolePrinter();
+    printer.Visit(value);
     Console.WriteLine();
 }
 
