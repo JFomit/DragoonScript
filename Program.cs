@@ -10,17 +10,15 @@ using JFomit.Functional.Extensions;
 
 var s = """
 fn (|>) f x = f x
+fn (||>) pipe command = shellExecuteFromPipe command pipe
 
-fn run command = shellRun command stdin
-fn run command stdin = shellRunFromPipe command stdin
-
+fn run str = shellExecute str
 fn ignore x = ()
 
-fn main =
-  run "echo \"Hello, world!\""
-  |> run "cat"
-  |> run "grep \"world\""
-  |> idgnore
+fn main = (run "echo \"Hello, world!\"")
+  ||> "cat"
+  ||> "grep \"world\""
+   |> ignore
 """;
 
 // fn main () = 2
@@ -58,12 +56,22 @@ var lexer = new Lexer(doc);
 var parser = new Parser(lexer);
 
 var tree = parser.File();
-var printer = new ParseTreePrinter(false);
-printer.VisitTree(tree);
-// var visitor = new FunctionBodyVisitor();
-// var value = visitor.VisitFunctionBody(tree.Children[0]);
-// var printer = new AstPrinter();
-// Console.WriteLine(printer.Visit(value));
+// var printer = new ParseTreePrinter(false);
+// printer.VisitTree(tree);
+var visitor = new FunctionBodyVisitor();
+
+foreach (var item in tree.Children)
+{
+    if (item.Kind == TreeKind.Token)
+    {
+        continue;
+    }
+
+    var value = visitor.Visit(item);
+    var printer = new AstConsolePrinter();
+    Console.WriteLine(printer.Visit(value));
+    Console.WriteLine();
+}
 
 parser.Diagnostics.ForEach(d => d.Print());
 

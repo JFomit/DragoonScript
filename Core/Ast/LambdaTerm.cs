@@ -12,6 +12,7 @@ abstract record LambdaTerm : AstNode;
 //EXP::= VAL 
 //      | let VAR = VAL in EXP
 //      | let VAR = VAL VAL in EXP
+//      | halt VAL
 abstract record Value : LambdaTerm
 {
     public static Value From(FunctionReference reference) => new FunctionVariable(reference);
@@ -77,13 +78,16 @@ record Literal(string Value) : Value
     public override IEnumerable<AstNode> Children => [];
     public override TResult Accept<TResult>(AstNodeVisitor<TResult> visitor) => visitor.VisitLiteral(this);
 }
-record Abstraction(Variable Variable, LambdaTerm Expression) : Value
+record Abstraction(Variable[] Variables, LambdaTerm Expression) : Value
 {
     public override IEnumerable<AstNode> Children
     {
         get
         {
-            yield return Variable;
+            foreach (var item in Variables)
+            {
+                yield return item;
+            }
             yield return Expression;
         }
     }
@@ -105,4 +109,17 @@ record IfExpressionBinding(Variable Variable, Value Condition, LambdaTerm Then, 
         }
     }
     public override TResult Accept<TResult>(AstNodeVisitor<TResult> visitor) => visitor.VisitIfExpressionBinding(this);
+}
+
+record Halt(Value Value) : Value
+{
+    public override IEnumerable<AstNode> Children
+    {
+        get
+        {
+            yield return Value;
+        }
+    }
+
+    public override TResult Accept<TResult>(AstNodeVisitor<TResult> visitor) => visitor.VisitHalt(Value);
 }

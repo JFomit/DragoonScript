@@ -1,7 +1,9 @@
+using System.Runtime.CompilerServices;
 using DragoonScript.Core.Ast;
 using DragoonScript.Semantic;
 using DragoonScript.Syntax;
 using DragoonScript.Utils;
+using JetBrains.Annotations;
 using JFomit.Functional.Monads;
 using static JFomit.Functional.Prelude;
 
@@ -48,13 +50,30 @@ namespace DragoonScript.Core
             _terms = CactusStack.CreateRoot<Binding>();
         }
 
-        public LambdaTerm VisitFunctionBody(ParseTree tree)
+        // public LambdaTerm VisitFunctionBody(ParseTree tree)
+        // {
+        //     Reset();
+        //     Value expression = Visit(tree.Children[^1]); // last is returning
+        //     var body = FixExpressions(expression);
+        //     return new Abstraction(tree.Children.SkipLast(1).Select(Visit).OfType<Variable>().ToArray(), body);
+        // }
+
+        protected override Value VisitFunctionDeclaration(ParseTree tree,
+            Option<ParseTree> nameOption,
+            Option<ParseTree> parametersOption,
+            Option<ParseTree> bodyOption)
         {
             Reset();
-            Value expression = Visit(tree.Children[^1]); // last is returning
+            var body = bodyOption.Unwrap();
+            var expression = FixExpressions(Visit(body));
 
-            return FixExpressions(expression);
+            var parametersTree = parametersOption.Unwrap();
+            var parameters = parametersTree.Children.Select(VisitFunctionParameter).OfType<Variable>().ToArray();
+
+            return new Abstraction(parameters, expression);
         }
+
+        protected override Value VisitFunctionParameter(ParseTree tree) => new Variable(tree.Stringify());
 
         private void PushUp(Binding binding)
         {
