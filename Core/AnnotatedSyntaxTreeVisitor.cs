@@ -89,6 +89,7 @@ abstract class AnnotatedSyntaxTreeVisitor<T> : ParseTreeVisitor<T>
 
             TreeKind.FnParameter => VisitFunctionParameter(tree),
             TreeKind.FnParameterList => VisitFunctionParameterList(tree, [.. tree.Children]),
+            TreeKind.BlockExpr => VisitBlock(tree),
 
             _ => VisitError(tree),
         };

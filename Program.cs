@@ -68,7 +68,7 @@ foreach (var item in tree.Children)
     }
 
     var value = visitor.Visit(item);
-    var printer = new AstConsolePrinter();
+    var printer = new AstPrinter();
     Console.WriteLine(printer.Visit(value));
     Console.WriteLine();
 }

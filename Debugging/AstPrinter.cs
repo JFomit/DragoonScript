@@ -19,6 +19,8 @@ class AstPrinter : AstNodeVisitor<string>
         => $"(let {Visit(binding.Variable)} = if ({Visit(binding.Condition)}) then ({Visit(binding.Then)}) else ({Visit(binding.Else)}) in\n{Visit(binding.Expression.Unwrap())})";
     public override string VisitAbstraction(Abstraction abstraction)
         => $"\\[{FormatCommaSperated(abstraction.Variables)}].(\n{Visit(abstraction.Expression)}\n)";
+    public override string VisitHalt(Value value)
+        => $"halt {Visit(value)}";
 
     private string FormatCommaSperated(LambdaTerm[] array) => array switch
     {
