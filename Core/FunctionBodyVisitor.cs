@@ -121,8 +121,8 @@ internal class FunctionBodyVisitor : AnnotatedSyntaxTreeVisitor<Value>
         var nullBinding = new NullBinding();
         _terms.Push(nullBinding);
         Value value = Visit(tree.Children[^1]); // last is returning
-        var expression = new Halt(value);
-        var result = FixExpressions(expression, nullBinding);
+        // var expression = new Halt(value);
+        var result = FixExpressions(value, nullBinding);
         _terms.Pop();
         return result;
     }

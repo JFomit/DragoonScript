@@ -3,25 +3,17 @@ using DragoonScript;
 using DragoonScript.Core;
 using DragoonScript.Debugging;
 using DragoonScript.Diagnostics;
+using DragoonScript.Runtime;
 using DragoonScript.Syntax;
 using DragoonScript.Syntax.Source;
 using JFomit.Functional;
 using JFomit.Functional.Extensions;
 
 var s = """
-fn (|>) f x = f x
-fn (||>) pipe command = shellExecuteFromPipe command pipe
-
-fn run str = shellExecute str
-fn ignore x = ()
-
-fn max x y =
-    if x > y then x else y
-
-fn main = (run "echo \"Hello, world!\"")
-  ||> "cat"
-  ||> "grep \"world\""
-   |> ignore
+fn main =
+    let x = 5
+    let y = 18 in
+    print (x + y)
 """;
 
 // fn main () = 2
@@ -63,18 +55,30 @@ var tree = parser.File();
 // printer.VisitTree(tree);
 var visitor = new FunctionBodyVisitor();
 
-foreach (var item in tree.Children)
-{
-    if (item.Kind == TreeKind.Token)
-    {
-        continue;
-    }
+var main = visitor.Visit(tree.Children[0]);
+var printer = new AstConsolePrinter();
+printer.Visit(main);
 
-    var value = visitor.Visit(item);
-    var printer = new AstConsolePrinter();
-    printer.Visit(value);
-    Console.WriteLine();
-}
+var builtIns = new FunctionScope(new()
+{
+    ["+"] = Closure.FromDelegate((double a, double b) => a + b),
+    ["-"] = Closure.FromDelegate((double a, double b) => a - b),
+    ["*"] = Closure.FromDelegate((double a, double b) => a * b),
+    ["/"] = Closure.FromDelegate((double a, double b) => a / b),
+
+    [">"] = Closure.FromDelegate((double a, double b) => a > b),
+    ["<"] = Closure.FromDelegate((double a, double b) => a < b),
+    [">="] = Closure.FromDelegate((double a, double b) => a >= b),
+    ["<="] = Closure.FromDelegate((double a, double b) => a <= b),
+    ["print"] = Closure.FromDelegate((object x) =>
+    {
+        Console.WriteLine(x);
+        return Prelude.Unit;
+    }),
+});
+
+var runner = new Interpreter(builtIns);
+runner.Visit(main);
 
 parser.Diagnostics.ForEach(d => d.Print());
 
