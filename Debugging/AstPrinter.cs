@@ -57,6 +57,29 @@ class AstConsolePrinter : AstNodeVisitor<Unit>
         _indent -= 2;
         return [];
     }
+    public override Unit VisitValueBinding(ValueBinding binding)
+    {
+        var body = binding.Expression.Unwrap();
+        var variable = binding.Variable;
+        var value = binding.Value;
+
+        Console.WriteLine($"{Indent}let {variable.Name} = {FormatAtomic(value)} in");
+        _indent += 2;
+        Visit(body);
+        _indent -= 2;
+
+        return [];
+    }
+    public override Unit VisitLiteral(Literal literal)
+    {
+        Console.WriteLine($"{Indent}{literal.Value}");
+        return [];
+    }
+    public override Unit VisitVariable(Variable variable)
+    {
+        Console.WriteLine($"{Indent}{variable.Name}");
+        return [];
+    }
 
     private static string FormatVariables(LambdaTerm[] array) => array.OfType<Variable>().ToArray() switch
     {

@@ -11,9 +11,7 @@ using JFomit.Functional.Extensions;
 
 var s = """
 fn main =
-    let x = 5
-    let y = 18 in
-    print (x + y)
+    print (if 5 > 4 then 2 else 6)
 """;
 
 // fn main () = 2
@@ -77,8 +75,8 @@ var builtIns = new FunctionScope(new()
     }),
 });
 
-var runner = new Interpreter(builtIns);
-runner.Visit(main);
+// var runner = new Interpreter(builtIns);
+// runner.Visit(main);
 
 parser.Diagnostics.ForEach(d => d.Print());
 
