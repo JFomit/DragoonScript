@@ -1,11 +1,26 @@
-fn (|>) f x = f x
-fn (||>) pipe command = shellExecuteFromPipe command pipe
 
-fn run str = shellExecute str
-fn ignore x = ()
-fn print pipe = shellPrintf pipe
+fn main =
+  let x = 5
+  let y = 18
+  let z = x + y
+  let q = x * z + 24
+  print 89
+  
+  if x > 5 then
+    print x
+  else
+    let y = y + 81
+    print ("Nope!" ++ y)
+  y
 
-fn main = (run "echo Hello, world")
-  ||> "cat"
-  ||> "grep w.rld"
-  ||> print
+fn main =
+|>let x = 5;
+|>let y = 18;
+|>let z = x + y;
+|>let q = x * z + 24;
+|>if x > 5 then
+  |>print x;
+  else
+  |>let y = y + 81;
+  |>print ("Nope!" ++ y);
+|>y;

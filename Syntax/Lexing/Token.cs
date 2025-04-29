@@ -37,6 +37,8 @@ enum TokenKind
     String,
 
     Semi,
+    Indent,
+    Dedent,
 }
 
 readonly struct Token(TokenKind type, SourceSpan view)

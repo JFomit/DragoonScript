@@ -1,10 +1,13 @@
 using System.Buffers;
+using System.Diagnostics;
 using DragoonScript.Syntax.Lexing;
 using DragoonScript.Syntax.Source;
 using JFomit.Functional.Monads;
 using static JFomit.Functional.Prelude;
 
 namespace DragoonScript.Syntax;
+
+internal record struct AlignedBlock(TokenKind Kind, int Offset);
 
 internal class Lexer(SourceDocument inputString) : TokenStream
 {
@@ -15,6 +18,15 @@ internal class Lexer(SourceDocument inputString) : TokenStream
     public override SourceDocument Document { get; } = inputString;
     private static readonly SearchValues<char> OperatorChars = SearchValues.Create(@"!#$%&*+./<=>?@^|-~");
     private readonly Queue<Token> _buffer = [];
+    private readonly Stack<int> _lineIndents = InitStack();
+    private static Stack<int> InitStack()
+    {
+        var stack = new Stack<int>();
+        stack.Push(1);
+        return stack;
+    }
+
+    private Token _last;
 
     public override Token Peek() => Peek(0);
     public override Token Peek(int lookahed)
@@ -140,7 +152,7 @@ internal class Lexer(SourceDocument inputString) : TokenStream
                 return result switch
                 {
                     "->" => Emit(TokenKind.Arrow),
-                    "=" => EmitIs(),
+                    "=" => Emit(TokenKind.Is),
                     "|" => Emit(TokenKind.Pipe),
 
                     _ => Emit(TokenKind.Operator)
@@ -181,15 +193,9 @@ internal class Lexer(SourceDocument inputString) : TokenStream
 
     public override Token Next()
     {
-        if (_buffer.Count > 0)
-        {
-            return _buffer.Dequeue();
-        }
-
-        return NextInternal();
+        _last = _buffer.Count > 0 ? _buffer.Dequeue() : NextInternal();
+        return _last;
     }
-
-    private Token EmitIs() => Emit(TokenKind.Is);
 
     private static ReadOnlySpan<char> Slice(ReadOnlySpan<char> span, Range range)
     {
@@ -215,7 +221,37 @@ internal class Lexer(SourceDocument inputString) : TokenStream
             _column = 1;
         }
 
+        if (_last.Kind == TokenKind.NewLine)
+        {
+            var offside = 1;
+            if (token.Kind == TokenKind.WhiteSpace)
+            {
+                offside += GetWhitespaceLength(token);
+                var current = _lineIndents.Peek();
+
+                if (current < offside)
+                {
+                    _buffer.Enqueue(token);
+                    _lineIndents.Push(offside);
+                    return new(TokenKind.Indent, token.View);
+                }
+                else if (current > offside)
+                {
+                    _buffer.Enqueue(token);
+                    _lineIndents.Pop();
+                    return new(TokenKind.Dedent, token.View);
+                }
+            }
+        }
+
         return token;
+    }
+    private static int GetWhitespaceLength(in Token token)
+    {
+        Debug.Assert(token.Kind == TokenKind.WhiteSpace);
+        var span = token.View.AsSpan();
+        // Tab is eight spaces. This is by design and what Haskell is doing
+        return 8 * span.Count('\t') + span.Count(' ');
     }
 
     private Token EmitEof() => Emit(TokenKind.EoF);//new(TokenKind.EoF, new SourceSpan(Document, Document.Length - 1, 0, _line, _column));

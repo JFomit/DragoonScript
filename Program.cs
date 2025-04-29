@@ -11,7 +11,15 @@ using JFomit.Functional.Extensions;
 
 var s = """
 fn main =
-    print (if 5 > 4 then 2 else 6)
+    let q = 1666
+    if x > 5 then
+        print (x + 1)
+    else
+        print "Bad"
+    let y = 8
+    let z = 8888
+    print (x + y)
+
 """;
 
 // fn main () = 2
@@ -46,6 +54,9 @@ fn main =
 var doc = new SourceDocument("<stdin>", s);
 
 var lexer = new Lexer(doc);
+var blocks = new BlockParser(lexer);
+blocks.PrintBlocks();
+return;
 var parser = new Parser(lexer);
 
 var tree = parser.File();
