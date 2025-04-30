@@ -33,21 +33,21 @@ internal class Lexer(SourceDocument inputString) : TokenStream
     {
         while (_buffer.Count <= lookahed)
         {
-            var next = NextInternal();
-            _buffer.Enqueue(next);
+            NextInternal();
         }
 
         return _buffer.ElementAt(lookahed);
     }
 
-    private Token NextInternal()
+    private void NextInternal()
     {
         var input = Document.Contents.AsSpan();
         var span = Slice(input, _pos..);
         _start = _pos;
         if (span.Length == 0)
         {
-            return EmitEof();
+            EmitEof();
+            return;
         }
 
         switch (span[0])
@@ -57,7 +57,8 @@ internal class Lexer(SourceDocument inputString) : TokenStream
             //     return Emit(TokenKind.Semi);
             case '\n':
                 _pos++;
-                return Emit(TokenKind.NewLine);
+                Emit(TokenKind.NewLine);
+                return;
             case '\t':
             case ' ':
             state_ws:
@@ -65,24 +66,29 @@ internal class Lexer(SourceDocument inputString) : TokenStream
                 span = Slice(input, _pos..);
                 if (span.Length < 1 || (span[0] != ' ' && span[0] != '\t'))
                 {
-                    return Emit(TokenKind.WhiteSpace);
+                    Emit(TokenKind.WhiteSpace);
+                    return;
                 }
                 goto state_ws;
             case ':':
                 _pos++;
-                return Emit(TokenKind.Colon);
+                Emit(TokenKind.Colon);
+                return;
             case '(':
                 _pos++;
                 span = Slice(input, _pos..);
                 if (span.Length < 1 || span[0] != ')')
                 {
-                    return Emit(TokenKind.LParen);
+                    Emit(TokenKind.LParen);
+                    return;
                 }
                 _pos++;
-                return Emit(TokenKind.Unit);
+                Emit(TokenKind.Unit);
+                return;
             case ')':
                 _pos++;
-                return Emit(TokenKind.RParen);
+                Emit(TokenKind.RParen);
+                return;
                 // case '\\':
                 //     _pos++;
                 //     throw new NotImplementedException();
@@ -98,11 +104,13 @@ internal class Lexer(SourceDocument inputString) : TokenStream
                 if (first.Contains('"'))
                 {
                     _pos++;
-                    return Emit(TokenKind.String);
+                    Emit(TokenKind.String);
+                    return;
                 }
                 if (first.Length < 1 || first.Contains('\n'))
                 {
-                    return Emit(TokenKind.Error);
+                    Emit(TokenKind.Error);
+                    return;
                 }
                 if (first.Contains('\\'))
                 {
@@ -124,7 +132,8 @@ internal class Lexer(SourceDocument inputString) : TokenStream
             first = Slice(input, _pos..(_pos + 1));
             if (first.Length < 1)
             {
-                return Emit(isFloat ? TokenKind.Float : TokenKind.Integer);
+                Emit(isFloat ? TokenKind.Float : TokenKind.Integer);
+                return;
             }
 
             if (first[0] == '.')
@@ -135,7 +144,8 @@ internal class Lexer(SourceDocument inputString) : TokenStream
 
             if (first.ContainsAnyExceptInRange('0', '9'))
             {
-                return Emit(isFloat ? TokenKind.Float : TokenKind.Integer);
+                Emit(isFloat ? TokenKind.Float : TokenKind.Integer);
+                return;
             }
             goto numberPart;
         }
@@ -148,15 +158,21 @@ internal class Lexer(SourceDocument inputString) : TokenStream
             if (first.Length < 1 || first.ContainsAnyExcept(OperatorChars))
             {
                 var result = input[_start.._pos];
-
-                return result switch
+                switch (result)
                 {
-                    "->" => Emit(TokenKind.Arrow),
-                    "=" => Emit(TokenKind.Is),
-                    "|" => Emit(TokenKind.Pipe),
-
-                    _ => Emit(TokenKind.Operator)
-                };
+                    case "->":
+                        Emit(TokenKind.Arrow);
+                        return;
+                    case "=":
+                        Emit(TokenKind.Is);
+                        return;
+                    case "|":
+                        Emit(TokenKind.Pipe);
+                        return;
+                    default:
+                        Emit(TokenKind.Operator);
+                        return;
+                }
             }
             goto operatorPart;
         }
@@ -170,30 +186,61 @@ internal class Lexer(SourceDocument inputString) : TokenStream
             {
                 var result = input[_start.._pos];
 
-                return result switch
+                switch (result)
                 {
-                    "fn" => Emit(TokenKind.Fn),
-                    "let" => Emit(TokenKind.Let),
-                    "type" => Emit(TokenKind.Type),
-                    "if" => Emit(TokenKind.If),
-                    "then" => Emit(TokenKind.Then),
-                    "else" => Emit(TokenKind.Else),
-                    "in" => Emit(TokenKind.In),
-                    "match" => Emit(TokenKind.Match),
-                    "with" => Emit(TokenKind.With),
-
-                    _ => Emit(TokenKind.Identifier)
-                };
+                    case "fn":
+                        Emit(TokenKind.Fn);
+                        return;
+                    case "let":
+                        Emit(TokenKind.Let);
+                        return;
+                    case "type":
+                        Emit(TokenKind.Type);
+                        return;
+                    case "if":
+                        Emit(TokenKind.If);
+                        return;
+                    case "then":
+                        Emit(TokenKind.Then);
+                        return;
+                    case "else":
+                        Emit(TokenKind.Else);
+                        return;
+                    case "in":
+                        Emit(TokenKind.In);
+                        return;
+                    case "match":
+                        Emit(TokenKind.Match);
+                        return;
+                    case "with":
+                        Emit(TokenKind.With);
+                        return;
+                    default:
+                        Emit(TokenKind.Identifier);
+                        return;
+                }
             }
             goto identifierPart;
         }
         _pos++;
-        return first.Length == 0 ? EmitEof() : Emit(TokenKind.Error);
+        if (first.Length == 0)
+        {
+            EmitEof();
+        }
+        else
+        {
+            Emit(TokenKind.Error);
+        }
     }
 
     public override Token Next()
     {
-        _last = _buffer.Count > 0 ? _buffer.Dequeue() : NextInternal();
+        if (_buffer.Count == 0)
+        {
+            NextInternal();
+        }
+
+        _last = _buffer.Dequeue();
         return _last;
     }
 
@@ -209,7 +256,7 @@ internal class Lexer(SourceDocument inputString) : TokenStream
         }
     }
 
-    private Token Emit(TokenKind type)
+    private void Emit(TokenKind type)
     {
         var token = new Token(type, new SourceSpan(Document, _start, _pos - _start, _line, _column));
         _column += token.View.Length;
@@ -227,24 +274,43 @@ internal class Lexer(SourceDocument inputString) : TokenStream
             if (token.Kind == TokenKind.WhiteSpace)
             {
                 offside += GetWhitespaceLength(token);
-                var current = _lineIndents.Peek();
 
-                if (current < offside)
-                {
-                    _buffer.Enqueue(token);
-                    _lineIndents.Push(offside);
-                    return new(TokenKind.Indent, token.View);
-                }
-                else if (current > offside)
-                {
-                    _buffer.Enqueue(token);
-                    _lineIndents.Pop();
-                    return new(TokenKind.Dedent, token.View);
-                }
+            }
+
+            var current = _lineIndents.Peek();
+            if (current < offside)
+            {
+                _buffer.Enqueue(new(TokenKind.Indent, token.View));
+                _buffer.Enqueue(token);
+                _lineIndents.Push(offside);
+                return;
+            }
+            else if (current > offside)
+            {
+                _buffer.Enqueue(new(TokenKind.Dedent, token.View));
+                _lineIndents.Pop();
+                _buffer.Enqueue(token);
+                return;
             }
         }
 
-        return token;
+        if (token.Kind == TokenKind.EoF)
+        {
+            if (_lineIndents.Count == 1)
+            {
+                _buffer.Enqueue(token);
+                return;
+            }
+            // pop everything
+            while (_lineIndents.Count > 1)
+            {
+                _lineIndents.Pop();
+                _buffer.Enqueue(new(TokenKind.Dedent, token.View));
+            }
+            return;
+        }
+
+        _buffer.Enqueue(token);
     }
     private static int GetWhitespaceLength(in Token token)
     {
@@ -254,5 +320,5 @@ internal class Lexer(SourceDocument inputString) : TokenStream
         return 8 * span.Count('\t') + span.Count(' ');
     }
 
-    private Token EmitEof() => Emit(TokenKind.EoF);//new(TokenKind.EoF, new SourceSpan(Document, Document.Length - 1, 0, _line, _column));
+    private void EmitEof() => Emit(TokenKind.EoF);//new(TokenKind.EoF, new SourceSpan(Document, Document.Length - 1, 0, _line, _column));
 }

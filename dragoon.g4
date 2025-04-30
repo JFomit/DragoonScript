@@ -9,8 +9,8 @@ declaration
   ;
 
 function_declaration
-  : FN LPAREN name=OPERATOR RPAREN params=parameter_list (COLON type=type_expression) IS body=aligned_block
-  | FN name=IDENTIFIER params=parameter_list (COLON type=type_expression) IS body=aligned_block
+  : FN LPAREN name=OPERATOR RPAREN params=parameter_list (COLON type=type_expression) IS body=block_expression
+  | FN name=IDENTIFIER params=parameter_list (COLON type=type_expression) IS body=block_expression
   ;
 parameter_list
   : parameter*
@@ -18,21 +18,18 @@ parameter_list
 parameter
   : IDENTIFIER
   ;
-aligned_block
-  : aligned_expression+
+block_expression
+  : INDENT standalone_expression+ DEDENT
   | expression
   ;
-aligned_expression
-  : INDENT let_binding
-  | INDENT if_expression
-  | INDENT match_expression
-  | INDENT expression
-  ;
-block_expression
-  : let_binding* expression
+standalone_expression
+  : let_binding
+  | if_expression
+  | match_expression
+  | expression
   ;
 let_binding
-  : LET pattern=binding_pattern IS value=aligned_block
+  : LET pattern=binding_pattern IS value=block_expression
   ;
 expression
   : lhs=primary_expression op=OPERATOR rhs=primary_expression
@@ -58,13 +55,13 @@ prefix_operator
   : op=OPERATOR rhs=expression
   ;
 if_expression
-  : IF condition=expression THEN then=aligned_block ELSE else_=aligned_block
+  : IF condition=expression THEN then=block_expression ELSE else_=block_expression
   ;
 match_expression
   : MATCH value=expression WITH match_pattern_list
   ;
 match_pattern_list
-  : (PIPE binding_pattern ARROW aligned_block)+
+  : (PIPE binding_pattern ARROW block_expression)+
   ;
 binding_pattern
   : IDENTIFIER
@@ -112,3 +109,4 @@ STRING: '"'.*?'"';
 OPERATOR: [!#$%&*+./<=>?@\\^|-~]+;
 
 INDENT: /* Indentations-specific lexer built-in */ WS;
+DEDENT: /* Indentations-specific lexer built-in */ WS;

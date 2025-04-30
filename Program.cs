@@ -11,15 +11,9 @@ using JFomit.Functional.Extensions;
 
 var s = """
 fn main =
-    let q = 1666
-    if x > 5 then
-        print (x + 1)
-    else
-        print "Bad"
-    let y = 8
-    let z = 8888
-    print (x + y)
-
+    let q = 2
+    ()
+fn print = (x + y) * z - 21
 """;
 
 // fn main () = 2
@@ -54,19 +48,21 @@ fn main =
 var doc = new SourceDocument("<stdin>", s);
 
 var lexer = new Lexer(doc);
-var blocks = new BlockParser(lexer);
-blocks.PrintBlocks();
-return;
+// var blocks = new BlockParser(lexer);
+// blocks.PrintBlocks();
 var parser = new Parser(lexer);
 
+Console.WriteLine();
 var tree = parser.File();
-// var printer = new ParseTreePrinter(false);
-// printer.VisitTree(tree);
+var printer = new ParseTreePrinter(false);
+printer.VisitTree(tree);
+parser.Diagnostics.ForEach(d => d.Print());
+return;
 var visitor = new FunctionBodyVisitor();
 
 var main = visitor.Visit(tree.Children[0]);
-var printer = new AstConsolePrinter();
-printer.Visit(main);
+// var printer = new AstConsolePrinter();
+// printer.Visit(main);
 
 var builtIns = new FunctionScope(new()
 {
@@ -88,8 +84,6 @@ var builtIns = new FunctionScope(new()
 
 // var runner = new Interpreter(builtIns);
 // runner.Visit(main);
-
-parser.Diagnostics.ForEach(d => d.Print());
 
 file static class Extensions
 {
@@ -125,5 +119,24 @@ file static class Extensions
         }
         Console.WriteLine(diagnostic.Message);
         diagnostic.Note.Select(s => $"NOTE: {s}").IfSome(Console.WriteLine);
+    }
+}
+
+
+class byRef
+{
+    public static void Byref(ref int q)
+    { }
+}
+
+class Programs
+{
+    int q;
+    public ref int this[int x]
+    {
+        get
+        {
+            return ref q;
+        }
     }
 }

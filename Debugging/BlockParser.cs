@@ -8,7 +8,6 @@ class BlockParser(TokenStream stream)
     private int _offsets = 0;
     public void PrintBlocks()
     {
-        Token last = default;
         while (true)
         {
             var next = _stream.Next();
@@ -29,17 +28,8 @@ class BlockParser(TokenStream stream)
             }
             else
             {
-                if (last.Kind == TokenKind.NewLine)
-                {
-                    Console.Write('=');
-                    Console.Write(new string(' ', _offsets));
-                }
-                else
-                {
-                    Console.Write(next.View.AsSpan().ToString());
-                }
+                Console.Write(next.View.AsSpan().ToString());
             }
-            last = next;
         }
     }
 }

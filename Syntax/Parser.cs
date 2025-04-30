@@ -213,30 +213,48 @@ class Parser(TokenStream lexer)
     {
         var tree = EnterRule();
 
-        if (!At(TokenKind.Let) && !IsAtExpressionStart())
+        if (!IsAtExpressionStart() && !At(TokenKind.Indent))
         {
-            tree.PushBack(GobbleError("Expected a let-biniding or expression."));
+            tree.PushBack(GobbleError("Expected expression or a block."));
+            return ExitRule(tree, TreeKind.BlockExpr);
         }
-
+        if (IsAtExpressionStart())
+        {
+            tree.PushBack(Expression());
+            return ExitRule(tree, TreeKind.BlockExpr);
+        }
+        // else if at TokenKind.Indent
+        tree.PushBack(Expect(TokenKind.Indent));
         while (true)
         {
             if (At(TokenKind.Let))
             {
                 tree.PushBack(LetBinding());
             }
+            else if (At(TokenKind.If))
+            {
+                tree.PushBack(IfExpression());
+            }
+            else if (At(TokenKind.Match))
+            {
+                tree.PushBack(MatchExpression());
+            }
             else if (IsAtExpressionStart())
             {
-                tree.PushBack(Expression(), "RETURN");
+                tree.PushBack(Expression());
+            }
+            else if (At(TokenKind.Dedent))
+            {
+                tree.PushBack(Eat(TokenKind.Dedent));
                 return ExitRule(tree, TreeKind.BlockExpr);
             }
             else
             {
+                var q = Peek();
                 tree.PushBack(GobbleError("Incomplete expression block."));
-                break;
+                return ExitRule(tree, TreeKind.BlockExpr);
             }
         }
-
-        return ExitRule(tree, TreeKind.BlockExpr);
     }
 
     // TypeExpressions ::= '(' type_expression ')' | type_expression '->' type_expression | ID | ID type_expression
@@ -507,6 +525,11 @@ class Parser(TokenStream lexer)
 
     bool IsAtExpressionStart(bool isDelimited = false)
     {
+        if (At(TokenKind.NewLine, skipWs: false))
+        {
+            return false;
+        }
+
         if (isDelimited)
         {
             if (At(TokenKind.Let) || At(TokenKind.Match) || At(TokenKind.Fn) || At(TokenKind.In) || At(TokenKind.Type))
@@ -514,6 +537,7 @@ class Parser(TokenStream lexer)
                 return false;
             }
         }
+
 
         var simpleStart =
             At(TokenKind.Identifier)
