@@ -101,9 +101,6 @@ internal class Lexer(SourceDocument inputString) : TokenStream
                 _pos++;
                 Emit(TokenKind.RParen);
                 return;
-                // case '\\':
-                //     _pos++;
-                //     throw new NotImplementedException();
         }
 
         var first = Slice(input, _pos..(_pos + 1));
@@ -181,6 +178,9 @@ internal class Lexer(SourceDocument inputString) : TokenStream
                     case "|":
                         Emit(TokenKind.Pipe);
                         return;
+                    case "\\":
+                        Emit(TokenKind.Lambda);
+                        return;
                     default:
                         Emit(TokenKind.Operator);
                         return;
@@ -200,6 +200,9 @@ internal class Lexer(SourceDocument inputString) : TokenStream
 
                 switch (result)
                 {
+                    case "λ":
+                        Emit(TokenKind.Lambda);
+                        return;
                     case "fn":
                         Emit(TokenKind.Fn);
                         return;

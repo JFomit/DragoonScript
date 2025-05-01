@@ -11,10 +11,10 @@ using JFomit.Functional.Extensions;
 
 var s = """
 fn (|>) x f = f x
-fn square x = x * x
 
 fn main =
     let x = 5
+    let square = \x -> x * x
     x |> square |> print
 """;
 
@@ -56,16 +56,16 @@ var parser = new Parser(lexer);
 
 var tree = parser.File();
 parser.Diagnostics.ForEach(d => d.Print());
-// var printer = new ParseTreePrinter(false);
-// printer.VisitTree(tree);
-// return;
+var printer = new ParseTreePrinter(false);
+printer.VisitTree(tree);
+return;
 var visitor = new AstBuilder();
 var program = visitor.VisitFile(tree);
-var printer = new AstConsolePrinter();
-foreach (var func in program.Values)
-{
-    printer.Visit(func);
-}
+// var printer = new AstConsolePrinter();
+// foreach (var func in program.Values)
+// {
+//     printer.Visit(func);
+// }
 
 var builtIns = new FunctionScope(new()
 {
