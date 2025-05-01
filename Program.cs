@@ -61,8 +61,11 @@ parser.Diagnostics.ForEach(d => d.Print());
 // return;
 var visitor = new AstBuilder();
 var program = visitor.VisitFile(tree);
-// var printer = new AstConsolePrinter();
-// printer.Visit(main);
+var printer = new AstConsolePrinter();
+foreach (var func in program.Values)
+{
+    printer.Visit(func);
+}
 
 var builtIns = new FunctionScope(new()
 {

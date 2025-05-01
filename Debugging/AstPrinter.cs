@@ -11,6 +11,18 @@ class AstConsolePrinter : AstNodeVisitor<Unit>
     private int _indent = 0;
     private string Indent => new(' ', _indent);
 
+    public override Unit VisitFunctionDeclaration(FunctionDeclaration function)
+    {
+        var name = function.Name;
+        var body = function.Body;
+        var variables = function.Parameters;
+        Console.WriteLine($"{Indent}{name} = \\[{FormatVariables(variables)}].");
+        _indent += 2;
+        Visit(body);
+        _indent -= 2;
+        return [];
+    }
+
     public override Unit VisitAbstraction(Abstraction abstraction)
     {
         var body = abstraction.Expression;
