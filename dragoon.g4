@@ -27,6 +27,7 @@ standalone_expression
   | if_expression
   | match_expression
   | expression
+  | lambda_abstraction
   ;
 let_binding
   : LET pattern=binding_pattern IS value=block_expression
@@ -42,6 +43,9 @@ primary_expression
   | literal
   | LPAREN inner=expression RPAREN
   | prefix_operator
+  ;
+lambda_abstraction
+  : LAMBDA params=parameter_list ARROW block_expression
   ;
 literal
   : INTEGER
@@ -99,6 +103,8 @@ ELSE: 'else';
 IN: 'in';
 MATCH: 'match';
 WITH: 'with';
+
+LAMBDA: '\\' | 'λ';
 
 IDENTIFIER: [a-zA-Z_][a-zA-Z_0-9]*;
 UNIT: '()';

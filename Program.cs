@@ -10,19 +10,12 @@ using JFomit.Functional;
 using JFomit.Functional.Extensions;
 
 var s = """
-fn main =
-  let x = 5
-  let y = 18
-  let z = x + y
-  let q = x * z + 24
-  print 89
+fn (|>) x f = f x
 
-  if x > 5 then
-    print x
-  else
-    let y = y + 81
-    print ("Nope! " ++ y)
-  print y
+fn main =
+    let x = 5
+    let square = \x -> x * x
+    x |> square |> print
 """;
 
 // fn main () = 2
@@ -63,9 +56,9 @@ var parser = new Parser(lexer);
 
 var tree = parser.File();
 parser.Diagnostics.ForEach(d => d.Print());
-// var printer = new ParseTreePrinter(false);
-// printer.VisitTree(tree);
-// return;
+var printer = new ParseTreePrinter(false);
+printer.VisitTree(tree);
+return;
 var visitor = new AstBuilder();
 var program = visitor.VisitFile(tree);
 // var printer = new AstConsolePrinter();
