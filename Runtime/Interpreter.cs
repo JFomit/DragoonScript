@@ -14,11 +14,7 @@ class Interpreter(FunctionScope builtInFunctions) : AstNodeVisitor<object>
 
     public override object VisitAbstraction(Abstraction abstraction)
     {
-        foreach (var item in abstraction.Variables)
-        {
-            Scope.UpdateWithShadow(item.Name, 0.0d);
-        }
-        return Visit(abstraction.Body);
+        return Closure.FromLambda(abstraction);
     }
 
     public override object VisitHalt(Value value) => ExtractValue(value);
@@ -67,8 +63,9 @@ class Interpreter(FunctionScope builtInFunctions) : AstNodeVisitor<object>
         FunctionVariable f => Scope
             .GetValue(f.Function.Name)
             .Expect($"Function not is scope: {f.Function.Name}."),
+        Abstraction a => Closure.FromLambda(a),
 
-        _ => throw new InvalidOperationException("Invalid value.")
+        _ => throw new InvalidOperationException($"Invalid value, got {value.GetType()}.")
     };
     private static object ExtractLiteral(Literal l)
     {

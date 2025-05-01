@@ -107,7 +107,8 @@ class Closure(Func<Interpreter, object[], object> function)
 
         return new((interpreter, otherArgs) =>
         {
-            args = [.. args, .. otherArgs];
+            args = args is null ? otherArgs : ([.. args, .. otherArgs]);
+
             if (args.Length > parameters.Length)
             {
                 throw new InvalidOperationException("Extra arguments.");
@@ -118,13 +119,15 @@ class Closure(Func<Interpreter, object[], object> function)
                 interpreter.PushScope();
                 for (int i = 0; i < args.Length; i++)
                 {
-                    Variable? item = parameters[i];
+                    var item = parameters[i];
                     interpreter.Scope.UpdateWithShadow(item.Name, args[i]);
                 }
-                var result = interpreter.Visit(declaration);
+                var result = interpreter.Visit(body);
                 interpreter.PopScope();
                 return result;
             }
+
+            return FromLambda(abstraction, args);
         });
     }
 }
