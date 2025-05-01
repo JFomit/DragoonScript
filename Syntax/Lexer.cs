@@ -39,6 +39,18 @@ internal class Lexer(SourceDocument inputString) : TokenStream
         return _buffer.ElementAt(lookahed);
     }
 
+    private bool IsOnNewLine()
+    {
+        var input = Document.Contents.AsSpan();
+        var span = Slice(input, _pos..);
+        if (span.Length == 0)
+        {
+            return false;
+        }
+
+        return span[0] == '\n';
+    }
+
     private void NextInternal()
     {
         var input = Document.Contents.AsSpan();
@@ -268,13 +280,18 @@ internal class Lexer(SourceDocument inputString) : TokenStream
             _column = 1;
         }
 
+        if (_last.Kind == TokenKind.NewLine && ((token.Kind == TokenKind.WhiteSpace && IsOnNewLine()) || token.Kind == TokenKind.NewLine))
+        {
+            _buffer.Enqueue(token);
+            return;
+        }
+
         if (_last.Kind == TokenKind.NewLine)
         {
             var offside = 1;
             if (token.Kind == TokenKind.WhiteSpace)
             {
                 offside += GetWhitespaceLength(token);
-
             }
 
             var current = _lineIndents.Peek();

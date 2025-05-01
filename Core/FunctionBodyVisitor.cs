@@ -59,7 +59,6 @@ internal class FunctionBodyVisitor : AnnotatedSyntaxTreeVisitor<Value>
     private readonly Stack<Binding> _terms = [];
 
     private Variable GetNextVariable() => new($"'t{_counter++}");
-    private Variable GetDiscard() => new($"'discard");
 
     public void Reset()
     {

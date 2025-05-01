@@ -1,5 +1,4 @@
 ﻿using System.Diagnostics;
-using System.Net.Http.Headers;
 using DragoonScript;
 using DragoonScript.Core;
 using DragoonScript.Debugging;
@@ -11,9 +10,19 @@ using JFomit.Functional;
 using JFomit.Functional.Extensions;
 
 var s = """
-fn echo =
-    let v = random 1 3
-    print (if v == 1 then "hi" else "bye")
+fn main =
+  let x = 5
+  let y = 18
+  let z = x + y
+  let q = x * z + 24
+  print 89
+  
+  if x > 5 then
+    print x
+  else
+    let y = y + 81
+    print ("Nope!" ++ y)
+  print y
 """;
 
 // fn main () = 2
@@ -60,9 +69,9 @@ parser.Diagnostics.ForEach(d => d.Print());
 var visitor = new FunctionBodyVisitor();
 
 var main = visitor.Visit(tree.Children[0]);
-// var printer = new AstConsolePrinter();
-// printer.Visit(main);
-
+var printer = new AstConsolePrinter();
+printer.Visit(main);
+return;
 var builtIns = new FunctionScope(new()
 {
     ["+"] = Closure.FromDelegate((double a, double b) => a + b),
@@ -76,6 +85,10 @@ var builtIns = new FunctionScope(new()
     ["<="] = Closure.FromDelegate((double a, double b) => a <= b),
     ["=="] = Closure.FromDelegate((double a, double b) => a == b),
     ["!="] = Closure.FromDelegate((double a, double b) => a != b),
+    ["++"] = Closure.FromDelegate((object x, object y) =>
+    {
+        return $"{x}{y}";
+    }),
     ["print"] = Closure.FromDelegate((object x) =>
     {
         Console.WriteLine(x);
