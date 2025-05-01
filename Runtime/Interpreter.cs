@@ -128,6 +128,6 @@ class Interpreter(FunctionScope builtInFunctions) : AstNodeVisitor<object>
             return Prelude.Unit;
         }
 
-        return l.Value.Trim('\"');
+        return l.Value.Replace("\\\"", "\"")[1..^1];
     }
 }

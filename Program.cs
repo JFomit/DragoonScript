@@ -10,12 +10,7 @@ using JFomit.Functional;
 using JFomit.Functional.Extensions;
 
 var s = """
-fn (|>) x f = f x
-fn square x = x * x
-
-fn main =
-    let x = 5
-    x |> square |> print
+fn main = print ("You said: \"" ++ read () ++ "\"!")
 """;
 
 // fn main () = 2
@@ -40,10 +35,10 @@ fn main =
 // else
 //   42
 //      ==
-// let 't0 = x + 3 in
+// let 't0 = + x 3 in
 //   let q = 't0 in
 //     q
-// let 't1 = x > 3 in
+// let 't1 = > x 3 in
 //   let 't2 = if 't1 then 't0 else 42 in
 //     't2
 
@@ -61,11 +56,11 @@ parser.Diagnostics.ForEach(d => d.Print());
 // return;
 var visitor = new AstBuilder();
 var program = visitor.VisitFile(tree);
-var printer = new AstConsolePrinter();
-foreach (var func in program.Values)
-{
-    printer.Visit(func);
-}
+// var printer = new AstConsolePrinter();
+// foreach (var func in program.Values)
+// {
+//     printer.Visit(func);
+// }
 
 var builtIns = new FunctionScope(new()
 {
@@ -83,10 +78,7 @@ var builtIns = new FunctionScope(new()
     ["<="] = Closure.FromDelegate((double a, double b) => a <= b),
     ["=="] = Closure.FromDelegate((double a, double b) => a == b),
     ["!="] = Closure.FromDelegate((double a, double b) => a != b),
-    ["++"] = Closure.FromDelegate((object x, object y) =>
-    {
-        return $"{x}{y}";
-    }),
+    ["++"] = Closure.FromDelegate((object x, object y) => $"{x}{y}"),
     ["print"] = Closure.FromDelegate((object x) =>
     {
         Console.WriteLine(x);
