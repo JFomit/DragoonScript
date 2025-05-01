@@ -304,8 +304,12 @@ internal class Lexer(SourceDocument inputString) : TokenStream
             }
             else if (current > offside)
             {
-                _buffer.Enqueue(new(TokenKind.Dedent, token.View));
-                _lineIndents.Pop();
+                while (current > offside)
+                {
+                    _buffer.Enqueue(new(TokenKind.Dedent, token.View));
+                    _lineIndents.Pop();
+                    current = _lineIndents.Peek();
+                }
                 _buffer.Enqueue(token);
                 return;
             }

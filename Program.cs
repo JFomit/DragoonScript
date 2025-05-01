@@ -11,18 +11,12 @@ using JFomit.Functional.Extensions;
 
 var s = """
 fn main =
-  let x = 5
-  let y = 18
-  let z = x + y
-  let q = x * z + 24
-  print 89
-  
+  let x = 18
   if x > 5 then
-    print x
+    24
   else
-    let y = y + 81
-    print ("Nope!" ++ y)
-  print y
+    42
+fn test = ()
 """;
 
 // fn main () = 2
@@ -62,7 +56,7 @@ var lexer = new Lexer(doc);
 var parser = new Parser(lexer);
 
 var tree = parser.File();
-parser.Diagnostics.ForEach(d => d.Print());
+// parser.Diagnostics.ForEach(d => d.Print());
 // var printer = new ParseTreePrinter(false);
 // printer.VisitTree(tree);
 // return;
@@ -106,7 +100,7 @@ var builtIns = new FunctionScope(new()
 });
 
 var runner = new Interpreter(builtIns);
-runner.Visit(main);
+// runner.Visit(main);
 
 file static class Extensions
 {
