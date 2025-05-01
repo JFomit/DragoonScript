@@ -85,7 +85,7 @@ class Closure(Func<Interpreter, object[], object> function)
 
             if (args.Length == parameters.Length)
             {
-                var childScope = interpreter.Global.Fork();
+                var childScope = interpreter.Scope.Fork();
                 for (int i = 0; i < args.Length; i++)
                 {
                     Variable? item = parameters[i];

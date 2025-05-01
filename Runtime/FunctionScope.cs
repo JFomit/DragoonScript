@@ -25,6 +25,11 @@ class FunctionScope(Dictionary<string, object> values)
         return Parent.SelectMany(name, static (p, name) => p.GetValue(name));
     }
 
+    public void UpdateWithShadow(string name, object value)
+    {
+        Values[name] = value;
+    }
+
     public void UpdateOrAddValue(string name, object value)
     {
         var updated = UpdateValue(name, value);

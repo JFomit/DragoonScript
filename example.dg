@@ -12,15 +12,3 @@ fn main =
     let y = y + 81
     print ("Nope!" ++ y)
   y
-
-fn main =
-|>let x = 5;
-|>let y = 18;
-|>let z = x + y;
-|>let q = x * z + 24;
-|>if x > 5 then
-  |>print x;
-  else
-  |>let y = y + 81;
-  |>print ("Nope!" ++ y);
-|>y;

@@ -10,14 +10,19 @@ using JFomit.Functional;
 using JFomit.Functional.Extensions;
 
 var s = """
-fn (|>) x f = f x
-fn ($) f x = f x
-
-fn add x y = x + y
-
 fn main =
-    let add5 = add 5
-    print (add5 $ 4)
+  let x = 5
+  let y = 18
+  let z = x + y
+  let q = x * z + 24
+  print 89
+
+  if x > 5 then
+    print x
+  else
+    let y = y + 81
+    print ("Nope! " ++ y)
+  print y
 """;
 
 // fn main () = 2
@@ -68,6 +73,7 @@ var program = visitor.VisitFile(tree);
 // {
 //     printer.Visit(func);
 // }
+// Console.WriteLine();
 
 var builtIns = new FunctionScope(new()
 {

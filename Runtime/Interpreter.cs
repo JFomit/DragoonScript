@@ -9,13 +9,14 @@ namespace DragoonScript.Runtime;
 
 class Interpreter(FunctionScope builtInFunctions) : AstNodeVisitor<object>
 {
-    public FunctionScope Global { get; } = builtInFunctions;
+    public FunctionScope Global { get; private set; } = builtInFunctions;
+    public FunctionScope Scope { get; private set; } = builtInFunctions;
 
     public override object VisitAbstraction(Abstraction abstraction)
     {
         foreach (var item in abstraction.Variables)
         {
-            Global.UpdateOrAddValue(item.Name, 0.0d);
+            Scope.UpdateWithShadow(item.Name, 0.0d);
         }
         return Visit(abstraction.Expression);
     }
@@ -26,7 +27,7 @@ class Interpreter(FunctionScope builtInFunctions) : AstNodeVisitor<object>
         var resultName = binding.Variable.Name;
         var function = (Closure)ExtractValue(binding.Function);
         var args = binding.Arguments.Select(ExtractValue).ToArray();
-        Global.UpdateOrAddValue(resultName, function.Call(this, args));
+        Scope.UpdateWithShadow(resultName, function.Call(this, args));
         return Visit(binding.Expression.Unwrap());
     }
 
@@ -37,13 +38,14 @@ class Interpreter(FunctionScope builtInFunctions) : AstNodeVisitor<object>
         var resultName = binding.Variable.Name;
         var condition = Visit(binding.Condition);
 
-        Global.UpdateOrAddValue(resultName, condition switch
+        Scope = Scope.Fork(); // push
+        Scope.UpdateOrAddValue(resultName, condition switch
         {
             true => Visit(binding.Then),
             false => Visit(binding.Else),
-
             _ => throw new InvalidOperationException("Value is not a boolean.")
         });
+        Scope = Scope.Parent.Unwrap(); // pop
 
         return Visit(binding.Expression.Unwrap());
     }
@@ -52,17 +54,17 @@ class Interpreter(FunctionScope builtInFunctions) : AstNodeVisitor<object>
     {
         var variableName = binding.Variable.Name;
         var value = ExtractValue(binding.Value);
-        Global.UpdateOrAddValue(variableName, value);
+        Scope.UpdateWithShadow(variableName, value);
         return Visit(binding.Expression.Unwrap());
     }
 
     private object ExtractValue(Value value) => value switch
     {
         Literal l => ExtractLiteral(l),
-        Variable v => Global
+        Variable v => Scope
             .GetValue(v.Name)
             .Expect($"Variable not is scope: {v.Name}."),
-        FunctionVariable f => Global
+        FunctionVariable f => Scope
             .GetValue(f.Function.Name)
             .Expect($"Function not is scope: {f.Function.Name}."),
 
