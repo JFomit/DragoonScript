@@ -38,14 +38,14 @@ class Interpreter(FunctionScope builtInFunctions) : AstNodeVisitor<object>
         var resultName = binding.Variable.Name;
         var condition = Visit(binding.Condition);
 
-        Scope = Scope.Fork(); // push
+        PushScope();
         Scope.UpdateOrAddValue(resultName, condition switch
         {
             true => Visit(binding.Then),
             false => Visit(binding.Else),
             _ => throw new InvalidOperationException("Value is not a boolean.")
         });
-        Scope = Scope.Parent.Unwrap(); // pop
+        PopScope();
 
         return Visit(binding.Expression.Unwrap());
     }
@@ -82,5 +82,14 @@ class Interpreter(FunctionScope builtInFunctions) : AstNodeVisitor<object>
         }
 
         return l.Value.Replace("\\\"", "\"")[1..^1];
+    }
+
+    public void PushScope()
+    {
+        Scope = Scope.Fork();
+    }
+    public void PopScope()
+    {
+        Scope = Scope.Parent.Unwrap();
     }
 }

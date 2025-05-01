@@ -85,15 +85,15 @@ class Closure(Func<Interpreter, object[], object> function)
 
             if (args.Length == parameters.Length)
             {
-                var childScope = interpreter.Scope.Fork();
+                interpreter.PushScope();
                 for (int i = 0; i < args.Length; i++)
                 {
                     Variable? item = parameters[i];
-                    childScope.UpdateOrAddValue(item.Name, args[i]);
+                    interpreter.Scope.UpdateWithShadow(item.Name, args[i]);
                 }
-
-                var inner = new Interpreter(childScope);
-                return inner.Visit(declaration);
+                var result = interpreter.Visit(declaration);
+                interpreter.PopScope();
+                return result;
             }
 
             return FromDeclarationCurried(declaration, args);
