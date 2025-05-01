@@ -15,7 +15,7 @@ class Interpreter(FunctionScope builtInFunctions) : AstNodeVisitor<object>
     {
         foreach (var item in abstraction.Variables)
         {
-            Global.Update(item.Name, 0.0d, true);
+            Global.UpdateOrAddValue(item.Name, 0.0d);
         }
         return Visit(abstraction.Expression);
     }
@@ -26,7 +26,7 @@ class Interpreter(FunctionScope builtInFunctions) : AstNodeVisitor<object>
         var resultName = binding.Variable.Name;
         var function = (Closure)ExtractValue(binding.Function);
         var args = binding.Arguments.Select(ExtractValue).ToArray();
-        Global.Update(resultName, function.Call(this, args), true).Unwrap();
+        Global.UpdateOrAddValue(resultName, function.Call(this, args));
         return Visit(binding.Expression.Unwrap());
     }
 
@@ -37,13 +37,13 @@ class Interpreter(FunctionScope builtInFunctions) : AstNodeVisitor<object>
         var resultName = binding.Variable.Name;
         var condition = Visit(binding.Condition);
 
-        Global.Update(resultName, condition switch
+        Global.UpdateOrAddValue(resultName, condition switch
         {
             true => Visit(binding.Then),
             false => Visit(binding.Else),
 
             _ => throw new InvalidOperationException("Value is not a boolean.")
-        }, true);
+        });
 
         return Visit(binding.Expression.Unwrap());
     }
@@ -52,7 +52,7 @@ class Interpreter(FunctionScope builtInFunctions) : AstNodeVisitor<object>
     {
         var variableName = binding.Variable.Name;
         var value = ExtractValue(binding.Value);
-        Global.Update(variableName, value, true);
+        Global.UpdateOrAddValue(variableName, value);
         return Visit(binding.Expression.Unwrap());
     }
 
@@ -60,10 +60,10 @@ class Interpreter(FunctionScope builtInFunctions) : AstNodeVisitor<object>
     {
         Literal l => ExtractLiteral(l),
         Variable v => Global
-            .GetVariable(v.Name)
+            .GetValue(v.Name)
             .Expect($"Variable not is scope: {v.Name}."),
         FunctionVariable f => Global
-            .GetVariable(f.Function.Name)
+            .GetValue(f.Function.Name)
             .Expect($"Function not is scope: {f.Function.Name}."),
 
         _ => throw new InvalidOperationException("Invalid value.")

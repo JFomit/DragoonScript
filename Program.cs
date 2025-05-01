@@ -10,7 +10,16 @@ using JFomit.Functional;
 using JFomit.Functional.Extensions;
 
 var s = """
-fn main = print ("You said: \"" ++ read () ++ "\"!")
+fn ($) f x = f x
+fn (|>) x f = f x
+
+fn square x = x * x
+fn add x y = x + y
+
+fn main =
+    let add5 = add 5
+    let eight = add5 3
+    print eight
 """;
 
 // fn main () = 2
@@ -94,6 +103,10 @@ var builtIns = new FunctionScope(new()
         return (double)Random.Shared.Next((int)a, (int)b);
     }),
 });
+foreach (var func in program)
+{
+    builtIns.UpdateOrAddValue(func.Key, Closure.FromDeclaration(func.Value));
+}
 
 var runner = new Interpreter(builtIns);
 runner.Visit(program["main"]);

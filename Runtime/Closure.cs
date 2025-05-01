@@ -74,7 +74,15 @@ class Closure(Func<Interpreter, object[], object> function)
     {
         return new((interpreter, args) =>
         {
-            var i = new Interpreter(interpreter.Global.Current);
+            var childScope = interpreter.Global.Fork();
+
+            for (int i1 = 0; i1 < declaration.Parameters.Length; i1++)
+            {
+                Variable? item = declaration.Parameters[i1];
+                childScope.UpdateOrAddValue(item.Name, args[i1]);
+            }
+
+            var i = new Interpreter(childScope);
             return i.Visit(declaration);
         });
     }
