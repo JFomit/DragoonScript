@@ -27,14 +27,15 @@ standalone_expression
   | if_expression
   | match_expression
   | expression
-  | lambda_abstraction
   ;
 let_binding
-  : LET pattern=binding_pattern IS value=block_expression
+  : LET pattern=binding_pattern IS value=expression
   ;
 expression
-  : lhs=primary_expression op=OPERATOR rhs=primary_expression
-  | function=expression expression+
+  : function=expression expression+
+  | lhs=primary_expression op=OPERATOR rhs=primary_expression
+  | op=OPERATOR rhs=primary_expression
+  | primary_expression
   ;
 primary_expression
   : match_expression

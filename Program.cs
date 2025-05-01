@@ -10,11 +10,11 @@ using JFomit.Functional;
 using JFomit.Functional.Extensions;
 
 var s = """
-fn (|>) x f = f x
+fn (.) g f = \ x -> f (g x)
 
 fn main =
     let x = 5
-    let square = \x -> x * x
+    let square = \ x -> x * x
     x |> square |> print
 """;
 
