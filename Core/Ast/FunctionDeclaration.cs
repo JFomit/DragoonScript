@@ -10,7 +10,7 @@ enum FunctionKind
     PrefixOperator
 }
 
-record FunctionDeclaration(string Name, LambdaTerm Body) : AstNode
+record FunctionDeclaration(string Name, Variable[] Parameters, LambdaTerm Body) : AstNode
 {
     public override IEnumerable<AstNode> Children
     {

@@ -10,9 +10,12 @@ using JFomit.Functional;
 using JFomit.Functional.Extensions;
 
 var s = """
+fn (|>) x f = f x
+fn square x = x * x
+
 fn main =
-    let x = 15
-    print -x
+    let x = 5
+    x |> square |> print
 """;
 
 // fn main () = 2
@@ -52,15 +55,14 @@ var lexer = new Lexer(doc);
 var parser = new Parser(lexer);
 
 var tree = parser.File();
-// parser.Diagnostics.ForEach(d => d.Print());
+parser.Diagnostics.ForEach(d => d.Print());
 // var printer = new ParseTreePrinter(false);
 // printer.VisitTree(tree);
 // return;
-var visitor = new FunctionBodyVisitor();
-
-var main = visitor.Visit(tree.Children[0]);
-var printer = new AstConsolePrinter();
-printer.Visit(main);
+var visitor = new AstBuilder();
+var program = visitor.VisitFile(tree);
+// var printer = new AstConsolePrinter();
+// printer.Visit(main);
 
 var builtIns = new FunctionScope(new()
 {
@@ -99,7 +101,7 @@ var builtIns = new FunctionScope(new()
 });
 
 var runner = new Interpreter(builtIns);
-runner.Visit(main);
+runner.Visit(program["main"]);
 
 file static class Extensions
 {

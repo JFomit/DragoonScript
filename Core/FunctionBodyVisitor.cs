@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using DragoonScript.Core.Ast;
 using DragoonScript.Semantic;
@@ -66,20 +67,35 @@ internal class FunctionBodyVisitor : AnnotatedSyntaxTreeVisitor<Value>
         _terms.Clear();
     }
 
-    protected override Value VisitFunctionDeclaration(ParseTree tree,
-        Option<ParseTree> nameOption,
-        Option<ParseTree> parametersOption,
-        Option<ParseTree> bodyOption)
+    public FunctionDeclaration VisitFunction(ParseTree tree)
     {
-        Reset();
-        var body = bodyOption.Unwrap();
-        var expression = FixExpressions(VisitBlock(body));
+        Debug.Assert(tree.Kind == TreeKind.FnDecl);
 
-        var parametersTree = parametersOption.Unwrap();
+        var body = tree.GetNamedChild("BODY").Unwrap();
+        var name = tree.GetNamedChild("NAME").Unwrap().Stringify();
+        var parametersTree = tree.GetNamedChild("PARAMS").Unwrap();
         var parameters = parametersTree.Children.Select(VisitFunctionParameter).OfType<Variable>().ToArray();
 
-        return new Abstraction(parameters, expression);
+        Reset();
+        var expression = FixExpressions(VisitBlock(body));
+
+        return new FunctionDeclaration(name, parameters, expression);
     }
+
+    // protected override Value VisitFunctionDeclaration(ParseTree tree,
+    //     Option<ParseTree> nameOption,
+    //     Option<ParseTree> parametersOption,
+    //     Option<ParseTree> bodyOption)
+    // {
+    //     Reset();
+    //     var body = bodyOption.Unwrap();
+    //     var expression = FixExpressions(VisitBlock(body));
+
+    //     var parametersTree = parametersOption.Unwrap();
+    //     var parameters = parametersTree.Children.Select(VisitFunctionParameter).OfType<Variable>().ToArray();
+
+    //     return new Abstraction(parameters, expression);
+    // }
 
     protected override Value VisitFunctionParameter(ParseTree tree) => new Variable(tree.Stringify());
 
