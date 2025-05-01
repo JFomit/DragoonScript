@@ -18,7 +18,7 @@ class Interpreter(FunctionScope builtInFunctions) : AstNodeVisitor<object>
         {
             Scope.UpdateWithShadow(item.Name, 0.0d);
         }
-        return Visit(abstraction.Expression);
+        return Visit(abstraction.Body);
     }
 
     public override object VisitHalt(Value value) => ExtractValue(value);

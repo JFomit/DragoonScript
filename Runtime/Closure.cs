@@ -99,4 +99,32 @@ class Closure(Func<Interpreter, object[], object> function)
             return FromDeclarationCurried(declaration, args);
         });
     }
+
+    public static Closure FromLambda(Abstraction abstraction, object[]? args = null)
+    {
+        var parameters = abstraction.Variables;
+        var body = abstraction.Body;
+
+        return new((interpreter, otherArgs) =>
+        {
+            args = [.. args, .. otherArgs];
+            if (args.Length > parameters.Length)
+            {
+                throw new InvalidOperationException("Extra arguments.");
+            }
+
+            if (args.Length == parameters.Length)
+            {
+                interpreter.PushScope();
+                for (int i = 0; i < args.Length; i++)
+                {
+                    Variable? item = parameters[i];
+                    interpreter.Scope.UpdateWithShadow(item.Name, args[i]);
+                }
+                var result = interpreter.Visit(declaration);
+                interpreter.PopScope();
+                return result;
+            }
+        });
+    }
 }

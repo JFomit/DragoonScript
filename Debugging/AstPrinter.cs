@@ -25,7 +25,7 @@ class AstConsolePrinter : AstNodeVisitor<Unit>
 
     public override Unit VisitAbstraction(Abstraction abstraction)
     {
-        var body = abstraction.Expression;
+        var body = abstraction.Body;
         var variables = abstraction.Variables;
         Console.WriteLine($"{Indent}\\[{FormatVariables(variables)}].");
         _indent += 2;

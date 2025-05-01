@@ -78,7 +78,7 @@ record Literal(string Value) : Value
     public override IEnumerable<AstNode> Children => [];
     public override TResult Accept<TResult>(AstNodeVisitor<TResult> visitor) => visitor.VisitLiteral(this);
 }
-record Abstraction(Variable[] Variables, LambdaTerm Expression) : Value
+record Abstraction(Variable[] Variables, LambdaTerm Body) : Value
 {
     public override IEnumerable<AstNode> Children
     {
@@ -88,7 +88,7 @@ record Abstraction(Variable[] Variables, LambdaTerm Expression) : Value
             {
                 yield return item;
             }
-            yield return Expression;
+            yield return Body;
         }
     }
     public override TResult Accept<TResult>(AstNodeVisitor<TResult> visitor) => visitor.VisitAbstraction(this);
