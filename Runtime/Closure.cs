@@ -1,4 +1,5 @@
 using DragoonScript.Core.Ast;
+using JetBrains.Annotations;
 using JFomit.Functional;
 
 namespace DragoonScript.Runtime;
@@ -70,20 +71,32 @@ class Closure(Func<Interpreter, object[], object> function)
         });
     }
 
-    public static Closure FromDeclaration(FunctionDeclaration declaration)
+    public static Closure FromDeclaration(FunctionDeclaration declaration) => FromDeclarationCurried(declaration, []);
+    private static Closure FromDeclarationCurried(FunctionDeclaration declaration, object[] args)
     {
-        return new((interpreter, args) =>
+        var parameters = declaration.Parameters;
+        return new((interpreter, otherArgs) =>
         {
-            var childScope = interpreter.Global.Fork();
-
-            for (int i1 = 0; i1 < declaration.Parameters.Length; i1++)
+            args = [.. args, .. otherArgs];
+            if (args.Length > parameters.Length)
             {
-                Variable? item = declaration.Parameters[i1];
-                childScope.UpdateOrAddValue(item.Name, args[i1]);
+                throw new InvalidOperationException("Extra arguments.");
             }
 
-            var i = new Interpreter(childScope);
-            return i.Visit(declaration);
+            if (args.Length == parameters.Length)
+            {
+                var childScope = interpreter.Global.Fork();
+                for (int i = 0; i < args.Length; i++)
+                {
+                    Variable? item = parameters[i];
+                    childScope.UpdateOrAddValue(item.Name, args[i]);
+                }
+
+                var inner = new Interpreter(childScope);
+                return inner.Visit(declaration);
+            }
+
+            return FromDeclarationCurried(declaration, args);
         });
     }
 }

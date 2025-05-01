@@ -10,16 +10,14 @@ using JFomit.Functional;
 using JFomit.Functional.Extensions;
 
 var s = """
-fn ($) f x = f x
 fn (|>) x f = f x
+fn ($) f x = f x
 
-fn square x = x * x
 fn add x y = x + y
 
 fn main =
     let add5 = add 5
-    let eight = add5 3
-    print eight
+    print (add5 $ 4)
 """;
 
 // fn main () = 2
