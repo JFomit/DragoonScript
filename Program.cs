@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using System.Net.Http.Headers;
 using DragoonScript;
 using DragoonScript.Core;
 using DragoonScript.Debugging;
@@ -10,10 +11,9 @@ using JFomit.Functional;
 using JFomit.Functional.Extensions;
 
 var s = """
-fn main =
-    let q = 2
-    ()
-fn print = (x + y) * z - 21
+fn echo =
+    let v = random 1 3
+    print (if v == 1 then "hi" else "bye")
 """;
 
 // fn main () = 2
@@ -52,12 +52,11 @@ var lexer = new Lexer(doc);
 // blocks.PrintBlocks();
 var parser = new Parser(lexer);
 
-Console.WriteLine();
 var tree = parser.File();
-var printer = new ParseTreePrinter(false);
-printer.VisitTree(tree);
 parser.Diagnostics.ForEach(d => d.Print());
-return;
+// var printer = new ParseTreePrinter(false);
+// printer.VisitTree(tree);
+// return;
 var visitor = new FunctionBodyVisitor();
 
 var main = visitor.Visit(tree.Children[0]);
@@ -75,15 +74,26 @@ var builtIns = new FunctionScope(new()
     ["<"] = Closure.FromDelegate((double a, double b) => a < b),
     [">="] = Closure.FromDelegate((double a, double b) => a >= b),
     ["<="] = Closure.FromDelegate((double a, double b) => a <= b),
+    ["=="] = Closure.FromDelegate((double a, double b) => a == b),
+    ["!="] = Closure.FromDelegate((double a, double b) => a != b),
     ["print"] = Closure.FromDelegate((object x) =>
     {
         Console.WriteLine(x);
         return Prelude.Unit;
     }),
+    ["read"] = Closure.FromDelegate((object x) =>
+    {
+        var str = Console.ReadLine()!;
+        return str;
+    }),
+    ["random"] = Closure.FromDelegate((double a, double b) =>
+    {
+        return (double)Random.Shared.Next((int)a, (int)b);
+    }),
 });
 
-// var runner = new Interpreter(builtIns);
-// runner.Visit(main);
+var runner = new Interpreter(builtIns);
+runner.Visit(main);
 
 file static class Extensions
 {
@@ -119,24 +129,5 @@ file static class Extensions
         }
         Console.WriteLine(diagnostic.Message);
         diagnostic.Note.Select(s => $"NOTE: {s}").IfSome(Console.WriteLine);
-    }
-}
-
-
-class byRef
-{
-    public static void Byref(ref int q)
-    { }
-}
-
-class Programs
-{
-    int q;
-    public ref int this[int x]
-    {
-        get
-        {
-            return ref q;
-        }
     }
 }

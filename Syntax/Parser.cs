@@ -220,7 +220,7 @@ class Parser(TokenStream lexer)
         }
         if (IsAtExpressionStart())
         {
-            tree.PushBack(Expression());
+            tree.PushBack(Expression(), "RETURN");
             return ExitRule(tree, TreeKind.BlockExpr);
         }
         // else if at TokenKind.Indent
@@ -245,12 +245,12 @@ class Parser(TokenStream lexer)
             }
             else if (At(TokenKind.Dedent))
             {
+                tree.UpdateTopName("RETURN");
                 tree.PushBack(Eat(TokenKind.Dedent));
                 return ExitRule(tree, TreeKind.BlockExpr);
             }
             else
             {
-                var q = Peek();
                 tree.PushBack(GobbleError("Incomplete expression block."));
                 return ExitRule(tree, TreeKind.BlockExpr);
             }

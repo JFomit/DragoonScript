@@ -74,15 +74,18 @@ class Interpreter(FunctionScope builtInFunctions) : AstNodeVisitor<object>
     public override object VisitLiteral(Literal literal) => ExtractValue(literal);
     public override object VisitIfExpressionBinding(IfExpressionBinding binding)
     {
+        var resultName = binding.Variable.Name;
         var condition = Visit(binding.Condition);
 
-        return condition switch
+        Scopes.Update(resultName, condition switch
         {
             true => Visit(binding.Then),
             false => Visit(binding.Else),
 
             _ => throw new InvalidOperationException("Value is not a boolean.")
-        };
+        }, true);
+
+        return Visit(binding.Expression.Unwrap());
     }
 
     public override object VisitValueBinding(ValueBinding binding)
@@ -95,7 +98,7 @@ class Interpreter(FunctionScope builtInFunctions) : AstNodeVisitor<object>
 
     private object ExtractValue(Value value) => value switch
     {
-        Literal l => double.Parse(l.Value),
+        Literal l => ExtractLiteral(l),
         Variable v => Scopes
             .GetVariable(v.Name)
             .Expect($"Variable not is scope: {v.Name}."),
@@ -105,4 +108,17 @@ class Interpreter(FunctionScope builtInFunctions) : AstNodeVisitor<object>
 
         _ => throw new InvalidOperationException("Invalid value.")
     };
+    private static object ExtractLiteral(Literal l)
+    {
+        if (double.TryParse(l.Value, out var d))
+        {
+            return d;
+        }
+        if (l.Value == "()")
+        {
+            return Prelude.Unit;
+        }
+
+        return l.Value.Trim('\"');
+    }
 }

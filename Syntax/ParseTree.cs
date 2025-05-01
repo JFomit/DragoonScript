@@ -4,6 +4,7 @@ using JFomit.Functional.Monads;
 using JFomit.Functional.Extensions;
 using static JFomit.Functional.Prelude;
 using DragoonScript.Utils;
+using System.Diagnostics;
 
 namespace DragoonScript.Syntax;
 
@@ -61,6 +62,26 @@ class ParseTree(TreeKind kind = TreeKind.Error) : IParseTreeItem
     public ParseTree PushFront(ParseTree child)
     {
         _children.Insert(0, child);
+        return this;
+    }
+
+    public ParseTree UpdateTopName(string name)
+    {
+        Debug.Assert(_children.Count > 0);
+
+        var child = _children[^1];
+        if (NamedChildren.TryUnwrap(out var dict))
+        {
+            dict.Add(name, child);
+        }
+        else
+        {
+            NamedChildren = Some(new Dictionary<string, ParseTree>()
+            {
+                [name] = child
+            });
+        }
+
         return this;
     }
 

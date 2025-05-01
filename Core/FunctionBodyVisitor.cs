@@ -9,33 +9,49 @@ using static JFomit.Functional.Prelude;
 
 namespace DragoonScript.Core;
 
-//
-// fn main x y = 
-//   let q = x * 2 in
-//   x + f y - x ^ q
-//          =>
-// block
-// |-let q = (*)
-// |          |-x
-// |          |-2
-// |-(-)
-//    |-(+)
-//    |  |-x
-//    |  |-(f)
-//    |     |-y
-//    |-(^)
-//       |-x
-//       |-q
-//          =>
-// let main = \[x y].(
-//   let q = (* x 2) in
-//     let 't0 = (f y) in
-//       let 't1 = (^ x q) in
-//         let 't2 = (+ x 't0) in
-//           let 't3 = (- 't2 't1) in
-//             't3
-// )
-//
+// fn main =
+//   let q = 24
+//   let x = 24
+//   print (q + x)
+//   if x > 5 then
+//     print 4
+//   else
+//     print (q + x)
+//       =>
+// fn main
+// + block
+//   + let q =
+//   |       + 24
+//   + let x =
+//   |       + 24
+//   + print (+)
+//   |        + q
+//   |        + x
+//   + if
+//      + (>)
+//      |  + x
+//      |  + 5
+//      + then
+//      |   + print 4
+//      + else
+//          + print (+)
+//                   + q
+//                   + x
+//         =>
+// \[].
+//   let q = 24 in
+//     let x = 24 in
+//       let 't0 = + q x in
+//         let <discard> = (print 't0) in
+//           let 't1 = > x 5 in
+//             let 't3 = if 't1 then
+//               let 't2 = print 4 in
+//                 't2
+//             else
+//               let 't4 = (+ q x) in
+//                 let 't5 = (print 't4) in
+//                   't5
+//             in 't3
 
 internal class FunctionBodyVisitor : AnnotatedSyntaxTreeVisitor<Value>
 {
@@ -43,6 +59,7 @@ internal class FunctionBodyVisitor : AnnotatedSyntaxTreeVisitor<Value>
     private readonly Stack<Binding> _terms = [];
 
     private Variable GetNextVariable() => new($"'t{_counter++}");
+    private Variable GetDiscard() => new($"'discard");
 
     public void Reset()
     {
@@ -119,8 +136,13 @@ internal class FunctionBodyVisitor : AnnotatedSyntaxTreeVisitor<Value>
     {
         var nullBinding = new NullBinding();
         _terms.Push(nullBinding);
-        Value value = Visit(tree.Children[^1]); // last is returning
-        // var expression = new Halt(value);
+
+        foreach (var child in tree.Children.Where(t => t.Kind != TreeKind.Token).SkipLast(1))
+        {
+            Visit(child);
+        }
+        Value value = Visit(tree.GetNamedChild("RETURN").Unwrap());
+
         var result = FixExpressions(value, nullBinding);
         _terms.Pop();
         return result;

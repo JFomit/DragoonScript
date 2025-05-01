@@ -55,6 +55,10 @@ class AstConsolePrinter : AstNodeVisitor<Unit>
         _indent += 2;
         Visit(@else);
         _indent -= 2;
+        Console.WriteLine($"{Indent}in");
+        _indent += 2;
+        Visit(binding.Expression.Unwrap());
+        _indent -= 2;
         return [];
     }
     public override Unit VisitValueBinding(ValueBinding binding)
