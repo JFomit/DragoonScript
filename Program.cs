@@ -10,11 +10,9 @@ using JFomit.Functional;
 using JFomit.Functional.Extensions;
 
 var s = """
-fn (.) g f = \ x -> f (g x)
-
 fn main =
+    let square = \x -> x * x
     let x = 5
-    let square = \ x -> x * x
     x |> square |> print
 """;
 
@@ -56,17 +54,17 @@ var parser = new Parser(lexer);
 
 var tree = parser.File();
 parser.Diagnostics.ForEach(d => d.Print());
-var printer = new ParseTreePrinter(false);
-printer.VisitTree(tree);
-return;
+// var printer = new ParseTreePrinter(false);
+// printer.VisitTree(tree);
 var visitor = new AstBuilder();
 var program = visitor.VisitFile(tree);
-// var printer = new AstConsolePrinter();
-// foreach (var func in program.Values)
-// {
-//     printer.Visit(func);
-// }
-// Console.WriteLine();
+var printer = new AstConsolePrinter();
+foreach (var func in program.Values)
+{
+    printer.Visit(func);
+}
+Console.WriteLine();
+return;
 
 var builtIns = new FunctionScope(new()
 {

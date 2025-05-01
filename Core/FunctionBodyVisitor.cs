@@ -82,21 +82,6 @@ internal class FunctionBodyVisitor : AnnotatedSyntaxTreeVisitor<Value>
         return new FunctionDeclaration(name, parameters, expression);
     }
 
-    // protected override Value VisitFunctionDeclaration(ParseTree tree,
-    //     Option<ParseTree> nameOption,
-    //     Option<ParseTree> parametersOption,
-    //     Option<ParseTree> bodyOption)
-    // {
-    //     Reset();
-    //     var body = bodyOption.Unwrap();
-    //     var expression = FixExpressions(VisitBlock(body));
-
-    //     var parametersTree = parametersOption.Unwrap();
-    //     var parameters = parametersTree.Children.Select(VisitFunctionParameter).OfType<Variable>().ToArray();
-
-    //     return new Abstraction(parameters, expression);
-    // }
-
     protected override Value VisitFunctionParameter(ParseTree tree) => new Variable(tree.Stringify());
 
     private LambdaTerm FixExpressions(LambdaTerm value)
@@ -175,10 +160,18 @@ internal class FunctionBodyVisitor : AnnotatedSyntaxTreeVisitor<Value>
         _terms.Push(node);
         return result;
     }
+    protected override Value VisitLambdaExpression(ParseTree tree, Option<ParseTree> parametersOption, Option<ParseTree> bodyOption)
+    {
+        var body = VisitBlock(bodyOption.Unwrap());
+        var parameters = parametersOption.Unwrap().Children.Select(VisitFunctionParameter).OfType<Variable>().ToArray();
+
+        return new Abstraction(parameters, body);
+    }
     protected override Value VisitLetBinding(ParseTree tree, Option<ParseTree> patternOption, Option<ParseTree> value)
     {
         Variable result = (Variable)Visit(patternOption.Unwrap()); // VisitLetPattern (which will be called) always returns a variable for now
-        _terms.Push(new ValueBinding(result, Visit(value.Unwrap())));
+        var toAssign = Visit(value.Unwrap());
+        _terms.Push(new ValueBinding(result, toAssign));
         return result;
     }
     protected override Variable VisitLetPattern(ParseTree tree, Option<TokenTree> variableOption)

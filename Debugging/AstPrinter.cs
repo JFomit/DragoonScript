@@ -79,7 +79,18 @@ class AstConsolePrinter : AstNodeVisitor<Unit>
         var variable = binding.Variable;
         var value = binding.Value;
 
-        Console.WriteLine($"{Indent}let {variable.Name} = {FormatAtomic(value)} in");
+        if (value is Abstraction lambda)
+        {
+            Console.WriteLine($"{Indent}let {variable.Name} =");
+            _indent += 2;
+            VisitAbstraction(lambda);
+            _indent -= 2;
+            Console.WriteLine($"{Indent}in");
+        }
+        else
+        {
+            Console.WriteLine($"{Indent}let {variable.Name} = {FormatAtomic(value)} in");
+        }
         _indent += 2;
         Visit(body);
         _indent -= 2;
