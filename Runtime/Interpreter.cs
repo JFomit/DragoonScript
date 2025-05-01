@@ -61,6 +61,15 @@ class Interpreter(FunctionScope builtInFunctions) : AstNodeVisitor<object>
 {
     private readonly FunctionScopeStack Scopes = new(builtInFunctions);
 
+    public override object VisitAbstraction(Abstraction abstraction)
+    {
+        foreach (var item in abstraction.Variables)
+        {
+            Scopes.Update(item.Name, 0.0d, true);
+        }
+        return Visit(abstraction.Expression);
+    }
+
     public override object VisitHalt(Value value) => ExtractValue(value);
     public override object VisitApplicationBinding(ApplicationBinding binding)
     {

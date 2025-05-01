@@ -11,12 +11,8 @@ using JFomit.Functional.Extensions;
 
 var s = """
 fn main =
-  let x = 18
-  if x > 5 then
-    24
-  else
-    42
-fn test = ()
+    let x = 15
+    print -x
 """;
 
 // fn main () = 2
@@ -65,9 +61,12 @@ var visitor = new FunctionBodyVisitor();
 var main = visitor.Visit(tree.Children[0]);
 var printer = new AstConsolePrinter();
 printer.Visit(main);
-return;
+
 var builtIns = new FunctionScope(new()
 {
+    ["~-"] = Closure.FromDelegate((double x) => -x),
+    ["~+"] = Closure.FromDelegate((double x) => +x),
+
     ["+"] = Closure.FromDelegate((double a, double b) => a + b),
     ["-"] = Closure.FromDelegate((double a, double b) => a - b),
     ["*"] = Closure.FromDelegate((double a, double b) => a * b),
@@ -100,7 +99,7 @@ var builtIns = new FunctionScope(new()
 });
 
 var runner = new Interpreter(builtIns);
-// runner.Visit(main);
+runner.Visit(main);
 
 file static class Extensions
 {
