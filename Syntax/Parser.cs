@@ -443,6 +443,10 @@ class Parser(TokenStream lexer)
             {
                 return IfExpression();
             }
+            else if (At(TokenKind.Lambda)) // lambda expression
+            {
+                return LambdaExpression();
+            }
 
             var tree = EnterRule();
             TreeKind kind;
@@ -489,6 +493,16 @@ class Parser(TokenStream lexer)
         tree.PushBack(BlockExpression(), "ELSE");
 
         return ExitRule(tree, TreeKind.IfExpr);
+    }
+    private ParseTree LambdaExpression()
+    {
+        var tree = EnterRule();
+        tree.PushBack(Expect(TokenKind.Lambda));
+        tree.PushBack(ParameterList(), "PARAMS");
+        tree.PushBack(Expect(TokenKind.Arrow));
+        tree.PushBack(BlockExpression(), "BODY");
+
+        return ExitRule(tree, TreeKind.LambdaExpr);
     }
     private ParseTree MatchExpression()
     {
@@ -544,7 +558,8 @@ class Parser(TokenStream lexer)
             || IsAtLiteral()
             || At(TokenKind.If)
             || At(TokenKind.Match)
-            || At(TokenKind.LParen);
+            || At(TokenKind.LParen)
+            || At(TokenKind.Lambda);
 
         if (simpleStart)
         {

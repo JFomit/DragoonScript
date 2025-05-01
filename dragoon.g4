@@ -27,6 +27,7 @@ standalone_expression
   | if_expression
   | match_expression
   | expression
+  | lambda_abstraction
   ;
 let_binding
   : LET pattern=binding_pattern IS value=block_expression
@@ -42,7 +43,6 @@ primary_expression
   | literal
   | LPAREN inner=expression RPAREN
   | prefix_operator
-  | lambda_abstraction
   ;
 lambda_abstraction
   : LAMBDA params=parameter_list ARROW block_expression
