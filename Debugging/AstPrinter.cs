@@ -115,14 +115,24 @@ class AstConsolePrinter : AstNodeVisitor<Unit>
         var a => a.Select(x => x.Name).Aggregate((p, n) => $"{p}, {n}")
     };
 
-    private static string FormatAtomic(Value one) => one switch
+    private string FormatAtomic(Value one) => one switch
     {
         Variable v => v.Name,
         Literal l => l.Value,
         FunctionVariable f => f.Function.Name,
+        Abstraction a => FormatAbstraction(a),
         _ => ""
     };
-    private static string FormatAtomics(Value[] array) => array switch
+    private string FormatAbstraction(Abstraction a)
+    {
+        var str = new StringBuilder();
+        str.AppendLine($"\\{FormatVariables(a.Variables)}.");
+        _indent += 2;
+        Visit(a.Body);
+        _indent -= 2;
+        return str.ToString();
+    }
+    private string FormatAtomics(Value[] array) => array switch
     {
     [] => "",
     [var atomic] => FormatAtomic(atomic),

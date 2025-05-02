@@ -1,4 +1,5 @@
 using DragoonScript.Core.Ast;
+using DragoonScript.Debugging;
 using JetBrains.Annotations;
 using JFomit.Functional;
 
@@ -72,21 +73,23 @@ class Closure(Func<Interpreter, object[], object> function)
     }
 
     public static Closure FromDeclaration(FunctionDeclaration declaration) => FromDeclarationCurried(declaration, []);
-    private static Closure FromDeclarationCurried(FunctionDeclaration declaration, object[] args)
+    private static Closure FromDeclarationCurried(FunctionDeclaration declaration, object[] oldArgs)
     {
         var parameters = declaration.Parameters;
         return new((interpreter, otherArgs) =>
         {
-            args = [.. args, .. otherArgs];
+            var args = new object[oldArgs.Length + otherArgs.Length];
+            Array.Copy(oldArgs, args, oldArgs.Length);
+            Array.Copy(otherArgs, 0, args, oldArgs.Length, otherArgs.Length);
+
             if (args.Length > parameters.Length)
             {
                 throw new InvalidOperationException("Extra arguments.");
             }
-
             if (args.Length == parameters.Length)
             {
                 interpreter.PushScope();
-                for (int i = 0; i < args.Length; i++)
+                for (int i = 0; i < parameters.Length; i++)
                 {
                     Variable? item = parameters[i];
                     interpreter.Scope.UpdateWithShadow(item.Name, args[i]);
@@ -100,14 +103,24 @@ class Closure(Func<Interpreter, object[], object> function)
         });
     }
 
-    public static Closure FromLambda(Abstraction abstraction, object[]? args = null)
+    public static Closure FromLambda(Abstraction abstraction, object[]? oldArgs = null)
     {
         var parameters = abstraction.Variables;
         var body = abstraction.Body;
 
         return new((interpreter, otherArgs) =>
         {
-            args = args is null ? otherArgs : ([.. args, .. otherArgs]);
+            object[] args;
+            if (oldArgs is null)
+            {
+                args = otherArgs;
+            }
+            else
+            {
+                args = new object[oldArgs.Length + otherArgs.Length];
+                Array.Copy(oldArgs, args, oldArgs.Length);
+                Array.Copy(otherArgs, 0, args, oldArgs.Length, otherArgs.Length);
+            }
 
             if (args.Length > parameters.Length)
             {

@@ -64,4 +64,12 @@ class FunctionScope(Dictionary<string, object> values)
         [y.Key] = y.Value
     }, this);
     public FunctionScope Fork(params KeyValuePair<string, object>[] additional) => new(new(additional), this);
+
+    public void Dump()
+    {
+        foreach (var (key, value) in Values)
+        {
+            Console.WriteLine($"{key} = {value}");
+        }
+    }
 }

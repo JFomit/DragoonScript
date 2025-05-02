@@ -26,6 +26,10 @@ class Interpreter(FunctionScope builtInFunctions) : AstNodeVisitor<object>
         Scope.UpdateWithShadow(resultName, function.Call(this, args));
         return Visit(binding.Expression.Unwrap());
     }
+    public override object VisitFunctionDeclaration(FunctionDeclaration function)
+    {
+        return base.VisitFunctionDeclaration(function);
+    }
 
     public override object VisitVariable(Variable variable) => ExtractValue(variable);
     public override object VisitLiteral(Literal literal) => ExtractValue(literal);
