@@ -12,11 +12,10 @@ using JFomit.Functional.Extensions;
 var s = """
 fn add5 x = x + 5
 fn negate x = -x
-fn (.) g f = \x -> (g (f x))
-fn ($) f x = f x
+fn (|>) x f = f x
 
 fn main =
-    print ((negate . add5) $ 4)
+    5 |> add5 |> \x -> x * x |> negate |> print
 """;
 
 // fn main () = 2
@@ -57,17 +56,17 @@ var parser = new Parser(lexer);
 
 var tree = parser.File();
 parser.Diagnostics.ForEach(d => d.Print());
-var parserPrinter = new ParseTreePrinter(false);
-parserPrinter.VisitTree(tree);
+// var parserPrinter = new ParseTreePrinter(false);
+// parserPrinter.VisitTree(tree);
 var visitor = new AstBuilder();
 var program = visitor.VisitFile(tree);
-var printer = new AstConsolePrinter();
-foreach (var func in program.Values)
-{
-    printer.Visit(func);
-}
-Console.WriteLine();
-return;
+// var printer = new AstConsolePrinter();
+// foreach (var func in program.Values)
+// {
+//     printer.Visit(func);
+// }
+// Console.WriteLine();
+// return;
 
 var builtIns = new FunctionScope(new()
 {
