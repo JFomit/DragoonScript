@@ -10,12 +10,10 @@ using JFomit.Functional;
 using JFomit.Functional.Extensions;
 
 var s = """
-fn add5 x = x + 5
-fn negate x = -x
-fn (|>) x f = f x
-
 fn main =
-    5 |> add5 |> \x -> x * x |> negate |> print
+    let x = 15
+    let y = 84
+    print x
 """;
 
 // fn main () = 2
@@ -55,17 +53,16 @@ var lexer = new Lexer(doc);
 var parser = new Parser(lexer);
 var tree = parser.File();
 // parser.Diagnostics.ForEach(d => d.Print());
-// var parserPrinter = new ParseTreePrinter(false);
-// parserPrinter.VisitTree(tree);
+var parserPrinter = new ParseTreePrinter(false);
+parserPrinter.VisitTree(tree);
 var visitor = new AstBuilder();
 var program = visitor.VisitFile(tree);
-// var printer = new AstConsolePrinter();
-// foreach (var func in program.Values)
-// {
-//     printer.Visit(func);
-// }
-// Console.WriteLine();
-// return;
+var printer = new AstConsolePrinter();
+foreach (var func in program.Values)
+{
+    printer.Visit(func);
+}
+Console.WriteLine();
 
 var builtIns = new FunctionScope(new()
 {
@@ -99,10 +96,6 @@ var builtIns = new FunctionScope(new()
         return (double)Random.Shared.Next((int)a, (int)b);
     }),
 });
-foreach (var func in program)
-{
-    builtIns.UpdateOrAddValue(func.Key, Closure.FromDeclaration(func.Value));
-}
 
 var runner = new Interpreter(builtIns);
 runner.Visit(program["main"]);

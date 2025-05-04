@@ -15,30 +15,22 @@ class FunctionScope(Dictionary<string, object> values)
     public Option<FunctionScope> Parent { get; }
     public Dictionary<string, object> Values { get; } = values;
 
-    public Option<object> GetValue(string name)
+    public Option<object> Get(string name)
     {
         if (Values.TryGetValue(name, out var obj))
         {
             return Some(obj);
         }
 
-        return Parent.SelectMany(name, static (p, name) => p.GetValue(name));
+        return Parent.SelectMany(name, static (p, name) => p.Get(name));
     }
 
-    public void UpdateWithShadow(string name, object value)
+    public void Define(string name, object value)
     {
         Values[name] = value;
     }
 
-    public void UpdateOrAddValue(string name, object value)
-    {
-        var updated = UpdateValue(name, value);
-        if (updated.IsNone)
-        {
-            Values[name] = value;
-        }
-    }
-    public Option<Unit> UpdateValue(string name, object value)
+    public Option<Unit> Update(string name, object value)
     {
         if (Values.ContainsKey(name))
         {
@@ -46,7 +38,7 @@ class FunctionScope(Dictionary<string, object> values)
             return Some();
         }
 
-        return Parent.SelectMany((name, value), static (p, ctx) => p.UpdateValue(ctx.name, ctx.value));
+        return Parent.SelectMany((name, value), static (p, ctx) => p.Update(ctx.name, ctx.value));
     }
 
     public FunctionScope Fork() => new([], this);

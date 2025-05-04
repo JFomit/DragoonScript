@@ -1,3 +1,4 @@
+using System.Runtime.InteropServices;
 using DragoonScript.Core.Ast;
 using DragoonScript.Utils;
 using JFomit.Functional;
@@ -7,70 +8,27 @@ using static JFomit.Functional.Prelude;
 
 namespace DragoonScript.Runtime;
 
-class Interpreter(FunctionScope builtInFunctions) : AstNodeVisitor<object>
+class Interpreter(FunctionScope globals) : AstNodeVisitor<object>
 {
-    public FunctionScope Global { get; private set; } = builtInFunctions;
-    public FunctionScope Scope { get; private set; } = builtInFunctions;
-
-    public override object VisitAbstraction(Abstraction abstraction)
-    {
-        return Closure.FromLambda(abstraction);
-    }
-
-    public override object VisitHalt(Value value) => ExtractValue(value);
-    public override object VisitApplicationBinding(ApplicationBinding binding)
-    {
-        var resultName = binding.Variable.Name;
-        var function = (Closure)ExtractValue(binding.Function);
-        var args = binding.Arguments.Select(ExtractValue).ToArray();
-        Scope.UpdateWithShadow(resultName, function.Call(this, args));
-        return Visit(binding.Expression.Unwrap());
-    }
-    public override object VisitFunctionDeclaration(FunctionDeclaration function)
-    {
-        return base.VisitFunctionDeclaration(function);
-    }
-
-    public override object VisitVariable(Variable variable) => ExtractValue(variable);
-    public override object VisitLiteral(Literal literal) => ExtractValue(literal);
-    public override object VisitIfExpressionBinding(IfExpressionBinding binding)
-    {
-        var resultName = binding.Variable.Name;
-        var condition = Visit(binding.Condition);
-
-        PushScope();
-        Scope.UpdateOrAddValue(resultName, condition switch
-        {
-            true => Visit(binding.Then),
-            false => Visit(binding.Else),
-            _ => throw new InvalidOperationException("Value is not a boolean.")
-        });
-        PopScope();
-
-        return Visit(binding.Expression.Unwrap());
-    }
+    public FunctionScope Global { get; } = globals;
+    public FunctionScope Current { get; private set; } = globals.Fork();
 
     public override object VisitValueBinding(ValueBinding binding)
     {
-        var variableName = binding.Variable.Name;
-        var value = ExtractValue(binding.Value);
-        Scope.UpdateWithShadow(variableName, value);
+        var result = binding.Variable;
+        Current.Define(result.Name, Visit(binding.Value));
+        return Visit(binding.Expression.Unwrap());
+    }
+    public override object VisitApplicationBinding(ApplicationBinding binding)
+    {
+        var result = binding.Variable;
+        var function = (Closure)Visit(binding.Function);
+        PushScope();
+        PopScope();
         return Visit(binding.Expression.Unwrap());
     }
 
-    private object ExtractValue(Value value) => value switch
-    {
-        Literal l => ExtractLiteral(l),
-        Variable v => Scope
-            .GetValue(v.Name)
-            .Expect($"Variable not is scope: {v.Name}."),
-        FunctionVariable f => Scope
-            .GetValue(f.Function.Name)
-            .Expect($"Function not is scope: {f.Function.Name}."),
-        Abstraction a => Closure.FromLambda(a),
-
-        _ => throw new InvalidOperationException($"Invalid value, got {value.GetType()}.")
-    };
+    public override object VisitLiteral(Literal literal) => ExtractLiteral(literal);
     private static object ExtractLiteral(Literal l)
     {
         if (double.TryParse(l.Value, out var d))
@@ -87,10 +45,10 @@ class Interpreter(FunctionScope builtInFunctions) : AstNodeVisitor<object>
 
     public void PushScope()
     {
-        Scope = Scope.Fork();
+        Current = Current.Fork();
     }
     public void PopScope()
     {
-        Scope = Scope.Parent.Unwrap();
+        Current = Current.Parent.Unwrap();
     }
 }
