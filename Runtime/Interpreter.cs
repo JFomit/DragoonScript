@@ -30,11 +30,39 @@ class Interpreter(FunctionScope globals) : AstNodeVisitor<object>
     public override object VisitVariable(Variable variable) => Current.Get(variable.Name).Expect($"Variable not in scope: {variable.Name}.");
     public override object VisitFunctionVariable(FunctionVariable variable) => Current.Get(variable.Function.Name).Expect($"Function not in scope: {variable.Function.Name}.");
 
+    public override object VisitIfExpressionBinding(IfExpressionBinding binding)
+    {
+        var result = binding.Variable;
+        var condition = (bool)ExtractValue(binding.Condition);
+        if (condition)
+        {
+            PushScope();
+            var then = Visit(binding.Then);
+            PopScope();
+            Current.Define(result.Name, then);
+        }
+        else
+        {
+            PushScope();
+            var @else = Visit(binding.Else);
+            PopScope();
+            Current.Define(result.Name, @else);
+        }
+
+        return Visit(binding.Expression.Unwrap());
+    }
+    public override object VisitAbstraction(Abstraction abstraction)
+    {
+        var lambda = Closure.FromLambda(abstraction, Current);
+        return lambda;
+    }
+
     private object ExtractValue(Value value) => value switch
     {
         Variable v => Current.Get(v.Name).Unwrap(),
         Literal l => ExtractLiteral(l),
         FunctionVariable f => Current.Get(f.Function.Name).Unwrap(),
+        Abstraction lambda => Closure.FromLambda(lambda, Current),
 
         _ => throw new InvalidOperationException($"Not in scope: {value}.")
     };
@@ -53,6 +81,16 @@ class Interpreter(FunctionScope globals) : AstNodeVisitor<object>
         return l.Value.Replace("\\\"", "\"")[1..^1];
     }
 
+    public FunctionScope PushScope(FunctionScope scope)
+    {
+        var old = Current;
+        Current = scope.Fork();
+        return old;
+    }
+    public void PopScope(FunctionScope old)
+    {
+        Current = old;
+    }
     public void PushScope()
     {
         Current = Current.Fork();

@@ -10,12 +10,20 @@ using JFomit.Functional;
 using JFomit.Functional.Extensions;
 
 var s = """
+fn factorial x =
+    if x == 0 then
+        1
+    else
+        x * (factorial (x - 1))
+
 fn square x = x * x
 
 fn main =
-    let x = 15
-    let y = 84
-    print (square x + y)
+    "The result is " ++ (factorial . (\n -> n + 1) . square $ 2) |> print
+
+fn (|>) x f = f x
+fn ($) f x = f x
+fn (.) g f = \x -> g (f x)
 """;
 
 // fn main () = 2
@@ -56,15 +64,15 @@ var parser = new Parser(lexer);
 var tree = parser.File();
 // parser.Diagnostics.ForEach(d => d.Print());
 var parserPrinter = new ParseTreePrinter(false);
-parserPrinter.VisitTree(tree);
+// parserPrinter.VisitTree(tree);
 var visitor = new AstBuilder();
 var program = visitor.VisitFile(tree);
-var printer = new AstConsolePrinter();
-foreach (var func in program.Values)
-{
-    printer.Visit(func);
-}
-Console.WriteLine();
+// var printer = new AstConsolePrinter();
+// foreach (var func in program.Values)
+// {
+//     printer.Visit(func);
+// }
+// Console.WriteLine();
 
 var builtIns = new FunctionScope(new()
 {
@@ -82,7 +90,9 @@ var builtIns = new FunctionScope(new()
     ["<="] = Closure.FromDelegate((double a, double b) => a <= b),
     ["=="] = Closure.FromDelegate((double a, double b) => a == b),
     ["!="] = Closure.FromDelegate((double a, double b) => a != b),
+
     ["++"] = Closure.FromDelegate((object x, object y) => $"{x}{y}"),
+
     ["print"] = Closure.FromDelegate((object x) =>
     {
         Console.WriteLine(x);

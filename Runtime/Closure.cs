@@ -65,8 +65,6 @@ static class Closure
         }, 2).Curry();
     }
 
-    public static IClosure FromDeclaration(FunctionDeclaration declaration)
-    {
-        return new FunctionClosure(declaration).Curry();
-    }
+    public static IClosure FromDeclaration(FunctionDeclaration declaration) => new FunctionClosure(declaration).Curry();
+    public static IClosure FromLambda(Abstraction abstraction, FunctionScope scope) => new LambdaClosure(abstraction, scope).Curry();
 }
