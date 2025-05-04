@@ -53,9 +53,8 @@ var lexer = new Lexer(doc);
 // var blocks = new BlockParser(lexer);
 // blocks.PrintBlocks();
 var parser = new Parser(lexer);
-
 var tree = parser.File();
-parser.Diagnostics.ForEach(d => d.Print());
+// parser.Diagnostics.ForEach(d => d.Print());
 // var parserPrinter = new ParseTreePrinter(false);
 // parserPrinter.VisitTree(tree);
 var visitor = new AstBuilder();
