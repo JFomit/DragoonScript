@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using DragoonScript.Core.Ast;
 using DragoonScript.Debugging;
 using JetBrains.Annotations;
@@ -5,38 +6,45 @@ using JFomit.Functional;
 
 namespace DragoonScript.Runtime;
 
-class Closure(Func<Interpreter, object[], object> function)
+static class Closure
 {
-    public Func<Interpreter, object[], object> Function { get; } = function;
-
-    public object Call(Interpreter interpreter, object[] args) => Function(interpreter, args);
-
-    public static Closure FromDelegate(Func<Unit> func)
+    public static IClosure Curry(this IClosure inner)
     {
-        return new((_, args) =>
+        var max = inner.MaxArgsCount;
+        if (max == 1)
+        {
+            return inner; // already curried
+        }
+
+        return new CurriedClosure(inner, []);
+    }
+
+    public static IClosure FromDelegate(Func<Unit> func)
+    {
+        return new DelegateClosure((_, args) =>
         {
             if (args.Length > 0)
             {
                 throw new InvalidOperationException("Extra arguments.");
             }
             return func();
-        });
+        }, 0);
     }
 
-    public static Closure FromDelegate<TResult>(Func<TResult> func)
+    public static IClosure FromDelegate<TResult>(Func<TResult> func)
     {
-        return new((_, args) =>
+        return new DelegateClosure((_, args) =>
         {
             if (args.Length > 0)
             {
                 throw new InvalidOperationException("Extra arguments.");
             }
             return func()!;
-        });
+        }, 0);
     }
-    public static Closure FromDelegate<T1, TResult>(Func<T1, TResult> func)
+    public static IClosure FromDelegate<T1, TResult>(Func<T1, TResult> func)
     {
-        return new((_, args) =>
+        return new DelegateClosure((_, args) =>
         {
             if (args.Length > 1)
             {
@@ -47,28 +55,13 @@ class Closure(Func<Interpreter, object[], object> function)
                 throw new InvalidOperationException("Too few arguments provided.");
             }
             return func((T1)args[0])!;
-        });
+        }, 1);
     }
-    public static Closure FromDelegate<T1, T2, TResult>(Func<T1, T2, TResult> func)
+    public static IClosure FromDelegate<T1, T2, TResult>(Func<T1, T2, TResult> func)
     {
-        return new((_, args) =>
+        return new DelegateClosure((_, args) =>
         {
-            if (args.Length > 2)
-            {
-                throw new InvalidOperationException("Extra arguments.");
-            }
-            if (args.Length == 0)
-            {
-                throw new InvalidOperationException("Too few arguments provided.");
-            }
-            if (args.Length == 1)
-            {
-                return FromDelegate<T2, TResult>(next =>
-                {
-                    return func((T1)args[0], next);
-                });
-            }
             return func((T1)args[0], (T2)args[1])!;
-        });
+        }, 2).Curry();
     }
 }
