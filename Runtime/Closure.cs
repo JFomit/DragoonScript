@@ -64,4 +64,9 @@ static class Closure
             return func((T1)args[0], (T2)args[1])!;
         }, 2).Curry();
     }
+
+    public static IClosure FromDeclaration(FunctionDeclaration declaration)
+    {
+        return new FunctionClosure(declaration).Curry();
+    }
 }

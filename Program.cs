@@ -10,10 +10,12 @@ using JFomit.Functional;
 using JFomit.Functional.Extensions;
 
 var s = """
+fn square x = x * x
+
 fn main =
     let x = 15
     let y = 84
-    print x
+    print (square x + y)
 """;
 
 // fn main () = 2
@@ -96,6 +98,12 @@ var builtIns = new FunctionScope(new()
         return (double)Random.Shared.Next((int)a, (int)b);
     }),
 });
+
+// user-defined functions go to global scope
+foreach (var (name, function) in program)
+{
+    builtIns.Define(name, Closure.FromDeclaration(function));
+}
 
 var runner = new Interpreter(builtIns);
 runner.Visit(program["main"]);
