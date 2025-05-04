@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using DragoonScript.Core.Ast;
 
 namespace DragoonScript.Runtime;
@@ -13,7 +14,7 @@ class FunctionClosure(FunctionDeclaration function) : IClosure
         var scope = interpreter.Current;
         for (int i = 0; i < args.Length; i++)
         {
-            scope.Define(Function.Parameters[i].Name, args[i]);
+            Debug.Assert(scope.DefineUniqueOrFork(Function.Parameters[i].Name, args[i], out _));
         }
         var result = interpreter.Visit(Function);
         interpreter.PopScope();

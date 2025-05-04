@@ -552,7 +552,6 @@ class Parser(TokenStream lexer)
             }
         }
 
-
         var simpleStart =
             At(TokenKind.Identifier)
             || IsAtLiteral()

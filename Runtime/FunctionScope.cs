@@ -1,3 +1,5 @@
+using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using JFomit.Functional;
 using JFomit.Functional.Extensions;
 using JFomit.Functional.Monads;
@@ -25,9 +27,17 @@ class FunctionScope(Dictionary<string, object> values)
         return Parent.SelectMany(name, static (p, name) => p.Get(name));
     }
 
-    public void Define(string name, object value)
+    public bool DefineUniqueOrFork(string name, object value, [MaybeNullWhen(true)] out FunctionScope nextScope)
     {
+        if (Values.ContainsKey(name))
+        {
+            nextScope = Fork();
+            Debug.Assert(nextScope.DefineUniqueOrFork(name, value, out _));
+            return false;
+        }
         Values[name] = value;
+        nextScope = null!;
+        return true;
     }
 
     public Option<Unit> Update(string name, object value)

@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using DragoonScript.Core.Ast;
 
 namespace DragoonScript.Runtime;
@@ -15,7 +16,7 @@ class LambdaClosure(Abstraction lambda, FunctionScope currentScope) : IClosure
         var scope = interpreter.Current;
         for (int i = 0; i < args.Length; i++)
         {
-            scope.Define(Lambda.Variables[i].Name, args[i]);
+            Debug.Assert(scope.DefineUniqueOrFork(Lambda.Variables[i].Name, args[i], out _));
         }
         var result = interpreter.Visit(Lambda.Body);
         interpreter.PopScope(old);

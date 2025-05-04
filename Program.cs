@@ -112,7 +112,7 @@ var builtIns = new FunctionScope(new()
 // user-defined functions go to global scope
 foreach (var (name, function) in program)
 {
-    builtIns.Define(name, Closure.FromDeclaration(function));
+    builtIns.DefineUniqueOrFork(name, Closure.FromDeclaration(function), out _);
 }
 
 var runner = new Interpreter(builtIns);
