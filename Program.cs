@@ -10,17 +10,13 @@ using JFomit.Functional;
 using JFomit.Functional.Extensions;
 
 var s = """
-fn factorial x =
-    if x == 0 then
-        1
-    else
-        x * (factorial (x - 1))
 fn loop_rec f i n =
     if i <= n then
         f i
         loop_rec f (i + 1) n
     else
         ()
+
 fn loop f n =
     loop_rec f 1 n
 
