@@ -27,7 +27,7 @@ class FunctionScope(Dictionary<string, object> values)
         return Parent.SelectMany(name, static (p, name) => p.Get(name));
     }
 
-    public bool DefineUniqueOrFork(string name, object value, [MaybeNullWhen(true)] out FunctionScope nextScope)
+    public bool DefineUniqueOrFork(string name, object value, out FunctionScope nextScope)
     {
         if (Values.ContainsKey(name))
         {
@@ -36,7 +36,7 @@ class FunctionScope(Dictionary<string, object> values)
             return false;
         }
         Values[name] = value;
-        nextScope = null!;
+        nextScope = this;
         return true;
     }
 

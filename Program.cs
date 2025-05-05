@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using System.Dynamic;
 using DragoonScript;
 using DragoonScript.Core;
 using DragoonScript.Debugging;
@@ -116,7 +117,7 @@ var builtIns = new FunctionScope(new()
 // user-defined functions go to global scope
 foreach (var (name, function) in program)
 {
-    builtIns.DefineUniqueOrFork(name, Closure.FromDeclaration(function), out _);
+    Debug.Assert(builtIns.DefineUniqueOrFork(name, Closure.FromDeclaration(function), out builtIns));
 }
 
 var runner = new Interpreter(builtIns);

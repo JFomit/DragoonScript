@@ -11,15 +11,17 @@ namespace DragoonScript.Runtime;
 class Interpreter(FunctionScope globals) : AstNodeVisitor<object>
 {
     public FunctionScope Global { get; } = globals;
-    public FunctionScope Current { get; private set; } = globals.Fork();
+    public FunctionScope Current
+    {
+        get => _current;
+        private set => _current = value;
+    }
+    private FunctionScope _current = globals.Fork();
 
     public override object VisitValueBinding(ValueBinding binding)
     {
         var result = binding.Variable;
-        if (!Current.DefineUniqueOrFork(result.Name, ExtractValue(binding.Value), out var nextScope))
-        {
-            Current = nextScope;
-        }
+        Current.DefineUniqueOrFork(result.Name, ExtractValue(binding.Value), out _current);
         return Visit(binding.Expression.Unwrap());
     }
     public override object VisitApplicationBinding(ApplicationBinding binding)
@@ -27,10 +29,7 @@ class Interpreter(FunctionScope globals) : AstNodeVisitor<object>
         var result = binding.Variable;
         var function = (IClosure)Visit(binding.Function);
         var callResult = function.Call(this, binding.Arguments.Select(ExtractValue).ToArray());
-        if (!Current.DefineUniqueOrFork(result.Name, callResult, out var nextScope))
-        {
-            Current = nextScope;
-        }
+        Current.DefineUniqueOrFork(result.Name, callResult, out _current);
         return Visit(binding.Expression.Unwrap());
     }
     public override object VisitVariable(Variable variable) => Current.Get(variable.Name).Expect($"Variable not in scope: {variable.Name}.");
@@ -45,20 +44,14 @@ class Interpreter(FunctionScope globals) : AstNodeVisitor<object>
             PushScope();
             var then = Visit(binding.Then);
             PopScope();
-            if (!Current.DefineUniqueOrFork(result.Name, then, out var nextScope))
-            {
-                Current = nextScope;
-            }
+            Current.DefineUniqueOrFork(result.Name, then, out _current);
         }
         else
         {
             PushScope();
             var @else = Visit(binding.Else);
             PopScope();
-            if (!Current.DefineUniqueOrFork(result.Name, @else, out var nextScope))
-            {
-                Current = nextScope;
-            }
+            Current.DefineUniqueOrFork(result.Name, @else, out _current);
         }
 
         return Visit(binding.Expression.Unwrap());
