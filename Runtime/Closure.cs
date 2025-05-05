@@ -64,6 +64,48 @@ static class Closure
             return func((T1)args[0], (T2)args[1])!;
         }, 2).Curry();
     }
+    public static IClosure Loop()
+    {
+        return new DelegateClosure((interpreter, args) =>
+        {
+            var count = (int)(double)args[0];
+            var func = (IClosure)args[1];
+
+            for (int i = 0; i < count; i++)
+            {
+                func.Call(interpreter, [(double)i]);
+            }
+
+            return Unit.Value;
+        }, 2).Curry();
+    }
+    public static IClosure Repeat()
+    {
+        return new DelegateClosure((interpreter, args) =>
+        {
+            var count = (int)(double)args[0];
+            var func = (IClosure)args[1];
+
+            for (int i = 0; i < count; i++)
+            {
+                func.Call(interpreter, []);
+            }
+
+            return Unit.Value;
+        }, 2).Curry();
+    }
+    public static IClosure InfiniteLoop()
+    {
+        return new DelegateClosure((interpreter, args) =>
+        {
+            var func = (IClosure)args[0];
+
+            while (true)
+            {
+                func.Call(interpreter, []);
+            }
+        }, 1);
+    }
 
     public static IClosure FromDeclaration(FunctionDeclaration declaration) => new FunctionClosure(declaration).Curry();
     public static IClosure FromLambda(Abstraction abstraction, FunctionScope scope) => new LambdaClosure(abstraction, scope).Curry();

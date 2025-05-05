@@ -11,20 +11,12 @@ using JFomit.Functional;
 using JFomit.Functional.Extensions;
 
 var s = """
-fn loop_rec f i n =
-    if i <= n then
-        f i
-        loop_rec f (i + 1) n
-    else
-        ()
-
-fn loop f n =
-    loop_rec f 1 n
-
-fn square x = x * x
+fn talk =
+    let name = print "What is your name?" |> read
+    print ("Excellent! Your name is " ++ name ++ "!")
 
 fn main =
-    loop (\i -> print i) 10
+    forever talk
 
 fn (|>) x f = f x
 fn ($) f x = f x
@@ -112,6 +104,9 @@ var builtIns = new FunctionScope(new()
     {
         return (double)Random.Shared.Next((int)a, (int)b);
     }),
+    ["loop"] = Closure.Loop(),
+    ["repeat"] = Closure.Repeat(),
+    ["forever"] = Closure.InfiniteLoop(),
 });
 
 // user-defined functions go to global scope

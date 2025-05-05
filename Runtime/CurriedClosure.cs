@@ -11,7 +11,7 @@ class CurriedClosure(IClosure inner, object[] bound) : IClosure
     {
         if (args.Length == MaxArgsCount) // perfect forwarding
         {
-            return Inner.Call(interpreter, args);
+            return Inner.Call(interpreter, [.. Bound, .. args]);
         }
 
         if (args.Length > MaxArgsCount)

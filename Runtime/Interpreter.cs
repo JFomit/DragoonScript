@@ -28,9 +28,17 @@ class Interpreter(FunctionScope globals) : AstNodeVisitor<object>
     {
         var result = binding.Variable;
         var function = (IClosure)Visit(binding.Function);
-        var callResult = function.Call(this, binding.Arguments.Select(ExtractValue).ToArray());
+        var expression = binding.Expression.Unwrap();
+        var args = binding.Arguments.Select(ExtractValue).ToArray();
+
+        // if (expression is Variable variable && variable.Name == result.Name)
+        // {
+
+        // }
+
+        var callResult = function.Call(this, args);
         Current.DefineUniqueOrFork(result.Name, callResult, out _current);
-        return Visit(binding.Expression.Unwrap());
+        return Visit(expression);
     }
     public override object VisitVariable(Variable variable) => Current.Get(variable.Name).Expect($"Variable not in scope: {variable.Name}.");
     public override object VisitFunctionVariable(FunctionVariable variable) => Current.Get(variable.Function.Name).Expect($"Function not in scope: {variable.Function.Name}.");
