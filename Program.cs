@@ -15,11 +15,19 @@ fn factorial x =
         1
     else
         x * (factorial (x - 1))
+fn loop_rec f i n =
+    if i <= n then
+        f i
+        loop_rec f (i + 1) n
+    else
+        ()
+fn loop f n =
+    loop_rec f 1 n
 
 fn square x = x * x
 
 fn main =
-    "The result is " ++ (factorial . (\n -> n + 1) . square $ 2) |> print
+    loop (\i -> print i) 10
 
 fn (|>) x f = f x
 fn ($) f x = f x
