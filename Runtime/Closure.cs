@@ -23,24 +23,24 @@ static class Closure
     {
         return new DelegateClosure((_, args) =>
         {
-            if (args.Length > 0)
+            if (args.Length > 1)
             {
                 throw new InvalidOperationException("Extra arguments.");
             }
             return func();
-        }, 0);
+        }, 1);
     }
 
     public static IClosure FromDelegate<TResult>(Func<TResult> func)
     {
         return new DelegateClosure((_, args) =>
         {
-            if (args.Length > 0)
+            if (args.Length > 1)
             {
                 throw new InvalidOperationException("Extra arguments.");
             }
             return func()!;
-        }, 0);
+        }, 1);
     }
     public static IClosure FromDelegate<T1, TResult>(Func<T1, TResult> func)
     {
@@ -49,10 +49,6 @@ static class Closure
             if (args.Length > 1)
             {
                 throw new InvalidOperationException("Extra arguments.");
-            }
-            if (args.Length == 0)
-            {
-                throw new InvalidOperationException("Too few arguments provided.");
             }
             return func((T1)args[0])!;
         }, 1);
@@ -64,6 +60,22 @@ static class Closure
             return func((T1)args[0], (T2)args[1])!;
         }, 2).Curry();
     }
+    public static IClosure FromDelegate<T1, T2, T3, TResult>(Func<T1, T2, T3, TResult> func)
+    {
+        return new DelegateClosure((_, args) =>
+        {
+            return func((T1)args[0], (T2)args[1], (T3)args[2])!;
+        }, 3).Curry();
+    }
+
+    public static IClosure FromDelegate<T1, T2, T3, TResult>(Func<Interpreter, T1, T2, T3, TResult> func)
+    {
+        return new DelegateClosure((interpreter, args) =>
+        {
+            return func(interpreter, (T1)args[0], (T2)args[1], (T3)args[2])!;
+        }, 3).Curry();
+    }
+
     public static IClosure Loop()
     {
         return new DelegateClosure((interpreter, args) =>
@@ -107,6 +119,22 @@ static class Closure
                 func.Call(interpreter, [Unit.Value]);
             }
         }, 1);
+    }
+    public static IClosure While()
+    {
+        return new DelegateClosure((interpreter, args) =>
+        {
+            var cond = (IClosure)args[0];
+            var func = (IClosure)args[1];
+
+            while (cond.Call(interpreter, [Unit.Value]) is true)
+            {
+                Debug.Assert(func.MaxArgsCount > 0);
+                func.Call(interpreter, [Unit.Value]);
+            }
+
+            return Prelude.Unit;
+        }, 2).Curry();
     }
 
     public static IClosure FromDeclaration(FunctionDeclaration declaration) => new FunctionClosure(declaration).Curry();

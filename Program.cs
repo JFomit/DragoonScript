@@ -16,7 +16,9 @@ fn talk () =
     "Excellent! I will do as I'm told: " ++ purpose ++ ".\n" |> print
 
 fn main () =
-    forever (talk . (\() -> print "prepare thyself!"))
+    talk
+    |> while (\() -> random 0 6 > 0)
+    |> \() -> print "I am free!"
 
 fn (|>) x f = f x
 fn ($) f x = f x
@@ -112,6 +114,7 @@ var builtIns = new FunctionScope(new()
     ["loop"] = Closure.Loop(),
     ["repeat"] = Closure.Repeat(),
     ["forever"] = Closure.InfiniteLoop(),
+    ["while"] = Closure.While(),
 });
 
 // user-defined functions go to global scope
