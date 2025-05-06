@@ -5,6 +5,7 @@ using DragoonScript.Utils;
 using JFomit.Functional.Monads;
 using JFomit.Functional.Extensions;
 using static JFomit.Functional.Prelude;
+using System.Diagnostics;
 
 namespace DragoonScript.Core;
 
@@ -89,11 +90,21 @@ abstract class AnnotatedSyntaxTreeVisitor<T> : ParseTreeVisitor<T>
             TreeKind.LiteralExpr => VisitExpression(tree),
 
             TreeKind.FnParameter => VisitFunctionParameter(tree),
-            TreeKind.FnParameterList => VisitFunctionParameterList(tree, [.. tree.Children]),
+            TreeKind.FnParameterList => VisitFunctionParameterList(tree, ExtractNamedParameters(tree)),
             TreeKind.BlockExpr => VisitBlock(tree),
 
             _ => VisitError(tree),
         };
+    }
+    protected virtual ParseTree[] ExtractNamedParameters(ParseTree list)
+    {
+        Debug.Assert(list.Kind == TreeKind.FnParameterList);
+        if (list.Children.Count == 1 && list.Children[0].AsToken().TryUnwrap(out var token) && token.Token.Kind == TokenKind.Unit)
+        {
+            return [];
+        }
+
+        return [.. list.Children];
     }
 
     protected virtual T VisitFunctionParameter(ParseTree tree)

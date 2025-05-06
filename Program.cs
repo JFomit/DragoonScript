@@ -11,12 +11,12 @@ using JFomit.Functional;
 using JFomit.Functional.Extensions;
 
 var s = """
-fn talk =
-    let name = print "What is your name?" |> read
-    print ("Excellent! Your name is " ++ name ++ "!")
+fn talk () =
+    let purpose = print "What is my purpose?" |> read
+    "Excellent! I will do as I'm told: " ++ purpose ++ ".\n" |> print
 
-fn main =
-    forever talk
+fn main () =
+    forever (talk . (\() -> print "prepare thyself!"))
 
 fn (|>) x f = f x
 fn ($) f x = f x
@@ -59,7 +59,12 @@ var lexer = new Lexer(doc);
 // blocks.PrintBlocks();
 var parser = new Parser(lexer);
 var tree = parser.File();
-// parser.Diagnostics.ForEach(d => d.Print());
+parser.Diagnostics.ForEach(d => d.Print());
+if (parser.Diagnostics.Count > 0)
+{
+    return;
+}
+
 var parserPrinter = new ParseTreePrinter(false);
 // parserPrinter.VisitTree(tree);
 var visitor = new AstBuilder();

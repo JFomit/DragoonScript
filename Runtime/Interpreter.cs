@@ -91,7 +91,41 @@ class Interpreter(FunctionScope globals) : AstNodeVisitor<object>
             return Prelude.Unit;
         }
 
-        return l.Value.Replace("\\\"", "\"")[1..^1];
+        return ExtractString(l);
+    }
+    private static string ExtractString(Literal l)
+    {
+        var value = l.Value.AsSpan()[1..^1];
+        var buffer = value.Length > 50 ? new char[value.Length] : stackalloc char[value.Length];
+        int offset = 0;
+
+        for (int i = 0; i < value.Length; i++)
+        {
+            if (value[i] != '\\')
+            {
+                buffer[i - offset] = value[i];
+                continue;
+            }
+
+            if (i + 1 >= value.Length)
+            {
+                throw new InvalidOperationException("Invalid string literal.");
+            }
+
+            char next = value[i + 1] switch
+            {
+                'n' => '\n',
+                't' => '\t',
+                '\\' => '\\',
+                '"' => '"',
+                _ => throw new InvalidOperationException("Invalid escape sequence.")
+            };
+            buffer[i - offset] = next;
+            offset++;
+            i++;
+        }
+
+        return buffer.ToString();
     }
 
     public FunctionScope PushScope(FunctionScope scope)

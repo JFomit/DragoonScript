@@ -309,14 +309,47 @@ class Parser(TokenStream lexer)
     private ParseTree ParameterList()
     {
         var tree = EnterRule();
+        if (At(TokenKind.Unit))
+        {
+            tree.PushBack(Eat(TokenKind.Unit));
+            if (At(TokenKind.Identifier))
+            {
+                tree.PushBack(SwallowError("Functions that take () must not take any other arguments."));
+            }
+
+            return ExitRule(tree, TreeKind.FnParameterList);
+        }
+
+        if (At(TokenKind.Is))
+        {
+            var next = Peek();
+            var diagnostic = Diagnostic
+                .Create(DiagnosticLabel.Create(next))
+                .WithSeverity(DiagnosticSeverity.Error)
+                .WhitMessage("Expected a list of parametrers.")
+                .WithNote("If the function doesn't take any arguments, declare it with a single `()' parameter.")
+                .Build();
+            PushDiagnostic(diagnostic);
+            tree.PushBack(Eat());
+        }
+
         while (!At(TokenKind.Is) && !Eof())
         {
             if (At(TokenKind.Identifier))
             {
                 tree.PushBack(Parameter());
             }
+            else if (At(TokenKind.Unit))
+            {
+                tree.PushBack(SwallowError("Functions that take () must not take any other arguments."));
+            }
+            else if (At(TokenKind.Arrow))
+            {
+                break;
+            }
             else
             {
+                tree.PushBack(SwallowError("Expected parameter name."));
                 break;
             }
         }
