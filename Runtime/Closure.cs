@@ -88,7 +88,8 @@ static class Closure
 
             for (int i = 0; i < count; i++)
             {
-                func.Call(interpreter, []);
+                Debug.Assert(func.MaxArgsCount > 0);
+                func.Call(interpreter, [Unit.Value]);
             }
 
             return Unit.Value;
@@ -102,7 +103,8 @@ static class Closure
 
             while (true)
             {
-                func.Call(interpreter, []);
+                Debug.Assert(func.MaxArgsCount > 0);
+                func.Call(interpreter, [Unit.Value]);
             }
         }, 1);
     }
