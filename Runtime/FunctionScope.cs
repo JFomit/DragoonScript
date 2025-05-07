@@ -32,7 +32,8 @@ class FunctionScope(Dictionary<string, object> values)
         if (Values.ContainsKey(name))
         {
             nextScope = Fork();
-            Debug.Assert(nextScope.DefineUniqueOrFork(name, value, out _));
+            var ok = nextScope.DefineUniqueOrFork(name, value, out _);
+            Debug.Assert(ok);
             return false;
         }
         Values[name] = value;
@@ -69,6 +70,19 @@ class FunctionScope(Dictionary<string, object> values)
 
     public void Dump()
     {
+        foreach (var (key, value) in Values)
+        {
+            Console.WriteLine($"{key} = {value}");
+        }
+    }
+    public void DumpAll()
+    {
+        if (Parent.TryUnwrap(out var p))
+        {
+            Console.WriteLine("Parent:");
+            p.DumpAll();
+        }
+
         foreach (var (key, value) in Values)
         {
             Console.WriteLine($"{key} = {value}");

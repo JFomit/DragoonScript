@@ -14,7 +14,8 @@ class FunctionClosure(FunctionDeclaration function) : IClosure
         var scope = interpreter.Current;
         for (int i = 0; i < args.Length; i++)
         {
-            Debug.Assert(scope.DefineUniqueOrFork(Function.Parameters[i].Name, args[i], out _));
+            var ok = scope.DefineUniqueOrFork(Function.Parameters[i].Name, args[i], out _);
+            Debug.Assert(ok);
         }
         var result = interpreter.Visit(Function);
         interpreter.PopScope();

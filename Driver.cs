@@ -1,5 +1,5 @@
 using System.Diagnostics;
-using CommandLine;
+using ConsoleAppFramework;
 using DragoonScript.Runtime;
 using JFomit.Functional.Extensions;
 
@@ -7,21 +7,26 @@ namespace DragoonScript;
 
 class Driver
 {
-    public static int Run(string[] args)
+    public static void Run(string[] args)
     {
-        return Parser.Default.ParseArguments<ScriptRunnerOptions>(args)
-            .MapResult(
-                ScriptRunner,
-                HandleErrors
-            );
+        var app = ConsoleApp.Create();
+        app.Add<ScriptRunnerCommands>();
+        app.Run(args);
     }
 
-    private static int HandleErrors(IEnumerable<Error> errs)
+    internal class ScriptRunnerCommands
     {
-        return 1;
+#pragma warning disable CA1822 // Mark a member as static
+        /// <summary>
+        /// Runs a passed script.
+        /// </summary>
+        /// <param name="input">Script to run.</param>
+        [Command("run")]
+        public void Run([Argument] string input) => ScriptRunner(input);
+#pragma warning restore CA1822 // Mark a member as static
     }
 
-    private static int ScriptRunner(ScriptRunnerOptions script)
+    private static int ScriptRunner(string scriptSourcePath)
     {
         bool isatty = !Console.IsOutputRedirected;
 
@@ -29,13 +34,13 @@ class Driver
         string identifier = "<stdin>";
         try
         {
-            using var sourceInput = new StreamReader(script.Input);
+            using var sourceInput = new StreamReader(scriptSourcePath);
             source = sourceInput.ReadToEnd();
-            identifier = Path.GetFileName(script.Input);
+            identifier = Path.GetFileName(scriptSourcePath);
         }
         catch (FileNotFoundException)
         {
-            WriteError($"File not found: {script.Input}.");
+            WriteError($"File not found: {scriptSourcePath}.");
             return 1;
         }
         catch (IOException e)
@@ -105,15 +110,4 @@ class Driver
         Console.Error.WriteLine(diagnostic.Message);
         diagnostic.Note.Select(s => $"NOTE: {s}").IfSome(Console.Error.WriteLine);
     }
-
-    [Verb("run", isDefault: true, aliases: ["r"], HelpText = "Runs a passed script file.")]
-    public class ScriptRunnerOptions
-    {
-        [Value(0, HelpText = "The file to run.", MetaName = "Input", Required = true)]
-        public string Input { get; set; } = "<stdin>";
-    }
-
-    [Verb("debug", isDefault: false, Hidden = true, HelpText = "Interpreter debugging utilities.")]
-    public class DebugDumpOptions
-    { }
 }

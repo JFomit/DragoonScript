@@ -17,7 +17,8 @@ class LambdaClosure(Abstraction lambda, FunctionScope currentScope) : IClosure
 
         for (int i = 0; i < args.Length; i++)
         {
-            Debug.Assert(scope.DefineUniqueOrFork(Lambda.Variables[i].Name, args[i], out _));
+            var ok = scope.DefineUniqueOrFork(Lambda.Variables[i].Name, args[i], out _);
+            Debug.Assert(ok);
         }
         var result = interpreter.Visit(Lambda.Body);
         interpreter.PopScope(old);

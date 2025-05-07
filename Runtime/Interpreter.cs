@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Runtime.InteropServices;
 using DragoonScript.Core.Ast;
 using DragoonScript.Utils;
@@ -40,7 +41,11 @@ class Interpreter(FunctionScope globals) : AstNodeVisitor<object>
         Current.DefineUniqueOrFork(result.Name, callResult, out _current);
         return Visit(expression);
     }
-    public override object VisitVariable(Variable variable) => Current.Get(variable.Name).Expect($"Variable not in scope: {variable.Name}.");
+    public override object VisitVariable(Variable variable)
+    {
+        return Current.Get(variable.Name).Expect($"Variable not in scope: {variable.Name}.");
+    }
+
     public override object VisitFunctionVariable(FunctionVariable variable) => Current.Get(variable.Function.Name).Expect($"Function not in scope: {variable.Function.Name}.");
 
     public override object VisitIfExpressionBinding(IfExpressionBinding binding)

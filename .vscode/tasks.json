@@ -8,8 +8,8 @@
             "args": [
                 "build",
                 "${workspaceFolder}/DragoonScript.csproj",
-                "/property:GenerateFullPaths=true",
-                "/consoleloggerparameters:NoSummary;ForceNoAlign"
+                "/property:GenerateFullPaths=true;Configuration=Release",
+                "/consoleloggerparameters:NoSummary;ForceNoAlign",
             ],
             "problemMatcher": "$msCompile"
         },
