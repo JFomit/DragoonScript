@@ -25,4 +25,6 @@ class LambdaClosure(Abstraction lambda, FunctionScope currentScope) : IClosure
 
         return result;
     }
+
+    public string Format() => $"<lambda>";
 }

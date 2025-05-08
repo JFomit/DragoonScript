@@ -1,3 +1,5 @@
+using static JFomit.Functional.Prelude;
+
 namespace DragoonScript.Runtime;
 
 class CurriedClosure(IClosure inner, object[] bound) : IClosure
@@ -16,13 +18,15 @@ class CurriedClosure(IClosure inner, object[] bound) : IClosure
 
         if (args.Length > MaxArgsCount)
         {
-            throw new InvalidOperationException("Extra arguments.");
+            throw new InterpreterException("Extra arguments.", Some(Format()));
         }
         if (args.Length < 1)
         {
-            throw new InvalidOperationException("Not enough arguments provided.");
+            throw new InterpreterException("Not enough arguments provided.", Some(Format()));
         }
 
         return new CurriedClosure(Inner, [.. Bound, .. args]); // partial application
     }
+
+    public string Format() => $"<partial>{Inner.Format()}";
 }

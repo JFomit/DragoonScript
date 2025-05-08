@@ -1,13 +1,9 @@
+using JFomit.Functional.Monads;
+
 namespace DragoonScript.Runtime;
 
-class RuntimeError
+class RuntimeError(string message, Option<string> function)
 {
-    public RuntimeError(string message, string function)
-    {
-        Message = message;
-        Function = function;
-    }
-
-    public string Message { get; }
-    public string Function { get; }
+    public string Message { get; } = message;
+    public Option<string> Function { get; } = function;
 }

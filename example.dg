@@ -1,12 +1,10 @@
-fn talk () =
-  let purpose = print "What is my purpose?" |> read
-  "Excellent! I will do as I'm told: " ++ purpose ++ ".\n" |> print
+fn (|>) x f = f x
 
 fn main () =
-  talk
-  |> while (\() -> random 0 6 > 0)
-  |> \() -> print "I am free!"
+    factorial 5 |> print
 
-fn (|>) x f = f x
-fn ($) f x = f x
-fn (.) g f = \x -> g (f x)
+fn factorial x =
+    if x == 0 then
+        1
+    else
+        x * factorial (x - 1)

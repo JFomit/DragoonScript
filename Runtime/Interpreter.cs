@@ -28,7 +28,7 @@ class Interpreter(FunctionScope globals) : AstNodeVisitor<object>
     public override object VisitApplicationBinding(ApplicationBinding binding)
     {
         var result = binding.Variable;
-        var function = (IClosure)Visit(binding.Function);
+        var function = Visit(binding.Function).ValueCast<IClosure>();
         var expression = binding.Expression.Unwrap();
         var args = binding.Arguments.Select(ExtractValue).ToArray();
 
@@ -42,11 +42,14 @@ class Interpreter(FunctionScope globals) : AstNodeVisitor<object>
         return Visit(expression);
     }
     public override object VisitVariable(Variable variable)
-    {
-        return Current.Get(variable.Name).Expect($"Variable not in scope: {variable.Name}.");
-    }
+        => Current.Get(variable.Name).TryUnwrap(out var v)
+        ? v
+        : throw new InterpreterException($"Variable not in scope: {variable.Name}.", None);
 
-    public override object VisitFunctionVariable(FunctionVariable variable) => Current.Get(variable.Function.Name).Expect($"Function not in scope: {variable.Function.Name}.");
+    public override object VisitFunctionVariable(FunctionVariable variable)
+        => Current.Get(variable.Function.Name).TryUnwrap(out var f)
+        ? f
+        : throw new InterpreterException($"Function not in scope: {variable.Function.Name}.", None);
 
     public override object VisitIfExpressionBinding(IfExpressionBinding binding)
     {
@@ -77,12 +80,15 @@ class Interpreter(FunctionScope globals) : AstNodeVisitor<object>
 
     private object ExtractValue(Value value) => value switch
     {
-        Variable v => Current.Get(v.Name).Expect($"Variable not in scope: {v.Name}."),
+        Variable v
+            => Current.Get(v.Name).TryUnwrap(out var x)
+            ? x
+            : throw new InterpreterException($"Variable not in scope: {v.Name}.", None),
         Literal l => ExtractLiteral(l),
         FunctionVariable f => Current.Get(f.Function.Name).Unwrap(),
         Abstraction lambda => Closure.FromLambda(lambda, Current),
 
-        _ => throw new InvalidOperationException($"Not in scope: {value}.")
+        _ => throw new InterpreterException($"Not in scope: {value}.", None)
     };
     public override object VisitLiteral(Literal literal) => ExtractLiteral(literal);
     private static object ExtractLiteral(Literal l)
@@ -114,7 +120,7 @@ class Interpreter(FunctionScope globals) : AstNodeVisitor<object>
 
             if (i + 1 >= value.Length)
             {
-                throw new InvalidOperationException("Invalid string literal.");
+                throw new InterpreterException("Invalid string literal.", None);
             }
 
             char next = value[i + 1] switch
@@ -123,7 +129,7 @@ class Interpreter(FunctionScope globals) : AstNodeVisitor<object>
                 't' => '\t',
                 '\\' => '\\',
                 '"' => '"',
-                _ => throw new InvalidOperationException("Invalid escape sequence.")
+                _ => throw new InterpreterException("Invalid escape sequence.", None)
             };
             buffer[i - offset] = next;
             offset++;

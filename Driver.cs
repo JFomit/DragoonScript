@@ -82,7 +82,10 @@ class Driver
     private static void WriteRuntimeError(RuntimeError error)
     {
         Console.Error.WriteLine($"Runtime error: {error.Message}");
-        Console.Error.WriteLine($"In {error.Function}");
+        if (error.Function.TryUnwrap(out var f))
+        {
+            Console.Error.WriteLine($"In {f}.");
+        }
     }
 
     private static void WriteDiagnostic(Diagnostics.Diagnostic diagnostic)

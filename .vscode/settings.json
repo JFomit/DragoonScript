@@ -17,7 +17,7 @@
         "**/Thumbs.db": true,
         "**/.antlr": true,
         "**/.idea": true,
-        "**/bin": true,
+        "**/bin": false,
         "**/obj": true,
         "**Folder.DotSettings.user": true
     }

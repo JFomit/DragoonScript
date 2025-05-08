@@ -3,6 +3,7 @@ using DragoonScript.Core.Ast;
 using DragoonScript.Debugging;
 using JetBrains.Annotations;
 using JFomit.Functional;
+using static JFomit.Functional.Prelude;
 
 namespace DragoonScript.Runtime;
 
@@ -25,7 +26,7 @@ static class Closure
         {
             if (args.Length > 1)
             {
-                throw new InvalidOperationException("Extra arguments.");
+                throw new InterpreterException("Extra arguments.", None);
             }
             return func();
         }, 1);
@@ -37,7 +38,7 @@ static class Closure
         {
             if (args.Length > 1)
             {
-                throw new InvalidOperationException("Extra arguments.");
+                throw new InterpreterException("Extra arguments.", None);
             }
             return func()!;
         }, 1);
@@ -48,23 +49,23 @@ static class Closure
         {
             if (args.Length > 1)
             {
-                throw new InvalidOperationException("Extra arguments.");
+                throw new InterpreterException("Extra arguments.", None);
             }
-            return func((T1)args[0])!;
+            return func(args[0].ValueCast<T1>())!;
         }, 1);
     }
     public static IClosure FromDelegate<T1, T2, TResult>(Func<T1, T2, TResult> func)
     {
         return new DelegateClosure((_, args) =>
         {
-            return func((T1)args[0], (T2)args[1])!;
+            return func(args[0].ValueCast<T1>(), args[1].ValueCast<T2>())!;
         }, 2).Curry();
     }
     public static IClosure FromDelegate<T1, T2, T3, TResult>(Func<T1, T2, T3, TResult> func)
     {
         return new DelegateClosure((_, args) =>
         {
-            return func((T1)args[0], (T2)args[1], (T3)args[2])!;
+            return func(args[0].ValueCast<T1>(), args[1].ValueCast<T2>(), args[2].ValueCast<T3>())!;
         }, 3).Curry();
     }
 
@@ -72,7 +73,7 @@ static class Closure
     {
         return new DelegateClosure((interpreter, args) =>
         {
-            return func(interpreter, (T1)args[0], (T2)args[1], (T3)args[2])!;
+            return func(interpreter, args[0].ValueCast<T1>(), args[1].ValueCast<T2>(), args[2].ValueCast<T3>())!;
         }, 3).Curry();
     }
 
@@ -80,43 +81,43 @@ static class Closure
     {
         return new DelegateClosure((interpreter, args) =>
         {
-            var count = (int)(double)args[0];
-            var func = (IClosure)args[1];
+            var func = args[1].ValueCast<IClosure>();
+            var count = (int)args[0].ValueCast<double>();
 
             for (int i = 0; i < count; i++)
             {
-                func.Call(interpreter, [(double)i]);
+                func.Call(interpreter, [i.ValueCast<double>()]);
             }
 
-            return Unit.Value;
+            return Prelude.Unit;
         }, 2).Curry();
     }
     public static IClosure Repeat()
     {
         return new DelegateClosure((interpreter, args) =>
         {
-            var count = (int)(double)args[0];
-            var func = (IClosure)args[1];
+            var func = args[1].ValueCast<IClosure>();
+            var count = (int)args[0].ValueCast<double>();
 
             for (int i = 0; i < count; i++)
             {
                 Debug.Assert(func.MaxArgsCount > 0);
-                func.Call(interpreter, [Unit.Value]);
+                func.Call(interpreter, [Prelude.Unit]);
             }
 
-            return Unit.Value;
+            return Prelude.Unit;
         }, 2).Curry();
     }
     public static IClosure InfiniteLoop()
     {
         return new DelegateClosure((interpreter, args) =>
         {
-            var func = (IClosure)args[0];
+            var func = args[0].ValueCast<IClosure>();
 
             while (true)
             {
                 Debug.Assert(func.MaxArgsCount > 0);
-                func.Call(interpreter, [Unit.Value]);
+                func.Call(interpreter, [Prelude.Unit]);
             }
         }, 1);
     }
@@ -124,13 +125,13 @@ static class Closure
     {
         return new DelegateClosure((interpreter, args) =>
         {
-            var cond = (IClosure)args[0];
-            var func = (IClosure)args[1];
+            var cond = args[0].ValueCast<IClosure>();
+            var func = args[1].ValueCast<IClosure>();
 
-            while (cond.Call(interpreter, [Unit.Value]) is true)
+            while (cond.Call(interpreter, [Prelude.Unit]) is true)
             {
                 Debug.Assert(func.MaxArgsCount > 0);
-                func.Call(interpreter, [Unit.Value]);
+                func.Call(interpreter, [Prelude.Unit]);
             }
 
             return Prelude.Unit;

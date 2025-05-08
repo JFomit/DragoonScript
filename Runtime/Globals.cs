@@ -25,7 +25,18 @@ static class Globals
 
         ["print"] = Closure.FromDelegate((object x) =>
         {
-            Console.WriteLine(x);
+            if (x is Unit u)
+            {
+                Console.WriteLine("()");
+            }
+            else if (x is IClosure cl)
+            {
+                Console.WriteLine(cl.Format());
+            }
+            else
+            {
+                Console.WriteLine(x);
+            }
             return Prelude.Unit;
         }),
         ["read"] = Closure.FromDelegate((object x) =>

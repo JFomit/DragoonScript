@@ -1,7 +1,13 @@
+using JFomit.Functional.Extensions;
+using JFomit.Functional.Monads;
+using static JFomit.Functional.Prelude;
+
 namespace DragoonScript.Runtime;
 
-class DelegateClosure(Func<Interpreter, object[], object> @delegate, int argsCount) : IClosure
+class DelegateClosure(Func<Interpreter, object[], object> @delegate, int argsCount, string? format = null) : IClosure
 {
+    public Option<string> Name { get; } = format.ToOption();
+
     public Func<Interpreter, object[], object> Delegate { get; } = @delegate;
     public int MaxArgsCount { get; } = argsCount;
 
@@ -9,12 +15,14 @@ class DelegateClosure(Func<Interpreter, object[], object> @delegate, int argsCou
     {
         if (args.Length > MaxArgsCount)
         {
-            throw new InvalidOperationException("Extra arguments.");
+            throw new InterpreterException("Extra arguments.", Some(Format()));
         }
         if (args.Length < MaxArgsCount)
         {
-            throw new InvalidOperationException("Too few arguments provided.");
+            throw new InterpreterException("Too few arguments provided.", Some(Format()));
         }
         return Delegate(interpreter, args);
     }
+
+    public string Format() => Name.TryUnwrap(out var name) ? name : "<builtin>";
 }
