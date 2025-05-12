@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using ConsoleAppFramework;
+using DragoonScript.Debugging;
 using DragoonScript.Runtime;
 using JFomit.Functional.Extensions;
 
@@ -11,6 +12,7 @@ class Driver
     {
         var app = ConsoleApp.Create();
         app.Add<ScriptRunnerCommands>();
+        app.Add<DebugCommands>();
         app.Run(args);
     }
 
@@ -23,6 +25,17 @@ class Driver
         /// <param name="input">Script to run.</param>
         [Command("run")]
         public void Run([Argument] string input) => ScriptRunner(input);
+#pragma warning restore CA1822 // Mark a member as static
+    }
+    internal class DebugCommands
+    {
+#pragma warning disable CA1822 // Mark a member as static
+        /// <summary>
+        /// Dumps parse tree.
+        /// </summary>
+        /// <param name="input">Script to examine.</param>
+        [Command("dumptree")]
+        public void Dump([Argument] string input) => DumpAst(input);
 #pragma warning restore CA1822 // Mark a member as static
     }
 
@@ -71,6 +84,41 @@ class Driver
                 WriteDiagnostic(item);
             }
 
+            return 1;
+        }
+    }
+
+    private static int DumpAst(string scriptSourcePath)
+    {
+        string source = "";
+        string identifier = "<stdin>";
+        try
+        {
+            using var sourceInput = new StreamReader(scriptSourcePath);
+            source = sourceInput.ReadToEnd();
+            identifier = Path.GetFileName(scriptSourcePath);
+        }
+        catch (FileNotFoundException)
+        {
+            WriteError($"File not found: {scriptSourcePath}.");
+            return 1;
+        }
+        catch (IOException e)
+        {
+            WriteError(e.Message);
+            return 1;
+        }
+
+        var pipeline = new CompilerPipeLine(identifier, source);
+        var program = pipeline.Lex().Select(pipeline.ParseForce);
+        if (program.TryUnwrapSuccess(out var t))
+        {
+            var visitpr = new ParseTreePrinter(false);
+            visitpr.VisitTree(t);
+            return 0;
+        }
+        else
+        {
             return 1;
         }
     }

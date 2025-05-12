@@ -25,6 +25,12 @@ class CompilerPipeLine(string identifier, string source)
             _ => Ok(tree)
         };
     }
+    public ParseTree ParseForce(TokenStream tokens)
+    {
+        var parser = new Parser(tokens);
+        var tree = parser.File();
+        return tree;
+    }
     public Result<int, RuntimeError> Execute(ParseTree tree)
     {
         var ast = new AstBuilder();
