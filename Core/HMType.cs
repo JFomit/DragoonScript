@@ -11,23 +11,52 @@ abstract class HMType
     public abstract string Format();
 }
 
-class HMClosureType : HMType
+class Any : HMType
 {
-    public override bool IsEqualTo(HMType other)
-    {
-        throw new NotImplementedException();
-    }
+    public override string Format() => "any";
+    public override bool IsEqualTo(HMType other) => other is Any;
+    public override bool IsOfType(object obj) => true;
+}
 
-    public override bool IsOfType(object obj)
+class CLRType(Type type) : HMType
+{
+    public Type Type { get; } = type;
+
+    public override string Format() => Type.Name;
+    public override bool IsEqualTo(HMType other) => other is CLRType clr && clr.Type == Type;
+    public override bool IsOfType(object obj) => obj.GetType() == Type;
+}
+
+class HMClosureType(params HMType[] @params) : HMType
+{
+    public HMType[] Parameters { get; } = @params;
+
+    public override bool IsEqualTo(HMType other) => other is HMClosureType closureType && closureType.Parameters.SequenceEqual(Parameters);
+    public override bool IsOfType(object obj) => obj is IClosure closure && IsEqualTo(closure.Type);
+
+    public bool IsCallableWith(object[] args)
     {
-        if (obj is IClosure closure)
+        if (args.Length != Parameters.Length)
         {
-            return closure.Type
+            return false;
         }
+
+        for (int i = 0; i < args.Length; i++)
+        {
+            if (!Parameters[i].IsOfType(args[i]))
+            {
+                return false;
+            }
+        }
+
+        return true;
     }
 
-    public override string Format()
+    public override string Format() => Parameters switch
     {
-        throw new NotImplementedException();
-    }
+    [] => throw new InvalidOperationException("Void accepting function."),
+    [var single] => single.Format(),
+    [var first, var second] => $"{first.Format()} -> {second.Format()}",
+    [var first, .. var rest] => rest.Aggregate(first.Format(), (p, n) => $"{p} -> {n.Format()}")
+    };
 }

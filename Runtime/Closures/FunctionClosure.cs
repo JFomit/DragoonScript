@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using DragoonScript.Core;
 using DragoonScript.Core.Ast;
 using static JFomit.Functional.Prelude;
 
@@ -8,6 +9,8 @@ class FunctionClosure(FunctionDeclaration function) : IClosure
 {
     public FunctionDeclaration Function { get; } = function;
     public int MaxArgsCount => Function.Parameters.Length;
+
+    public HMClosureType Type { get; } = new(function.Parameters.Select(_ => new Any()).ToArray());
 
     public object Call(Interpreter interpreter, object[] args)
     {
@@ -28,5 +31,5 @@ class FunctionClosure(FunctionDeclaration function) : IClosure
         return result;
     }
 
-    public string Format() => $"{Function.Name}: {Function.Parameters.Aggregate("obj", (p, n) => $"{p} -> obj")}";
+    public string Format() => $"<{Function.Name}: {Type.Format()}>";
 }

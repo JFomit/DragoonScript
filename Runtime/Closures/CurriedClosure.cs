@@ -1,3 +1,4 @@
+using DragoonScript.Core;
 using static JFomit.Functional.Prelude;
 
 namespace DragoonScript.Runtime;
@@ -8,6 +9,8 @@ class CurriedClosure(IClosure inner, object[] bound) : IClosure
     public object[] Bound { get; } = bound;
 
     public int MaxArgsCount => Inner.MaxArgsCount - Bound.Length;
+
+    public HMClosureType Type => new(Enumerable.Range(1, MaxArgsCount).Select(_ => new Any()).ToArray());
 
     public object Call(Interpreter interpreter, object[] args)
     {
@@ -28,5 +31,5 @@ class CurriedClosure(IClosure inner, object[] bound) : IClosure
         return new CurriedClosure(Inner, [.. Bound, .. args]); // partial application
     }
 
-    public string Format() => $"<partial>{Inner.Format()}";
+    public string Format() => $"<partial: {Type.Format()}>";
 }
