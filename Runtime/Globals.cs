@@ -6,20 +6,20 @@ static class Globals
 {
     public static FunctionScope GetInterpreterDefaults() => new(new()
     {
-        ["~-"] = Closure.FromDelegate((double x) => -x),
-        ["~+"] = Closure.FromDelegate((double x) => +x),
+        ["~-"] = Closure.FromDelegate((int x) => -x),
+        ["~+"] = Closure.FromDelegate((int x) => +x),
 
-        ["+"] = Closure.FromDelegate((double a, double b) => a + b),
-        ["-"] = Closure.FromDelegate((double a, double b) => a - b),
-        ["*"] = Closure.FromDelegate((double a, double b) => a * b),
-        ["/"] = Closure.FromDelegate((double a, double b) => a / b),
+        ["+"] = Closure.FromDelegate((int a, int b) => a + b),
+        ["-"] = Closure.FromDelegate((int a, int b) => a - b),
+        ["*"] = Closure.FromDelegate((int a, int b) => a * b),
+        ["/"] = Closure.FromDelegate((int a, int b) => a / b),
 
-        [">"] = Closure.FromDelegate((double a, double b) => a > b),
-        ["<"] = Closure.FromDelegate((double a, double b) => a < b),
-        [">="] = Closure.FromDelegate((double a, double b) => a >= b),
-        ["<="] = Closure.FromDelegate((double a, double b) => a <= b),
-        ["=="] = Closure.FromDelegate((double a, double b) => a == b),
-        ["!="] = Closure.FromDelegate((double a, double b) => a != b),
+        [">"] = Closure.FromDelegate((int a, int b) => a > b),
+        ["<"] = Closure.FromDelegate((int a, int b) => a < b),
+        [">="] = Closure.FromDelegate((int a, int b) => a >= b),
+        ["<="] = Closure.FromDelegate((int a, int b) => a <= b),
+        ["=="] = Closure.FromDelegate((int a, int b) => a == b),
+        ["!="] = Closure.FromDelegate((int a, int b) => a != b),
 
         ["++"] = Closure.FromDelegate((object x, object y) => $"{x}{y}"),
 
@@ -44,13 +44,42 @@ static class Globals
             var str = Console.ReadLine()!;
             return str;
         }),
-        ["random"] = Closure.FromDelegate((double a, double b) =>
+        ["random"] = Closure.FromDelegate((int a, int b) =>
         {
-            return (double)Random.Shared.Next((int)a, (int)b);
+            return Random.Shared.Next(a, b);
         }),
         ["loop"] = Closure.Loop(),
         ["repeat"] = Closure.Repeat(),
         ["forever"] = Closure.InfiniteLoop(),
         ["while"] = Closure.While(),
+
+        ["shell"] = ShellClosure.PrepareCommand(),
+        ["||>"] = ShellClosure.Pipe(),
+        ["run"] = ShellClosure.Run(),
+
+        ["!!"] = Closure.FromDelegate((object array, int index) =>
+        {
+            if (array is object[] arr)
+            {
+                return arr[index];
+            }
+            else if (array is string str)
+            {
+                return str[index];
+            }
+
+            throw new InterpreterException($"Invalid type: expected string or array, got {array.GetType().Format()}.", Prelude.None);
+        }),
+
+        ["numarray"] = Closure.FromDelegate((int size) => new int[size]),
+        ["get"] = Closure.FromDelegate((int index, int[] array) =>
+        {
+            return array[index];
+        }),
+        ["set"] = Closure.FromDelegate((int index, int value, int[] array) =>
+        {
+            array[index] = value;
+            return Prelude.Unit;
+        })
     });
 }

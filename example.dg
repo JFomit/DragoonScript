@@ -2,10 +2,13 @@ fn (|>) x f = f x
 fn ($) f x = f x
 
 fn main () =
-    2 |> (\x -> x * x) |> factorial |> print
+    (@"echo" !! "Hello, my name is fsehfsbgurbg")
+    ||> @"cat"
+    |> run
 
-fn factorial x =
-    if x == 0 then
-        1
-    else
-        x * factorial (x - 1)
+fn interpret code =
+    let instruction = 0
+    let data = 0
+
+    let current = code !! instruction
+    if current == 
