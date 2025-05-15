@@ -78,7 +78,7 @@ class OverloadedClosure : IClosure
             }
         }
 
-        throw new InterpreterException($"No in {Format()} is callable with provided arguments.", Some(Format()));
+        throw new InterpreterException($"No function in {Format()} is callable with provided arguments.", Some(Format()));
     }
 
     public string Format() => Name.TryUnwrap(out var name) ? $"<{name}: group with {Closures.Length} functions>" : $"<group with {Closures.Length} functions>";

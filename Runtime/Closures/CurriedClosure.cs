@@ -31,5 +31,13 @@ class CurriedClosure(IClosure inner, object[] bound) : IClosure
         return new CurriedClosure(Inner, [.. Bound, .. args]); // partial application
     }
 
-    public string Format() => $"<partial: {Type.Format()}>";
+    public string Format()
+    {
+        if (MaxArgsCount == Inner.MaxArgsCount)
+        {
+            return Inner.Format();
+        }
+
+        return $"<partial: {Type.Format()}>";
+    }
 }

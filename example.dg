@@ -1,5 +1,7 @@
 fn (|>) x f = f x
 fn ($) f x = f x
 
+fn to_do x y = x + y
+
 fn main () =
-    print ('a' == 'a')
+    print to_do

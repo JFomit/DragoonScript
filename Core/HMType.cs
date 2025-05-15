@@ -60,5 +60,5 @@ class HMClosureType(params HMType[] @params) : HMType
     [var single] => single.Format(),
     [var first, var second] => $"{first.Format()} -> {second.Format()}",
     [var first, .. var rest] => rest.Aggregate(first.Format(), (p, n) => $"{p} -> {n.Format()}")
-    };
+    } + " -> any";
 }
