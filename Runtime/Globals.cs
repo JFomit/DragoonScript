@@ -18,8 +18,8 @@ static class Globals
         ["<"] = Closure.FromDelegate((int a, int b) => a < b),
         [">="] = Closure.FromDelegate((int a, int b) => a >= b),
         ["<="] = Closure.FromDelegate((int a, int b) => a <= b),
-        ["=="] = Closure.FromDelegate((int a, int b) => a == b),
-        ["!="] = Closure.FromDelegate((int a, int b) => a != b),
+        ["=="] = Closure.Overloaded(2, Closure.FromDelegate((int a, int b) => a == b), Closure.FromDelegate((char a, char b) => a == b)),
+        ["!="] = Closure.Overloaded(2, Closure.FromDelegate((int a, int b) => a != b), Closure.FromDelegate((char a, char b) => a != b)),
 
         ["++"] = Closure.FromDelegate((object x, object y) => $"{x}{y}"),
 

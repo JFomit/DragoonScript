@@ -2,13 +2,5 @@ fn (|>) x f = f x
 fn ($) f x = f x
 
 fn main () =
-    (@"echo" !! "Hello, my name is fsehfsbgurbg")
-    ||> @"cat"
-    |> run
+    print (1 != 1)
 
-fn interpret code =
-    let instruction = 0
-    let data = 0
-
-    let current = code !! instruction
-    if current == 

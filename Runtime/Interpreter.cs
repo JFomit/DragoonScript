@@ -93,6 +93,10 @@ class Interpreter(FunctionScope globals) : AstNodeVisitor<object>
     public override object VisitLiteral(Literal literal) => ExtractLiteral(literal);
     private static object ExtractLiteral(Literal l)
     {
+        if (int.TryParse(l.Value, out var i))
+        {
+            return i;
+        }
         if (double.TryParse(l.Value, out var d))
         {
             return d;
