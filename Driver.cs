@@ -10,23 +10,40 @@ class Driver
 {
     public static void Run(string[] args)
     {
+        ConsoleApp.Version = "0.0.1";
         var app = ConsoleApp.Create();
         app.Add<ScriptRunnerCommands>();
+#if DEBUG
         app.Add<DebugCommands>();
+#endif
+        app.Add<DriverDefault>();
         app.Run(args);
+    }
+
+    internal class DriverDefault
+    {
+#pragma warning disable CA1822 // Mark a member as static
+        /// <summary>
+        /// Runs a file written in Dragoon Script.
+        /// </summary>
+        /// <param name="input">Script to run.</param>
+        [Command("")]
+        public void Run([Argument] string input, ConsoleAppContext context) => ScriptRunner(input, context.EscapedArguments);
+#pragma warning restore CA1822 // Mark a member as static
     }
 
     internal class ScriptRunnerCommands
     {
 #pragma warning disable CA1822 // Mark a member as static
         /// <summary>
-        /// Runs a passed script.
+        /// Runs passed script.
         /// </summary>
         /// <param name="input">Script to run.</param>
         [Command("run")]
-        public void Run([Argument] string input) => ScriptRunner(input);
+        public void Run([Argument] string input, ConsoleAppContext context) => ScriptRunner(input, context.EscapedArguments);
 #pragma warning restore CA1822 // Mark a member as static
     }
+#if DEBUG
     internal class DebugCommands
     {
 #pragma warning disable CA1822 // Mark a member as static
@@ -34,12 +51,13 @@ class Driver
         /// Dumps parse tree.
         /// </summary>
         /// <param name="input">Script to examine.</param>
-        [Command("dumptree")]
+        [Command("dumpast")]
         public void Dump([Argument] string input) => DumpAst(input);
 #pragma warning restore CA1822 // Mark a member as static
     }
+#endif
 
-    private static int ScriptRunner(string scriptSourcePath)
+    private static int ScriptRunner(string scriptSourcePath, ReadOnlySpan<string> _)
     {
         bool isatty = !Console.IsOutputRedirected;
 
