@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using DragoonScript.Runtime;
 
 namespace DragoonScript.Core;
@@ -27,6 +28,7 @@ class CLRType(Type type) : HMType
     public override bool IsOfType(object obj) => obj.GetType() == Type;
 }
 
+[DebuggerDisplay("Format(),nq")]
 class HMClosureType(params HMType[] @params) : HMType
 {
     public HMType[] Parameters { get; } = @params;

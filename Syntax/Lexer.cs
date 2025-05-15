@@ -132,6 +132,42 @@ internal class Lexer(SourceDocument inputString) : TokenStream
                 }
             }
         }
+        if (first.Contains('\''))
+        {
+            _pos++;
+            first = Slice(input, _pos..(_pos + 1));
+            if (first.Contains('\''))
+            {
+                _pos++;
+                Emit(TokenKind.Error);
+                return;
+            }
+            if (first.Length < 1 || first.Contains('\n'))
+            {
+                Emit(TokenKind.Error);
+                return;
+            }
+            if (first.Contains('\\'))
+            {
+                _pos++;
+                first = Slice(input, _pos..(_pos + 1));
+                if (first.Contains('\''))
+                {
+                    goto charEnd;
+                }
+            }
+        charEnd:
+            _pos++;
+            first = Slice(input, _pos..(_pos + 1));
+            if (first.Contains('\''))
+            {
+                _pos++;
+                Emit(TokenKind.Char);
+                return;
+            }
+            Emit(TokenKind.Error);
+            return;
+        }
 
         if (first.ContainsAnyInRange('0', '9'))
         {

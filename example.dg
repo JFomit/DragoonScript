@@ -2,5 +2,4 @@ fn (|>) x f = f x
 fn ($) f x = f x
 
 fn main () =
-    print (1 != 1)
-
+    print ('a' == 'a')

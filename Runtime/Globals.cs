@@ -47,7 +47,7 @@ static class Globals
         ["random"] = Closure.FromDelegate((int a, int b) =>
         {
             return Random.Shared.Next(a, b);
-        }),
+        }).Curry(),
         ["loop"] = Closure.Loop(),
         ["repeat"] = Closure.Repeat(),
         ["forever"] = Closure.InfiniteLoop(),
@@ -75,11 +75,11 @@ static class Globals
         ["get"] = Closure.FromDelegate((int index, int[] array) =>
         {
             return array[index];
-        }),
+        }).Curry(),
         ["set"] = Closure.FromDelegate((int index, int value, int[] array) =>
         {
             array[index] = value;
             return Prelude.Unit;
-        })
+        }).Curry()
     });
 }

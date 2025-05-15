@@ -568,7 +568,7 @@ class Parser(TokenStream lexer)
         }
     }
 
-    private bool IsAtLiteral() => At(TokenKind.Integer) || At(TokenKind.Float) || At(TokenKind.String) || At(TokenKind.Unit);
+    private bool IsAtLiteral() => At(TokenKind.Integer) || At(TokenKind.Float) || At(TokenKind.String) || At(TokenKind.Unit) || At(TokenKind.Char);
 
     bool IsAtExpressionStart(bool isDelimited = false)
     {

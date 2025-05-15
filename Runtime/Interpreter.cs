@@ -106,6 +106,19 @@ class Interpreter(FunctionScope globals) : AstNodeVisitor<object>
             return Prelude.Unit;
         }
 
+        // char
+        if (l.Value.StartsWith('\''))
+        {
+            if (l.Value.AsSpan()[1..^1] == "\\'")
+            {
+                return '\'';
+            }
+            else
+            {
+                return l.Value[1];
+            }
+        }
+
         return ExtractString(l);
     }
     private static string ExtractString(Literal l)

@@ -35,6 +35,7 @@ enum TokenKind
     Integer,
     Float,
     String,
+    Char,
 
     Semi,
     Indent,

@@ -61,14 +61,14 @@ static class Closure
         return new DelegateClosure((_, args) =>
         {
             return func(args[0].ValueCast<T1>(), args[1].ValueCast<T2>())!;
-        }, new(new CLRType(typeof(T1)), new CLRType(typeof(T2)))).Curry();
+        }, new(new CLRType(typeof(T1)), new CLRType(typeof(T2))));
     }
     public static IClosure FromDelegate<T1, T2, T3, TResult>(Func<T1, T2, T3, TResult> func)
     {
         return new DelegateClosure((_, args) =>
         {
             return func(args[0].ValueCast<T1>(), args[1].ValueCast<T2>(), args[2].ValueCast<T3>())!;
-        }, new(new CLRType(typeof(T1)), new CLRType(typeof(T2)), new CLRType(typeof(T3)))).Curry();
+        }, new(new CLRType(typeof(T1)), new CLRType(typeof(T2)), new CLRType(typeof(T3))));
     }
 
     public static IClosure FromDelegate<T1, T2, T3, TResult>(Func<Interpreter, T1, T2, T3, TResult> func)
@@ -76,7 +76,7 @@ static class Closure
         return new DelegateClosure((interpreter, args) =>
         {
             return func(interpreter, args[0].ValueCast<T1>(), args[1].ValueCast<T2>(), args[2].ValueCast<T3>())!;
-        }, new(new CLRType(typeof(T1)), new CLRType(typeof(T2)), new CLRType(typeof(T3)))).Curry();
+        }, new(new CLRType(typeof(T1)), new CLRType(typeof(T2)), new CLRType(typeof(T3))));
     }
 
     public static IClosure Loop()
