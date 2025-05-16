@@ -1,5 +1,101 @@
 fn (|>) x f = f x
-fn ($) f x = f x
 
 fn main () =
-    print "Hello, world!"
+    brainfck "++>+++++[<+>-]++++++++[<++++++>-]<."
+    printline ()
+
+fn brainfck source =
+    let ip = 0
+    let dp = 0
+    let tape = bytearray 30000
+
+    brainfck_interpret source ip tape dp
+
+fn inc index array =
+    let next = (array !! index) + to_byte 1
+    set index next array
+    ()
+
+fn dec index array =
+    let next = (array !! index) - to_byte 1
+    set index next array
+    ()
+
+fn brainfck_interpret source ip tape dp =
+    if ip >= length_of source then
+        ()
+    else
+        interpret_rec source ip tape dp
+
+fn interpret_rec source ip tape dp =
+    let current = source !! ip
+    if current == '+' then
+        inc dp tape
+        let ip = ip + 1
+
+        brainfck_interpret source ip tape dp
+    else if current == '-' then
+        dec dp tape
+        let ip = ip + 1
+
+        brainfck_interpret source ip tape dp
+    else if current == '>' then   
+        let dp = (dp + 1) % (length_of tape)
+        let ip = ip + 1
+
+        brainfck_interpret source ip tape dp
+    else if current == '<' then
+        let dp = if dp == 0 then (length_of tape - 1) else dp - 1
+        let ip = ip + 1
+
+        brainfck_interpret source ip tape dp
+    else if current == '.' then
+        (tape !! dp) |> to_char |> print
+        let ip = ip + 1
+
+        brainfck_interpret source ip tape dp
+    else if current == ',' then
+        let input_char = read_char ()
+        set dp input_char tape
+        let ip = ip + 1
+        
+        brainfck_interpret source ip tape dp
+    else if current == '[' then
+        let ip = handle_open source ip tape dp
+        
+        brainfck_interpret source ip tape dp
+    else if current == ']' then
+        let ip = handle_close source ip tape dp
+        
+        brainfck_interpret source ip tape dp
+    else
+        let ip = ip + 1
+        
+        brainfck_interpret source ip tape dp
+
+fn skip source ip symbol =
+    if (source !! ip) == symbol then
+        ip
+    else
+        skip source (ip + 1) symbol
+fn backtrack source ip symbol =
+    if (source !! ip) == symbol then
+        ip
+    else
+        backtrack source (ip - 1) symbol
+
+fn handle_open source ip tape dp =
+    if (tape !! dp) == to_byte 0 then
+        let result = skip source ip ']'
+        
+        result + 1
+    else
+        ip + 1
+
+fn handle_close source ip tape dp =
+    if (tape !! dp) != to_byte 0 then
+        let result = backtrack source ip '['
+        
+        result + 1
+    else
+        ip + 1
