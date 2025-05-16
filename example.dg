@@ -1,7 +1,5 @@
 fn (|>) x f = f x
 fn ($) f x = f x
 
-fn to_do x y = x + y
-
 fn main () =
-    print to_do
+    print "Hello, world!"

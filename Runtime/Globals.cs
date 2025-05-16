@@ -59,9 +59,9 @@ static class Globals
 
         ["!!"] = Closure.FromDelegate((object array, int index) =>
         {
-            if (array is object[] arr)
+            if (array is Array arr)
             {
-                return arr[index];
+                return arr.GetValue(index);
             }
             else if (array is string str)
             {
@@ -72,14 +72,27 @@ static class Globals
         }),
 
         ["numarray"] = Closure.FromDelegate((int size) => new int[size]),
-        ["get"] = Closure.FromDelegate((int index, int[] array) =>
+        ["bytearray"] = Closure.FromDelegate((int size) => new byte[size]),
+        ["get"] = Closure.FromDelegate((int index, object array) =>
         {
-            return array[index];
+            if (array is Array arr)
+            {
+                return arr.GetValue(index);
+            }
+            else if (array is string str)
+            {
+                return str[index];
+            }
+            throw new InterpreterException($"Invalid type: expected string or array, got {array.GetType().Format()}.", Prelude.None);
         }).Curry(),
-        ["set"] = Closure.FromDelegate((int index, int value, int[] array) =>
+        ["set"] = Closure.FromDelegate((int index, object value, object array) =>
         {
-            array[index] = value;
-            return Prelude.Unit;
+            if (array is Array arr)
+            {
+                arr.SetValue(value, index);
+                return Prelude.Unit;
+            }
+            throw new InterpreterException($"Invalid type: expected array, got {array.GetType().Format()}.", Prelude.None);
         }).Curry()
     });
 }
