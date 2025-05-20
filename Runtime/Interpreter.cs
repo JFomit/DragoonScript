@@ -19,9 +19,9 @@ class Interpreter(FunctionScope globals) : AstNodeVisitor<object>
     }
     private FunctionScope _current = globals.Fork();
 
-    public object Run(LambdaTerm first)
+    public object Run(LambdaTerm start)
     {
-        var expression = first;
+        var expression = start;
 
     next:
         switch (expression)
@@ -51,6 +51,7 @@ class Interpreter(FunctionScope globals) : AstNodeVisitor<object>
                         PopScope();
                         Current.DefineUniqueOrFork(result.Name, @else, out _current);
                     }
+                    expression = ifExpression.Expression.Unwrap();
                     goto next;
                 }
             case Variable variable:
@@ -80,11 +81,12 @@ class Interpreter(FunctionScope globals) : AstNodeVisitor<object>
                 {
                     var result = application.Variable;
                     var function = Visit(application.Function).ValueCast<IClosure>();
-                    expression = application.Expression.Unwrap();
                     var args = application.Arguments.Select(ExtractValue).ToArray();
 
                     var callResult = function.Call(this, args);
                     Current.DefineUniqueOrFork(result.Name, callResult, out _current);
+
+                    expression = application.Expression.Unwrap();
                     goto next;
                 }
         }
@@ -92,59 +94,14 @@ class Interpreter(FunctionScope globals) : AstNodeVisitor<object>
         throw new InterpreterException("Interpreter discovered an invalid program.", None);
     }
 
-    public override object VisitValueBinding(ValueBinding binding)
-    {
-        var result = binding.Variable;
-        Current.DefineUniqueOrFork(result.Name, ExtractValue(binding.Value), out _current);
-        return Visit(binding.Expression.Unwrap());
-    }
-    public override object VisitApplicationBinding(ApplicationBinding binding)
-    {
-        var result = binding.Variable;
-        var function = Visit(binding.Function).ValueCast<IClosure>();
-        var expression = binding.Expression.Unwrap();
-        var args = binding.Arguments.Select(ExtractValue).ToArray();
+    public override object VisitValueBinding(ValueBinding binding) => Run(binding);
+    public override object VisitApplicationBinding(ApplicationBinding binding) => Run(binding);
+    public override object VisitVariable(Variable variable) => Run(variable);
 
-        var callResult = function.Call(this, args);
-        Current.DefineUniqueOrFork(result.Name, callResult, out _current);
-        return Visit(expression);
-    }
-    public override object VisitVariable(Variable variable)
-        => Current.Get(variable.Name).TryUnwrap(out var v)
-        ? v
-        : throw new InterpreterException($"Variable not in scope: {variable.Name}.", None);
+    public override object VisitFunctionVariable(FunctionVariable variable) => Run(variable);
 
-    public override object VisitFunctionVariable(FunctionVariable variable)
-        => Current.Get(variable.Function.Name).TryUnwrap(out var f)
-        ? f
-        : throw new InterpreterException($"Function not in scope: {variable.Function.Name}.", None);
-
-    public override object VisitIfExpressionBinding(IfExpressionBinding binding)
-    {
-        var result = binding.Variable;
-        var condition = (bool)ExtractValue(binding.Condition);
-        if (condition)
-        {
-            PushScope();
-            var then = Visit(binding.Then);
-            PopScope();
-            Current.DefineUniqueOrFork(result.Name, then, out _current);
-        }
-        else
-        {
-            PushScope();
-            var @else = Visit(binding.Else);
-            PopScope();
-            Current.DefineUniqueOrFork(result.Name, @else, out _current);
-        }
-
-        return Visit(binding.Expression.Unwrap());
-    }
-    public override object VisitAbstraction(Abstraction abstraction)
-    {
-        var lambda = Closure.FromLambda(abstraction, Current);
-        return lambda;
-    }
+    public override object VisitIfExpressionBinding(IfExpressionBinding binding) => Run(binding);
+    public override object VisitAbstraction(Abstraction abstraction) => Run(abstraction);
 
     private object ExtractValue(Value value) => value switch
     {
@@ -158,7 +115,7 @@ class Interpreter(FunctionScope globals) : AstNodeVisitor<object>
 
         _ => throw new InterpreterException($"Not in scope: {value}.", None)
     };
-    public override object VisitLiteral(Literal literal) => ExtractLiteral(literal);
+    public override object VisitLiteral(Literal literal) => Run(literal);
     private static object ExtractLiteral(Literal l)
     {
         if (int.TryParse(l.Value, out var i))
