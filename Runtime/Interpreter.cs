@@ -19,6 +19,79 @@ class Interpreter(FunctionScope globals) : AstNodeVisitor<object>
     }
     private FunctionScope _current = globals.Fork();
 
+    public object Run(LambdaTerm first)
+    {
+        var expression = first;
+
+    next:
+        switch (expression)
+        {
+            case ValueBinding binding:
+                {
+                    var result = binding.Variable;
+                    Current.DefineUniqueOrFork(result.Name, ExtractValue(binding.Value), out _current);
+                    expression = binding.Expression.Unwrap();
+                    goto next;
+                }
+            case IfExpressionBinding ifExpression:
+                {
+                    var result = ifExpression.Variable;
+                    var condition = (bool)ExtractValue(ifExpression.Condition);
+                    if (condition)
+                    {
+                        PushScope();
+                        var then = Run(ifExpression.Then);
+                        PopScope();
+                        Current.DefineUniqueOrFork(result.Name, then, out _current);
+                    }
+                    else
+                    {
+                        PushScope();
+                        var @else = Run(ifExpression.Else);
+                        PopScope();
+                        Current.DefineUniqueOrFork(result.Name, @else, out _current);
+                    }
+                    goto next;
+                }
+            case Variable variable:
+                {
+                    return Current
+                        .Get(variable.Name)
+                        .TryUnwrap(out var v)
+                    ? v
+                    : throw new InterpreterException($"Variable not in scope: {variable.Name}.", None);
+                }
+            case FunctionVariable variable:
+                {
+                    return Current
+                            .Get(variable.Function.Name)
+                            .TryUnwrap(out var f)
+                        ? f
+                        : throw new InterpreterException($"Function not in scope: {variable.Function.Name}.", None);
+                }
+            case Abstraction abstraction:
+                {
+                    var lambda = Closure.FromLambda(abstraction, Current);
+                    return lambda;
+                }
+            case Literal literal:
+                return ExtractLiteral(literal);
+            case ApplicationBinding application:
+                {
+                    var result = application.Variable;
+                    var function = Visit(application.Function).ValueCast<IClosure>();
+                    expression = application.Expression.Unwrap();
+                    var args = application.Arguments.Select(ExtractValue).ToArray();
+
+                    var callResult = function.Call(this, args);
+                    Current.DefineUniqueOrFork(result.Name, callResult, out _current);
+                    goto next;
+                }
+        }
+
+        throw new InterpreterException("Interpreter discovered an invalid program.", None);
+    }
+
     public override object VisitValueBinding(ValueBinding binding)
     {
         var result = binding.Variable;
@@ -31,11 +104,6 @@ class Interpreter(FunctionScope globals) : AstNodeVisitor<object>
         var function = Visit(binding.Function).ValueCast<IClosure>();
         var expression = binding.Expression.Unwrap();
         var args = binding.Arguments.Select(ExtractValue).ToArray();
-
-        // if (expression is Variable variable && variable.Name == result.Name)
-        // {
-
-        // }
 
         var callResult = function.Call(this, args);
         Current.DefineUniqueOrFork(result.Name, callResult, out _current);
