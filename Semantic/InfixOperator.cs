@@ -72,7 +72,7 @@ readonly record struct InfixOperator(Token Token, int Precedence, Associativity 
             ">" or "<" or ">=" or  "<=" or "==" or "!=" => Ok(new InfixOperator(token, 5, Associativity.Left)), // relational group
 
             "&" or "&&" => Ok(new InfixOperator(token, 4, Associativity.Left)), // `and' group
-            "|" or "||" => Ok(new InfixOperator(token, 3, Associativity.Left)), // `or' group
+            "||" => Ok(new InfixOperator(token, 3, Associativity.Left)), // `or' group
             ['|' or '&', ..] => Ok(new InfixOperator(token, 3, Associativity.Left)), // custom `logic` group
 
             ['>', '>', ..] or ['<', '<', ..] => Ok(new InfixOperator(token, 2, Associativity.Left)), // bit-shift group

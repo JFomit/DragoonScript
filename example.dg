@@ -1,21 +1,21 @@
 fn (|>) x f = f x
 
 fn main () =
-    let code = "++>+++++[<+>-]++++++++[<++++++>-]<."
+    let code = "++++>+++++[<+>-]++++++++[<++++++>-]<."
     brainfck code
     printline ()
 
 fn inc index array =
     let next = (array !! index) + to_byte 1
-    set index next array
+    array_set index next array
 fn dec index array =
     let next = (array !! index) - to_byte 1
-    set index next array
+    array_set index next array
 
 fn brainfck source =
     let ip = 0
     let dp = 0
-    let tape = bytearray 30000
+    let tape = byte_array 30000
 
     brainfck_interpret source ip tape dp
 
@@ -54,7 +54,7 @@ fn interpret_rec source ip tape dp =
         brainfck_interpret source ip tape dp
     else if current == ',' then
         let input_char = read_char ()
-        set dp input_char tape
+        array_set dp input_char tape
         let ip = ip + 1
         
         brainfck_interpret source ip tape dp

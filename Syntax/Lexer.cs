@@ -16,7 +16,7 @@ internal class Lexer(SourceDocument inputString) : TokenStream
     private int _line = 1;
     private int _column = 1;
     public override SourceDocument Document { get; } = inputString;
-    private static readonly SearchValues<char> OperatorChars = SearchValues.Create(@"!#$%&*+./<=>?@^|-~\\");
+    private static readonly SearchValues<char> OperatorChars = SearchValues.Create(@"!#$%&*+./<=>?@^|-~\");
     private readonly Queue<Token> _buffer = [];
     private readonly Stack<int> _lineIndents = InitStack();
     private static Stack<int> InitStack()

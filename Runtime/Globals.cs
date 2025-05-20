@@ -25,6 +25,9 @@ static class Globals
             Closure.FromDelegate((int a, int b) => a % b),
             Closure.FromDelegate((byte a, byte b) => (byte)(a % b))),
 
+        // ["~##"] = Closure.FromDelegate((int a) => a * a),
+        // ["~###"] = Closure.FromDelegate((int a) => a * a * a),
+
         [">"] = Closure.Overloaded(2,
             Closure.FromDelegate((int a, int b) => a > b),
             Closure.FromDelegate((byte a, byte b) => a > b)),
@@ -49,6 +52,9 @@ static class Globals
         ["&&"] = Closure.FromDelegate((bool a, bool b) => a && b),
 
         ["++"] = Closure.FromDelegate((object x, object y) => $"{x}{y}"),
+
+        ["~##"] = Closure.FromDelegate((int x) => x * x),
+        ["~###"] = Closure.FromDelegate((int x) => x * x * x),
 
         ["printline"] = Closure.FromDelegate((object x) =>
         {
@@ -119,9 +125,9 @@ static class Globals
             throw new InterpreterException($"Invalid type: expected string or array, got {array.GetType().Format()}.", Prelude.None);
         }),
 
-        ["numarray"] = Closure.FromDelegate((int size) => new int[size]),
-        ["bytearray"] = Closure.FromDelegate((int size) => new byte[size]),
-        ["get"] = Closure.FromDelegate((int index, object array) =>
+        ["int_array"] = Closure.FromDelegate((int size) => new int[size]),
+        ["byte_array"] = Closure.FromDelegate((int size) => new byte[size]),
+        ["array_get"] = Closure.FromDelegate((int index, object array) =>
         {
             if (array is Array arr)
             {
@@ -133,7 +139,7 @@ static class Globals
             }
             throw new InterpreterException($"Invalid type: expected string or array, got {array.GetType().Format()}.", Prelude.None);
         }).Curry(),
-        ["set"] = Closure.FromDelegate((int index, object value, object array) =>
+        ["array_set"] = Closure.FromDelegate((int index, object value, object array) =>
         {
             if (array is Array arr)
             {
