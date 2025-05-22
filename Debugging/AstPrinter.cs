@@ -40,7 +40,14 @@ class AstConsolePrinter : AstNodeVisitor<Unit>
         var function = binding.Function;
         var args = binding.Arguments;
 
-        Console.WriteLine($"{Indent}let {variable.Name} = ({FormatAtomic(function)} {FormatAtomics(args)}) in");
+        if (binding.IsTailcall)
+        {
+            Console.WriteLine($"{Indent}let {variable.Name} = TAIL.({FormatAtomic(function)} {FormatAtomics(args)}) in");
+        }
+        else
+        {
+            Console.WriteLine($"{Indent}let {variable.Name} = ({FormatAtomic(function)} {FormatAtomics(args)}) in");
+        }
         _indent += 2;
         Visit(body);
         _indent -= 2;

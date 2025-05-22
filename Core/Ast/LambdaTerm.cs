@@ -41,8 +41,11 @@ record ValueBinding(Variable Variable, Value Value) : Binding(Variable)
 // TODO: make lambda calculus `correct' by currying right after the parser or *in* the parser
 record ApplicationBinding(Variable Variable, Value Function, Value[] Arguments) : Binding(Variable)
 {
+    public bool IsTailcall { get; set; } = false;
+
     public override IEnumerable<AstNode> Children
     {
+
         get
         {
             yield return Variable;
