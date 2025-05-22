@@ -19,8 +19,12 @@ class Interpreter(FunctionScope globals) : AstNodeVisitor<object>
     }
     private FunctionScope _current = globals.Fork();
 
-    public object Run(LambdaTerm start)
+    public Stack<Callable> CallStack { get; } = [];
+
+    public object Call(Callable closure)
     {
+        CallStack.Push(closure);
+
         var expression = start;
 
     next:
@@ -80,7 +84,7 @@ class Interpreter(FunctionScope globals) : AstNodeVisitor<object>
             case ApplicationBinding application:
                 {
                     var result = application.Variable;
-                    var function = Visit(application.Function).ValueCast<IClosure>();
+                    var function = Visit(application.Function).ValueCast<Callable>();
                     var args = application.Arguments.Select(ExtractValue).ToArray();
 
                     PushScope();
@@ -94,6 +98,11 @@ class Interpreter(FunctionScope globals) : AstNodeVisitor<object>
         }
 
         throw new InterpreterException("Interpreter discovered an invalid program.", None);
+    }
+
+    public object Run(LambdaTerm start)
+    {
+
     }
 
     public override object VisitValueBinding(ValueBinding binding) => Run(binding);

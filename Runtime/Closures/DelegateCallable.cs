@@ -5,16 +5,16 @@ using static JFomit.Functional.Prelude;
 
 namespace DragoonScript.Runtime;
 
-class DelegateClosure(Func<Interpreter, object[], object> @delegate, HMClosureType type, string? format = null) : IClosure
+class DelegateCallable(Func<Interpreter, object[], object> @delegate, HMClosureType type, string? format = null) : Callable
 {
     public Option<string> Name { get; } = format.ToOption();
 
     public Func<Interpreter, object[], object> Delegate { get; } = @delegate;
-    public int MaxArgsCount { get; } = type.Parameters.Length;
+    public override int MaxArgsCount { get; } = type.Parameters.Length;
 
-    public HMClosureType Type { get; } = type;
+    public override HMClosureType Type { get; } = type;
 
-    public object Call(Interpreter interpreter, object[] args)
+    public override object Call(Interpreter interpreter, object[] args)
     {
         if (args.Length > MaxArgsCount)
         {
@@ -27,5 +27,5 @@ class DelegateClosure(Func<Interpreter, object[], object> @delegate, HMClosureTy
         return Delegate(interpreter, args);
     }
 
-    public string Format() => Name.TryUnwrap(out var name) ? name : "<builtin>";
+    public override string Format() => Name.TryUnwrap(out var name) ? name : "<builtin>";
 }

@@ -11,7 +11,7 @@ namespace DragoonScript.Runtime;
 
 static class Closure
 {
-    public static IClosure Curry(this IClosure inner)
+    public static Callable Curry(this Callable inner)
     {
         var max = inner.MaxArgsCount;
         if (max == 1)
@@ -19,12 +19,12 @@ static class Closure
             return inner; // already curried
         }
 
-        return new CurriedClosure(inner, []);
+        return new CurriedCallable(inner, []);
     }
 
-    public static IClosure FromDelegate(Func<Unit> func)
+    public static Callable FromDelegate(Func<Unit> func)
     {
-        return new DelegateClosure((_, args) =>
+        return new DelegateCallable((_, args) =>
         {
             if (args.Length > 1)
             {
@@ -34,9 +34,9 @@ static class Closure
         }, new(new CLRType(typeof(Unit))));
     }
 
-    public static IClosure FromDelegate<TResult>(Func<TResult> func)
+    public static Callable FromDelegate<TResult>(Func<TResult> func)
     {
-        return new DelegateClosure((_, args) =>
+        return new DelegateCallable((_, args) =>
         {
             if (args.Length > 1)
             {
@@ -45,9 +45,9 @@ static class Closure
             return func()!;
         }, new(new CLRType(typeof(Unit))));
     }
-    public static IClosure FromDelegate<T1, TResult>(Func<T1, TResult> func)
+    public static Callable FromDelegate<T1, TResult>(Func<T1, TResult> func)
     {
-        return new DelegateClosure((_, args) =>
+        return new DelegateCallable((_, args) =>
         {
             if (args.Length > 1)
             {
@@ -56,34 +56,34 @@ static class Closure
             return func(args[0].ValueCast<T1>())!;
         }, new(new CLRType(typeof(Unit))));
     }
-    public static IClosure FromDelegate<T1, T2, TResult>(Func<T1, T2, TResult> func)
+    public static Callable FromDelegate<T1, T2, TResult>(Func<T1, T2, TResult> func)
     {
-        return new DelegateClosure((_, args) =>
+        return new DelegateCallable((_, args) =>
         {
             return func(args[0].ValueCast<T1>(), args[1].ValueCast<T2>())!;
         }, new(new CLRType(typeof(T1)), new CLRType(typeof(T2))));
     }
-    public static IClosure FromDelegate<T1, T2, T3, TResult>(Func<T1, T2, T3, TResult> func)
+    public static Callable FromDelegate<T1, T2, T3, TResult>(Func<T1, T2, T3, TResult> func)
     {
-        return new DelegateClosure((_, args) =>
+        return new DelegateCallable((_, args) =>
         {
             return func(args[0].ValueCast<T1>(), args[1].ValueCast<T2>(), args[2].ValueCast<T3>())!;
         }, new(new CLRType(typeof(T1)), new CLRType(typeof(T2)), new CLRType(typeof(T3))));
     }
 
-    public static IClosure FromDelegate<T1, T2, T3, TResult>(Func<Interpreter, T1, T2, T3, TResult> func)
+    public static Callable FromDelegate<T1, T2, T3, TResult>(Func<Interpreter, T1, T2, T3, TResult> func)
     {
-        return new DelegateClosure((interpreter, args) =>
+        return new DelegateCallable((interpreter, args) =>
         {
             return func(interpreter, args[0].ValueCast<T1>(), args[1].ValueCast<T2>(), args[2].ValueCast<T3>())!;
         }, new(new CLRType(typeof(T1)), new CLRType(typeof(T2)), new CLRType(typeof(T3))));
     }
 
-    public static IClosure Loop()
+    public static Callable Loop()
     {
-        return new DelegateClosure((interpreter, args) =>
+        return new DelegateCallable((interpreter, args) =>
         {
-            var func = args[1].ValueCast<IClosure>();
+            var func = args[1].ValueCast<Callable>();
             var count = args[0].ValueCast<int>();
 
             for (int i = 0; i < count; i++)
@@ -92,13 +92,13 @@ static class Closure
             }
 
             return Prelude.Unit;
-        }, new(new CLRType(typeof(int)), new CLRType(typeof(IClosure)))).Curry();
+        }, new(new CLRType(typeof(int)), new CLRType(typeof(Callable)))).Curry();
     }
-    public static IClosure Repeat()
+    public static Callable Repeat()
     {
-        return new DelegateClosure((interpreter, args) =>
+        return new DelegateCallable((interpreter, args) =>
         {
-            var func = args[1].ValueCast<IClosure>();
+            var func = args[1].ValueCast<Callable>();
             var count = args[0].ValueCast<int>();
 
             for (int i = 0; i < count; i++)
@@ -108,27 +108,27 @@ static class Closure
             }
 
             return Prelude.Unit;
-        }, new(new CLRType(typeof(int)), new CLRType(typeof(IClosure)))).Curry();
+        }, new(new CLRType(typeof(int)), new CLRType(typeof(Callable)))).Curry();
     }
-    public static IClosure InfiniteLoop()
+    public static Callable InfiniteLoop()
     {
-        return new DelegateClosure((interpreter, args) =>
+        return new DelegateCallable((interpreter, args) =>
         {
-            var func = args[0].ValueCast<IClosure>();
+            var func = args[0].ValueCast<Callable>();
 
             while (true)
             {
                 Debug.Assert(func.MaxArgsCount > 0);
                 func.Call(interpreter, [Prelude.Unit]);
             }
-        }, new(new CLRType(typeof(IClosure))));
+        }, new(new CLRType(typeof(Callable))));
     }
-    public static IClosure While()
+    public static Callable While()
     {
-        return new DelegateClosure((interpreter, args) =>
+        return new DelegateCallable((interpreter, args) =>
         {
-            var cond = args[0].ValueCast<IClosure>();
-            var func = args[1].ValueCast<IClosure>();
+            var cond = args[0].ValueCast<Callable>();
+            var func = args[1].ValueCast<Callable>();
 
             while (cond.Call(interpreter, [Prelude.Unit]) is true)
             {
@@ -137,18 +137,18 @@ static class Closure
             }
 
             return Prelude.Unit;
-        }, new(new CLRType(typeof(IClosure)), new CLRType(typeof(IClosure)))).Curry();
+        }, new(new CLRType(typeof(Callable)), new CLRType(typeof(Callable)))).Curry();
     }
 
-    public static IClosure FromDeclaration(FunctionDeclaration declaration) => new FunctionClosure(declaration).Curry();
-    public static IClosure FromLambda(Abstraction abstraction, FunctionScope scope) => new LambdaClosure(abstraction, scope).Curry();
+    public static Callable FromDeclaration(FunctionDeclaration declaration) => new FunctionCallable(declaration).Curry();
+    public static Callable FromLambda(Abstraction abstraction, FunctionScope scope) => new LambdaClosure(abstraction, scope).Curry();
 
-    public static IClosure Overloaded(int argsCount, params IClosure[] closures)
+    public static Callable Overloaded(int argsCount, params Callable[] closures)
     {
-        var builder = OverloadedClosure.CreateBuilder(argsCount);
+        var builder = OverloadedCallable.CreateBuilder(argsCount);
         var result = builder.AddRange(closures).Build();
 
         var result2 = result.Select((string message) => new InterpreterException(message, None));
-        return ResultExtensions.Cast<OverloadedClosure, InterpreterException, Exception>(result2).UnwrapOrThrow();
+        return ResultExtensions.Cast<OverloadedCallable, InterpreterException, Exception>(result2).UnwrapOrThrow();
     }
 }

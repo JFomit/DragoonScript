@@ -7,7 +7,7 @@ internal static class Utils
 {
     internal static string Format(this Type t)
     {
-        if (t == typeof(IClosure))
+        if (t == typeof(Callable))
         {
             return "<fn>";
         }

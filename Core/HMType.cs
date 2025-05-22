@@ -34,7 +34,7 @@ class HMClosureType(params HMType[] @params) : HMType
     public HMType[] Parameters { get; } = @params;
 
     public override bool IsEqualTo(HMType other) => other is HMClosureType closureType && closureType.Parameters.SequenceEqual(Parameters);
-    public override bool IsOfType(object obj) => obj is IClosure closure && IsEqualTo(closure.Type);
+    public override bool IsOfType(object obj) => obj is Callable closure && IsEqualTo(closure.Type);
 
     public bool IsCallableWith(object[] args)
     {

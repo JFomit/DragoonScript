@@ -5,14 +5,14 @@ using static JFomit.Functional.Prelude;
 
 namespace DragoonScript.Runtime;
 
-class FunctionClosure(FunctionDeclaration function) : IClosure
+class FunctionCallable(FunctionDeclaration function) : Callable
 {
     public FunctionDeclaration Function { get; } = function;
-    public int MaxArgsCount => Function.Parameters.Length;
+    public override int MaxArgsCount => Function.Parameters.Length;
 
-    public HMClosureType Type { get; } = new(function.Parameters.Select(_ => new Any()).ToArray());
+    public override HMClosureType Type { get; } = new(function.Parameters.Select(_ => new Any()).ToArray());
 
-    public object Call(Interpreter interpreter, object[] args)
+    public override object Call(Interpreter interpreter, object[] args)
     {
         var scope = interpreter.Current;
         if (Function.Parameters.Length < args.Length)
@@ -29,5 +29,5 @@ class FunctionClosure(FunctionDeclaration function) : IClosure
         return result;
     }
 
-    public string Format() => $"<{Function.Name}: {Type.Format()}>";
+    public override string Format() => $"<{Function.Name}: {Type.Format()}>";
 }

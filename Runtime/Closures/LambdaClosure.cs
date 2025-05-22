@@ -4,16 +4,16 @@ using DragoonScript.Core.Ast;
 
 namespace DragoonScript.Runtime;
 
-class LambdaClosure(Abstraction lambda, FunctionScope currentScope) : IClosure
+class LambdaClosure(Abstraction lambda, FunctionScope currentScope) : Callable
 {
     public Abstraction Lambda { get; } = lambda;
     FunctionScope Closure { get; } = currentScope;
 
-    public int MaxArgsCount => Lambda.Variables.Length;
+    public override int MaxArgsCount => Lambda.Variables.Length;
 
-    public HMClosureType Type { get; } = new(lambda.Variables.Select(_ => new Any()).ToArray());
+    public override HMClosureType Type { get; } = new(lambda.Variables.Select(_ => new Any()).ToArray());
 
-    public object Call(Interpreter interpreter, object[] args)
+    public override object Call(Interpreter interpreter, object[] args)
     {
         var old = interpreter.PushScope(Closure);
         var scope = interpreter.Current;
@@ -29,5 +29,5 @@ class LambdaClosure(Abstraction lambda, FunctionScope currentScope) : IClosure
         return result;
     }
 
-    public string Format() => $"<lambda: {Type.Format()}>";
+    public override string Format() => $"<lambda: {Type.Format()}>";
 }

@@ -5,25 +5,25 @@ using static JFomit.Functional.Prelude;
 
 namespace DragoonScript.Runtime;
 
-class OverloadedClosure : IClosure
+class OverloadedCallable : Callable
 {
     public readonly struct Builder(int argsCount)
     {
-        private readonly List<IClosure> _closures = [];
+        private readonly List<Callable> _closures = [];
         private readonly int _argsCount = argsCount;
 
-        public Builder AddRange(IEnumerable<IClosure> closures)
+        public Builder AddRange(IEnumerable<Callable> closures)
         {
             _closures.AddRange(closures);
             return this;
         }
-        public Builder Add(IClosure closure)
+        public Builder Add(Callable closure)
         {
             _closures.Add(closure);
             return this;
         }
 
-        public Result<OverloadedClosure, string> Build(string? format = null)
+        public Result<OverloadedCallable, string> Build(string? format = null)
         {
             if (_closures.Count == 0)
             {
@@ -36,20 +36,20 @@ class OverloadedClosure : IClosure
                 return Error("Function group contains functions of different arity.");
             }
 
-            return Ok(new OverloadedClosure([.. _closures], format));
+            return Ok(new OverloadedCallable([.. _closures], format));
 
-            bool ValidateClosures(IClosure closure) => closure.MaxArgsCount == count;
+            bool ValidateClosures(Callable closure) => closure.MaxArgsCount == count;
         }
     }
 
     public Option<string> Name { get; }
 
-    public int MaxArgsCount { get; }
-    public IClosure[] Closures { get; }
+    public override int MaxArgsCount { get; }
+    public Callable[] Closures { get; }
 
-    public HMClosureType Type { get; }
+    public override HMClosureType Type { get; }
 
-    private OverloadedClosure(IClosure[] closures, string? format = null)
+    private OverloadedCallable(Callable[] closures, string? format = null)
     {
         Name = format.ToOption();
         Closures = closures;
@@ -59,7 +59,7 @@ class OverloadedClosure : IClosure
 
     public static Builder CreateBuilder(int count) => new(count);
 
-    public object Call(Interpreter interpreter, object[] args)
+    public override object Call(Interpreter interpreter, object[] args)
     {
         if (args.Length > MaxArgsCount)
         {
@@ -81,5 +81,5 @@ class OverloadedClosure : IClosure
         throw new InterpreterException($"No function in {Format()} is callable with provided arguments: {args.Skip(1).Aggregate(args[0].GetType().Format(), (p, n) => $"{p} -> {n.GetType().Format()}")}", Some(Format()));
     }
 
-    public string Format() => Name.TryUnwrap(out var name) ? $"<{name}: group with {Closures.Length} functions>" : $"<group with {Closures.Length} functions>";
+    public override string Format() => Name.TryUnwrap(out var name) ? $"<{name}: group with {Closures.Length} functions>" : $"<group with {Closures.Length} functions>";
 }

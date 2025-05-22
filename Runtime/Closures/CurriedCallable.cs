@@ -3,16 +3,16 @@ using static JFomit.Functional.Prelude;
 
 namespace DragoonScript.Runtime;
 
-class CurriedClosure(IClosure inner, object[] bound) : IClosure
+class CurriedCallable(Callable inner, object[] bound) : Callable
 {
-    public IClosure Inner { get; } = inner;
+    public Callable Inner { get; } = inner;
     public object[] Bound { get; } = bound;
 
-    public int MaxArgsCount => Inner.MaxArgsCount - Bound.Length;
+    public override int MaxArgsCount => Inner.MaxArgsCount - Bound.Length;
 
-    public HMClosureType Type => new(Enumerable.Range(1, MaxArgsCount).Select(_ => new Any()).ToArray());
+    public override HMClosureType Type => new(Enumerable.Range(1, MaxArgsCount).Select(_ => new Any()).ToArray());
 
-    public object Call(Interpreter interpreter, object[] args)
+    public override object Call(Interpreter interpreter, object[] args)
     {
         if (args.Length == MaxArgsCount) // perfect forwarding
         {
@@ -28,10 +28,10 @@ class CurriedClosure(IClosure inner, object[] bound) : IClosure
             throw new InterpreterException("Not enough arguments provided.", Some(Format()));
         }
 
-        return new CurriedClosure(Inner, [.. Bound, .. args]); // partial application
+        return new CurriedCallable(Inner, [.. Bound, .. args]); // partial application
     }
 
-    public string Format()
+    public override string Format()
     {
         if (MaxArgsCount == Inner.MaxArgsCount)
         {

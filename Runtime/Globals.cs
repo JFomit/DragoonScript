@@ -62,7 +62,7 @@ static class Globals
             {
                 Console.WriteLine();
             }
-            else if (x is IClosure cl)
+            else if (x is Callable cl)
             {
                 Console.WriteLine(cl.Format());
             }
@@ -78,7 +78,7 @@ static class Globals
             {
                 Console.Write("()");
             }
-            else if (x is IClosure cl)
+            else if (x is Callable cl)
             {
                 Console.Write(cl.Format());
             }
@@ -107,9 +107,9 @@ static class Globals
         ["forever"] = Closure.InfiniteLoop(),
         ["while"] = Closure.While(),
 
-        ["shell"] = ShellClosure.PrepareCommand(),
-        ["||>"] = ShellClosure.Pipe(),
-        ["run"] = ShellClosure.Run(),
+        ["shell"] = ShellClallable.PrepareCommand(),
+        ["||>"] = ShellClallable.Pipe(),
+        ["run"] = ShellClallable.Run(),
 
         ["!!"] = Closure.FromDelegate((object array, int index) =>
         {
