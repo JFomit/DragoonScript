@@ -83,7 +83,9 @@ class Interpreter(FunctionScope globals) : AstNodeVisitor<object>
                     var function = Visit(application.Function).ValueCast<IClosure>();
                     var args = application.Arguments.Select(ExtractValue).ToArray();
 
+                    PushScope();
                     var callResult = function.Call(this, args);
+                    PopScope();
                     Current.DefineUniqueOrFork(result.Name, callResult, out _current);
                     expression = application.Expression.Unwrap();
 
