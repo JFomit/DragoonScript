@@ -85,8 +85,8 @@ class Interpreter(FunctionScope globals) : AstNodeVisitor<object>
 
                     var callResult = function.Call(this, args);
                     Current.DefineUniqueOrFork(result.Name, callResult, out _current);
-
                     expression = application.Expression.Unwrap();
+
                     goto next;
                 }
         }

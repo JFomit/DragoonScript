@@ -30,6 +30,19 @@ class FunctionClosure(FunctionDeclaration function) : IClosure
 
         return result;
     }
+    public void TailCall(FunctionScope scope, ref LambdaTerm currentExpression, object[] args)
+    {
+        if (Function.Parameters.Length < args.Length)
+        {
+            throw new InterpreterException("Extra arguments.", Some(Format()));
+        }
+        for (int i = 0; i < args.Length; i++)
+        {
+            var ok = scope.DefineUniqueOrFork(Function.Parameters[i].Name, args[i], out _);
+            Debug.Assert(ok);
+        }
+        currentExpression = Function.Body;
+    }
 
     public string Format() => $"<{Function.Name}: {Type.Format()}>";
 }
