@@ -12,5 +12,5 @@ abstract class Callable
 
     public abstract string Format();
 
-    public virtual bool IsImmediate => false;
+    public virtual bool IsImmediate(int count) => false;
 }

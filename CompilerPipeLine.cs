@@ -7,7 +7,7 @@ using JFomit.Functional.Extensions;
 using static JFomit.Functional.Prelude;
 using DragoonScript.Runtime;
 using DragoonScript.Core;
-using DragoonScript.Core.Optimization;
+using DragoonScript.Core.Transformations;
 using DragoonScript.Debugging;
 
 namespace DragoonScript;
@@ -38,9 +38,13 @@ class CompilerPipeLine(string identifier, string source)
         var ast = new AstBuilder();
         var program = ast.VisitFile(tree);
         var tailcallOptimizer = new TailCallPass();
+        var joinOptimizer = new JoinPass();
+        // var printer = new AstConsolePrinter();
         foreach (var (_, function) in program)
         {
             tailcallOptimizer.TransformFunction(function);
+            joinOptimizer.TransformFunction(function);
+            // printer.Visit(function);
         }
 
         try

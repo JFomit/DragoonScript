@@ -98,6 +98,9 @@ record Abstraction(Variable[] Variables, LambdaTerm Body) : Value
 }
 record IfExpressionBinding(Variable Variable, Value Condition, LambdaTerm Then, LambdaTerm Else) : Binding(Variable)
 {
+    public LambdaTerm Then { get; set; } = Then;
+    public LambdaTerm Else { get; set; } = Else;
+
     public override IEnumerable<AstNode> Children
     {
         get
@@ -125,4 +128,17 @@ record Halt(Value Value) : Value
     }
 
     public override TResult Accept<TResult>(AstNodeVisitor<TResult> visitor) => visitor.VisitHalt(Value);
+}
+
+record Join(Value Value, Option<LambdaTerm> JoinTarget) : Value
+{
+    public override IEnumerable<AstNode> Children
+    {
+        get
+        {
+            yield return Value;
+        }
+    }
+
+    public override TResult Accept<TResult>(AstNodeVisitor<TResult> visitor) => visitor.VisitJoin(this);
 }

@@ -4,9 +4,9 @@ using JFomit.Functional;
 using JFomit.Functional.Monads;
 using static JFomit.Functional.Prelude;
 
-namespace DragoonScript.Core.Optimization;
+namespace DragoonScript.Core.Transformations;
 
-class TailCallPass : AstNodeVisitor<Unit>, IOptimizationPass
+class TailCallPass : AstNodeVisitor<Unit>, ITransformationPass
 {
     public void TransformFunction(FunctionDeclaration function)
     {

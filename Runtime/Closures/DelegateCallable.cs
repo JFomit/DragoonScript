@@ -14,6 +14,8 @@ class DelegateCallable(Func<Interpreter, object[], object> @delegate, HMClosureT
 
     public override HMClosureType Type { get; } = type;
 
+    public override bool IsImmediate(int count) => true;
+
     public override object Call(Interpreter interpreter, object[] args)
     {
         if (args.Length > MaxArgsCount)

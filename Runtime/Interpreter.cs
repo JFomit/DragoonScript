@@ -21,10 +21,8 @@ class Interpreter(FunctionScope globals) : AstNodeVisitor<object>
 
     public Stack<Callable> CallStack { get; } = [];
 
-    public object Call(Callable closure)
+    public object Run(LambdaTerm start)
     {
-        CallStack.Push(closure);
-
         var expression = start;
 
     next:
@@ -95,13 +93,9 @@ class Interpreter(FunctionScope globals) : AstNodeVisitor<object>
 
                     goto next;
                 }
+            default:
+                throw new InterpreterException("Interpreter discovered an invalid program.", None);
         }
-
-        throw new InterpreterException("Interpreter discovered an invalid program.", None);
-    }
-
-    public object Run(LambdaTerm start)
-    {
 
     }
 

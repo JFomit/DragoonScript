@@ -1,8 +1,8 @@
 using DragoonScript.Core.Ast;
 
-namespace DragoonScript.Core.Optimization;
+namespace DragoonScript.Core.Transformations;
 
-interface IOptimizationPass
+interface ITransformationPass
 {
     void TransformFunction(FunctionDeclaration function);
 }

@@ -59,6 +59,11 @@ class AstConsolePrinter : AstNodeVisitor<Unit>
         Console.WriteLine($"{Indent}halt {FormatAtomic(value)}");
         return [];
     }
+    public override Unit VisitJoin(Join join)
+    {
+        Console.WriteLine($"{Indent}join {FormatAtomic(join.Value)} -> {join.JoinTarget.Unwrap()}");
+        return [];
+    }
 
     public override Unit VisitIfExpressionBinding(IfExpressionBinding binding)
     {

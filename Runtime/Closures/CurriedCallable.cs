@@ -12,6 +12,16 @@ class CurriedCallable(Callable inner, object[] bound) : Callable
 
     public override HMClosureType Type => new(Enumerable.Range(1, MaxArgsCount).Select(_ => new Any()).ToArray());
 
+    public override bool IsImmediate(int count)
+    {
+        if (count == MaxArgsCount)
+        {
+            return Inner.IsImmediate(Bound.Length + count);
+        }
+
+        return true;
+    }
+
     public override object Call(Interpreter interpreter, object[] args)
     {
         if (args.Length == MaxArgsCount) // perfect forwarding

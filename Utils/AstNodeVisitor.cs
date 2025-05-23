@@ -30,4 +30,5 @@ abstract class AstNodeVisitor<TResult>
     public virtual TResult VisitValueBinding(ValueBinding binding) => VisitChildren(binding);
     public virtual TResult VisitFunctionVariable(FunctionVariable functionVariable) => VisitChildren(functionVariable);
     public virtual TResult VisitHalt(Value value) => VisitChildren(value);
+    public virtual TResult VisitJoin(Join join) => Visit(join.Value);
 }
