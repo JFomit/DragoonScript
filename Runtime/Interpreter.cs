@@ -41,12 +41,12 @@ class Interpreter(FunctionScope globals) : AstNodeVisitor<object>
                     var condition = (bool)ExtractValue(ifExpression.Condition);
                     if (condition)
                     {
-                        // PushScope();
+                        PushScope();
                         expression = ifExpression.Then;
                     }
                     else
                     {
-                        // PushScope();
+                        PushScope();
                         expression = ifExpression.Else;
                     }
                     goto next;
@@ -54,7 +54,7 @@ class Interpreter(FunctionScope globals) : AstNodeVisitor<object>
             case Join join:
                 {
                     var result = ExtractValue(join.Value);
-                    // PopScope();
+                    PopScope();
                     Current.DefineUniqueOrFork(join.Variable.Name, result, out _current);
                     expression = join.JoinTarget.Unwrap();
                     goto next;
