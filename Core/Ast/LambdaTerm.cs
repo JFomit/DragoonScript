@@ -130,7 +130,7 @@ record Halt(Value Value) : Value
     public override TResult Accept<TResult>(AstNodeVisitor<TResult> visitor) => visitor.VisitHalt(Value);
 }
 
-record Join(Value Value, Option<LambdaTerm> JoinTarget) : Value
+record Join(Value Value, Variable Variable, Option<LambdaTerm> JoinTarget) : Value
 {
     public override IEnumerable<AstNode> Children
     {

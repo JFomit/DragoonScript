@@ -40,11 +40,11 @@ class JoinPass : ITransformationPass
         {
             if (last.TryUnwrap(out var binding))
             {
-                binding.Expression = Some<LambdaTerm>(new Join((Value)expression, Some(next)));
+                binding.Expression = Some<LambdaTerm>(new Join((Value)expression, ifBinding.Variable, Some(next)));
             }
             else
             {
-                ifBinding.Then = new Join((Value)expression, Some(next));
+                ifBinding.Then = new Join((Value)expression, ifBinding.Variable, Some(next));
             }
         }
 
@@ -59,11 +59,11 @@ class JoinPass : ITransformationPass
         {
             if (last.TryUnwrap(out var binding))
             {
-                binding.Expression = Some<LambdaTerm>(new Join((Value)expression, Some(next)));
+                binding.Expression = Some<LambdaTerm>(new Join((Value)expression, ifBinding.Variable, Some(next)));
             }
             else
             {
-                ifBinding.Else = new Join((Value)expression, Some(next));
+                ifBinding.Else = new Join((Value)expression, ifBinding.Variable, Some(next));
             }
         }
     }

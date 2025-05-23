@@ -39,13 +39,14 @@ class CompilerPipeLine(string identifier, string source)
         var program = ast.VisitFile(tree);
         var tailcallOptimizer = new TailCallPass();
         var joinOptimizer = new JoinPass();
-        // var printer = new AstConsolePrinter();
+        var printer = new AstConsolePrinter();
         foreach (var (_, function) in program)
         {
             tailcallOptimizer.TransformFunction(function);
             joinOptimizer.TransformFunction(function);
-            // printer.Visit(function);
+            printer.Visit(function);
         }
+        Console.ReadKey();
 
         try
         {

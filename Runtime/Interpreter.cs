@@ -41,19 +41,22 @@ class Interpreter(FunctionScope globals) : AstNodeVisitor<object>
                     var condition = (bool)ExtractValue(ifExpression.Condition);
                     if (condition)
                     {
-                        PushScope();
-                        var then = Run(ifExpression.Then);
-                        PopScope();
-                        Current.DefineUniqueOrFork(result.Name, then, out _current);
+                        // PushScope();
+                        expression = ifExpression.Then;
                     }
                     else
                     {
-                        PushScope();
-                        var @else = Run(ifExpression.Else);
-                        PopScope();
-                        Current.DefineUniqueOrFork(result.Name, @else, out _current);
+                        // PushScope();
+                        expression = ifExpression.Else;
                     }
-                    expression = ifExpression.Expression.Unwrap();
+                    goto next;
+                }
+            case Join join:
+                {
+                    var result = ExtractValue(join.Value);
+                    // PopScope();
+                    Current.DefineUniqueOrFork(join.Variable.Name, result, out _current);
+                    expression = join.JoinTarget.Unwrap();
                     goto next;
                 }
             case Variable variable:
