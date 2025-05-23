@@ -85,21 +85,20 @@ class Interpreter(FunctionScope globals) : AstNodeVisitor<object>
             case ApplicationBinding application:
                 {
                     var result = application.Variable;
-                    var function = Visit(application.Function).ValueCast<Callable>();
+                    var function = ExtractValue(application.Function).ValueCast<Callable>();
                     var args = application.Arguments.Select(ExtractValue).ToArray();
 
+                    expression = application.Expression.Unwrap();
                     PushScope();
                     var callResult = function.Call(this, args);
                     PopScope();
                     Current.DefineUniqueOrFork(result.Name, callResult, out _current);
-                    expression = application.Expression.Unwrap();
 
                     goto next;
                 }
             default:
                 throw new InterpreterException("Interpreter discovered an invalid program.", None);
         }
-
     }
 
     public override object VisitValueBinding(ValueBinding binding) => Run(binding);
