@@ -5,7 +5,7 @@ using static JFomit.Functional.Prelude;
 
 namespace DragoonScript.Runtime;
 
-class OverloadedCallable : Callable
+record OverloadedCallable : Callable
 {
     public readonly struct Builder(int argsCount)
     {
@@ -59,7 +59,7 @@ class OverloadedCallable : Callable
 
     public static Builder CreateBuilder(int count) => new(count);
 
-    public override object Call(Interpreter interpreter, object[] args)
+    public object Call(Interpreter interpreter, object[] args)
     {
         if (args.Length > MaxArgsCount)
         {

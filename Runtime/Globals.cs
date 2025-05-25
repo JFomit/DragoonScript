@@ -102,10 +102,10 @@ static class Globals
         {
             return Random.Shared.Next(a, b);
         }).Curry(),
-        ["loop"] = Closure.Loop(),
-        ["repeat"] = Closure.Repeat(),
-        ["forever"] = Closure.InfiniteLoop(),
-        ["while"] = Closure.While(),
+        // ["loop"] = Closure.Loop(),
+        // ["repeat"] = Closure.Repeat(),
+        // ["forever"] = Closure.InfiniteLoop(),
+        // ["while"] = Closure.While(),
 
         ["shell"] = ShellClallable.PrepareCommand(),
         ["||>"] = ShellClallable.Pipe(),

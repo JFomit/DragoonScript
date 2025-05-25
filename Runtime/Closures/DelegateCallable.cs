@@ -1,22 +1,19 @@
 using DragoonScript.Core;
+using DragoonScript.Core.Ast;
 using JFomit.Functional.Extensions;
 using JFomit.Functional.Monads;
 using static JFomit.Functional.Prelude;
 
 namespace DragoonScript.Runtime;
 
-class DelegateCallable(Func<Interpreter, object[], object> @delegate, HMClosureType type, string? format = null) : Callable
+record DelegateCallable(Func<Interpreter, object[], object> Delegate, HMClosureType Type, Option<string> Name = default) : Callable
 {
-    public Option<string> Name { get; } = format.ToOption();
+    public Func<Interpreter, object[], object> Delegate { get; } = Delegate;
+    public override int MaxArgsCount { get; } = Type.Parameters.Length;
 
-    public Func<Interpreter, object[], object> Delegate { get; } = @delegate;
-    public override int MaxArgsCount { get; } = type.Parameters.Length;
+    public override HMClosureType Type => Type;
 
-    public override HMClosureType Type { get; } = type;
-
-    public override bool IsImmediate(int count) => true;
-
-    public override object Call(Interpreter interpreter, object[] args)
+    public object Call(Interpreter interpreter, object[] args)
     {
         if (args.Length > MaxArgsCount)
         {

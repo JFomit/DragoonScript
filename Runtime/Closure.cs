@@ -79,67 +79,6 @@ static class Closure
         }, new(new CLRType(typeof(T1)), new CLRType(typeof(T2)), new CLRType(typeof(T3))));
     }
 
-    public static Callable Loop()
-    {
-        return new DelegateCallable((interpreter, args) =>
-        {
-            var func = args[1].ValueCast<Callable>();
-            var count = args[0].ValueCast<int>();
-
-            for (int i = 0; i < count; i++)
-            {
-                func.Call(interpreter, [i.ValueCast<int>()]);
-            }
-
-            return Prelude.Unit;
-        }, new(new CLRType(typeof(int)), new CLRType(typeof(Callable)))).Curry();
-    }
-    public static Callable Repeat()
-    {
-        return new DelegateCallable((interpreter, args) =>
-        {
-            var func = args[1].ValueCast<Callable>();
-            var count = args[0].ValueCast<int>();
-
-            for (int i = 0; i < count; i++)
-            {
-                Debug.Assert(func.MaxArgsCount > 0);
-                func.Call(interpreter, [Prelude.Unit]);
-            }
-
-            return Prelude.Unit;
-        }, new(new CLRType(typeof(int)), new CLRType(typeof(Callable)))).Curry();
-    }
-    public static Callable InfiniteLoop()
-    {
-        return new DelegateCallable((interpreter, args) =>
-        {
-            var func = args[0].ValueCast<Callable>();
-
-            while (true)
-            {
-                Debug.Assert(func.MaxArgsCount > 0);
-                func.Call(interpreter, [Prelude.Unit]);
-            }
-        }, new(new CLRType(typeof(Callable))));
-    }
-    public static Callable While()
-    {
-        return new DelegateCallable((interpreter, args) =>
-        {
-            var cond = args[0].ValueCast<Callable>();
-            var func = args[1].ValueCast<Callable>();
-
-            while (cond.Call(interpreter, [Prelude.Unit]) is true)
-            {
-                Debug.Assert(func.MaxArgsCount > 0);
-                func.Call(interpreter, [Prelude.Unit]);
-            }
-
-            return Prelude.Unit;
-        }, new(new CLRType(typeof(Callable)), new CLRType(typeof(Callable)))).Curry();
-    }
-
     public static Callable FromDeclaration(FunctionDeclaration declaration) => new FunctionCallable(declaration).Curry();
     public static Callable FromLambda(Abstraction abstraction, FunctionScope scope) => new LambdaClosure(abstraction, scope).Curry();
 

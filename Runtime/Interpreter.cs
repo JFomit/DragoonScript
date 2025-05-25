@@ -19,7 +19,7 @@ class Interpreter(FunctionScope globals) : AstNodeVisitor<object>
     }
     private FunctionScope _current = globals.Fork();
 
-    public Stack<Callable> CallStack { get; } = [];
+    public Stack<CallFrame> CallStack { get; } = [];
 
     public object Run(LambdaTerm start)
     {
@@ -39,16 +39,8 @@ class Interpreter(FunctionScope globals) : AstNodeVisitor<object>
                 {
                     var result = ifExpression.Variable;
                     var condition = (bool)ExtractValue(ifExpression.Condition);
-                    if (condition)
-                    {
-                        PushScope();
-                        expression = ifExpression.Then;
-                    }
-                    else
-                    {
-                        PushScope();
-                        expression = ifExpression.Else;
-                    }
+                    PushScope();
+                    expression = condition ? ifExpression.Then : ifExpression.Else;
                     goto next;
                 }
             case Join join:
@@ -88,13 +80,60 @@ class Interpreter(FunctionScope globals) : AstNodeVisitor<object>
                     var function = ExtractValue(application.Function).ValueCast<Callable>();
                     var args = application.Arguments.Select(ExtractValue).ToArray();
 
-                    expression = application.Expression.Unwrap();
-                    PushScope();
-                    var callResult = function.Call(this, args);
-                    PopScope();
-                    Current.DefineUniqueOrFork(result.Name, callResult, out _current);
+                call:
+                    switch (function)
+                    {
+                        case DelegateCallable delegateCallable:
+                            {
+                                Enter(delegateCallable, application.Expression.Unwrap());
+                                var callResult = delegateCallable.Call(this, args);
+                                expression = Leave();
+                                Current.DefineUniqueOrFork(result.Name, callResult, out _current);
 
-                    goto next;
+                                goto next;
+                            }
+                        case LambdaClosure lambdaClosure:
+                            {
+                                var old = PushScope(lambdaClosure.Closure);
+                                var scope = Current;
+
+                                for (int i = 0; i < args.Length; i++)
+                                {
+                                    var ok = scope.DefineUniqueOrFork(lambdaClosure.Lambda.Variables[i].Name, args[i], out _);
+                                    Debug.Assert(ok);
+                                }
+                                Enter(lambdaClosure, application.Expression.Unwrap());
+                                expression = lambdaClosure.Lambda.Body;
+                                PopScope(old);
+
+                                goto next;
+                            }
+                        case CurriedCallable curriedCallable:
+                            {
+                                if (args.Length == curriedCallable.MaxArgsCount) // perfect forwarding
+                                {
+                                    args = [.. curriedCallable.Bound, .. args];
+                                    function = curriedCallable.Inner;
+                                    goto call;
+                                }
+
+                                if (args.Length > curriedCallable.MaxArgsCount)
+                                {
+                                    throw new InterpreterException("Extra arguments.", Some(curriedCallable.Format()));
+                                }
+                                if (args.Length < 1)
+                                {
+                                    throw new InterpreterException("Not enough arguments provided.", Some(curriedCallable.Format()));
+                                }
+
+                                // partial application
+                                var callResult = new CurriedCallable(curriedCallable.Inner, [.. curriedCallable.Bound, .. args]);
+                                Current.DefineUniqueOrFork(result.Name, callResult, out _current);
+                                goto next;
+                            }
+                        default:
+                            throw new UnreachableException();
+                    }
                 }
             default:
                 throw new InterpreterException("Interpreter discovered an invalid program.", None);
@@ -206,4 +245,8 @@ class Interpreter(FunctionScope globals) : AstNodeVisitor<object>
     {
         Current = Current.Parent.Unwrap();
     }
+
+
+    private void Enter(Callable callable, LambdaTerm returnTarget) => CallStack.Push(new CallFrame(returnTarget, callable));
+    private LambdaTerm Leave() => CallStack.Pop().ReturnTarget;
 }

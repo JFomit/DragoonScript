@@ -1,28 +1,17 @@
 using DragoonScript.Core;
+using DragoonScript.Core.Ast;
+using JFomit.Functional.Monads;
 using static JFomit.Functional.Prelude;
 
 namespace DragoonScript.Runtime;
 
-class CurriedCallable(Callable inner, object[] bound) : Callable
+record CurriedCallable(Callable Inner, object[] Bound) : Callable
 {
-    public Callable Inner { get; } = inner;
-    public object[] Bound { get; } = bound;
-
     public override int MaxArgsCount => Inner.MaxArgsCount - Bound.Length;
 
     public override HMClosureType Type => new(Enumerable.Range(1, MaxArgsCount).Select(_ => new Any()).ToArray());
 
-    public override bool IsImmediate(int count)
-    {
-        if (count == MaxArgsCount)
-        {
-            return Inner.IsImmediate(Bound.Length + count);
-        }
-
-        return true;
-    }
-
-    public override object Call(Interpreter interpreter, object[] args)
+    public object Call(Interpreter interpreter, object[] args)
     {
         if (args.Length == MaxArgsCount) // perfect forwarding
         {
