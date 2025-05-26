@@ -2,8 +2,8 @@ using JFomit.Functional.Monads;
 
 namespace DragoonScript.Runtime;
 
-class RuntimeError(string message, Option<string> function)
+class RuntimeError(string message, Stack<CallFrame> callFrames)
 {
     public string Message { get; } = message;
-    public Option<string> Function { get; } = function;
+    public Stack<CallFrame> CallFrames { get; } = callFrames;
 }

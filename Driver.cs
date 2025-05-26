@@ -148,9 +148,14 @@ class Driver
     private static void WriteRuntimeError(RuntimeError error)
     {
         Console.Error.WriteLine($"Runtime error: {error.Message}");
-        if (error.Function.TryUnwrap(out var f))
+        PrintStackTrace(error.CallFrames);
+    }
+
+    private static void PrintStackTrace(Stack<CallFrame> callFrames)
+    {
+        while (callFrames.TryPop(out var frame))
         {
-            Console.Error.WriteLine($"In {f}.");
+            Console.Error.WriteLine($"\tin {frame.Function.Format()}");
         }
     }
 

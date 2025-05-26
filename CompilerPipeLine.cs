@@ -58,7 +58,7 @@ class CompilerPipeLine(string identifier, string source)
 
             var runner = new Interpreter(globalScope);
 
-            var result = runner.Visit(program["main"]);
+            var result = runner.CallMain(program["main"]);
             return result switch
             {
                 double v => Ok((int)v),

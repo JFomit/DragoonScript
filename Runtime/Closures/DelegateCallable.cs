@@ -6,22 +6,22 @@ using static JFomit.Functional.Prelude;
 
 namespace DragoonScript.Runtime;
 
-record DelegateCallable(Func<Interpreter, object[], object> Delegate, HMClosureType Type, Option<string> Name = default) : Callable
+record DelegateCallable(Func<Interpreter, object[], object> Delegate, HMClosureType Type, Option<string> Name = default) : ImmediateCallable
 {
     public Func<Interpreter, object[], object> Delegate { get; } = Delegate;
     public override int MaxArgsCount { get; } = Type.Parameters.Length;
 
-    public override HMClosureType Type => Type;
+    public override HMClosureType Type { get; } = Type;
 
-    public object Call(Interpreter interpreter, object[] args)
+    public override object Call(Interpreter interpreter, object[] args)
     {
         if (args.Length > MaxArgsCount)
         {
-            throw new InterpreterException("Extra arguments.", Some(Format()));
+            interpreter.ErrorAndThrow("Extra arguments.");
         }
         if (args.Length < MaxArgsCount)
         {
-            throw new InterpreterException("Too few arguments provided.", Some(Format()));
+            interpreter.ErrorAndThrow("Too few arguments provided.");
         }
         return Delegate(interpreter, args);
     }

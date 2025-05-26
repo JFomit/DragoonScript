@@ -59,27 +59,5 @@ record OverloadedCallable : Callable
 
     public static Builder CreateBuilder(int count) => new(count);
 
-    public object Call(Interpreter interpreter, object[] args)
-    {
-        if (args.Length > MaxArgsCount)
-        {
-            throw new InterpreterException("Extra arguments.", Some(Format()));
-        }
-        if (args.Length < MaxArgsCount)
-        {
-            throw new InterpreterException("Too few arguments provided.", Some(Format()));
-        }
-
-        foreach (var item in Closures)
-        {
-            if (item.Type.IsCallableWith(args))
-            {
-                return item.Call(interpreter, args);
-            }
-        }
-
-        throw new InterpreterException($"No function in {Format()} is callable with provided arguments: {args.Skip(1).Aggregate(args[0].GetType().Format(), (p, n) => $"{p} -> {n.GetType().Format()}")}", Some(Format()));
-    }
-
     public override string Format() => Name.TryUnwrap(out var name) ? $"<{name}: group with {Closures.Length} functions>" : $"<group with {Closures.Length} functions>";
 }

@@ -122,7 +122,7 @@ static class Globals
                 return str[index];
             }
 
-            throw new InterpreterException($"Invalid type: expected string or array, got {array.GetType().Format()}.", Prelude.None);
+            throw new InterpreterException($"Invalid type: expected string or array, got {array.GetType().Format()}.", []);
         }),
 
         ["int_array"] = Closure.FromDelegate((int size) => new int[size]),
@@ -137,7 +137,7 @@ static class Globals
             {
                 return str[index];
             }
-            throw new InterpreterException($"Invalid type: expected string or array, got {array.GetType().Format()}.", Prelude.None);
+            throw new InterpreterException($"Invalid type: expected string or array, got {array.GetType().Format()}.", []);
         }).Curry(),
         ["array_set"] = Closure.FromDelegate((int index, object value, object array) =>
         {
@@ -146,7 +146,7 @@ static class Globals
                 arr.SetValue(value, index);
                 return Prelude.Unit;
             }
-            throw new InterpreterException($"Invalid type: expected array, got {array.GetType().Format()}.", Prelude.None);
+            throw new InterpreterException($"Invalid type: expected array, got {array.GetType().Format()}.", []);
         }).Curry(),
         ["length_of"] = Closure.FromDelegate((object array) =>
         {
@@ -158,7 +158,7 @@ static class Globals
             {
                 return str.Length;
             }
-            throw new InterpreterException($"Invalid type: expected string or array, got {array.GetType().Format()}.", Prelude.None);
+            throw new InterpreterException($"Invalid type: expected string or array, got {array.GetType().Format()}.", []);
         }),
         ["to_byte"] = Closure.FromDelegate((object value) =>
         {
@@ -198,6 +198,6 @@ static class Globals
                 return value.ValueCast<char>();
             }
         }),
-        ["failwith"] = Closure.FromDelegate<string, Absurd>((string msg) => throw new InterpreterException(msg, Prelude.None))
+        ["failwith"] = Closure.FailWith()
     });
 }

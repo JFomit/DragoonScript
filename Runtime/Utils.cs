@@ -20,8 +20,8 @@ internal static class Utils
             return t.Name;
         }
     }
-    internal static T ValueCast<T>(this object obj, string? function = null)
+    internal static T ValueCast<T>(this object obj, Stack<CallFrame>? callFrames = null)
         => obj is T t
         ? t
-        : throw new InterpreterException($"Invalid type: expected {typeof(T).Format()}, got {obj.GetType().Format()}.", function.ToOption());
+        : throw new InterpreterException($"Invalid type: expected {typeof(T).Format()}, got {obj.GetType().Format()}.", callFrames ?? []);
 }

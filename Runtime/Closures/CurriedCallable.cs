@@ -11,25 +11,6 @@ record CurriedCallable(Callable Inner, object[] Bound) : Callable
 
     public override HMClosureType Type => new(Enumerable.Range(1, MaxArgsCount).Select(_ => new Any()).ToArray());
 
-    public object Call(Interpreter interpreter, object[] args)
-    {
-        if (args.Length == MaxArgsCount) // perfect forwarding
-        {
-            return Inner.Call(interpreter, [.. Bound, .. args]);
-        }
-
-        if (args.Length > MaxArgsCount)
-        {
-            throw new InterpreterException("Extra arguments.", Some(Format()));
-        }
-        if (args.Length < 1)
-        {
-            throw new InterpreterException("Not enough arguments provided.", Some(Format()));
-        }
-
-        return new CurriedCallable(Inner, [.. Bound, .. args]); // partial application
-    }
-
     public override string Format()
     {
         if (MaxArgsCount == Inner.MaxArgsCount)

@@ -3,9 +3,9 @@ using JFomit.Functional.Monads;
 namespace DragoonScript.Runtime;
 
 [Serializable]
-class InterpreterException(string message, Option<string> function) : Exception(message)
+class InterpreterException(string message, Stack<CallFrame> callFrames) : Exception(message)
 {
-    public Option<string> Function { get; set; } = function;
+    public Stack<CallFrame> CallFrames { get; } = callFrames;
 
-    public RuntimeError ToError() => new(Message, Function);
+    public RuntimeError ToError() => new(Message, CallFrames);
 }

@@ -13,3 +13,7 @@ abstract record Callable
     public abstract string Format();
 }
 
+abstract record ImmediateCallable : Callable
+{
+    public abstract object Call(Interpreter interpreter, object[] args);
+}
