@@ -112,47 +112,89 @@ class Interpreter(FunctionScope globals)
                         case FunctionCallable functionCallable:
                             {
                                 var functionDefinition = functionCallable.Function;
-                                Enter(functionCallable, applicationBinding.Expression.Unwrap());
-                                PushScope();
-                                var scope = Current;
                                 if (functionDefinition.Parameters.Length < args.Length)
                                 {
                                     HaltAndCatchFire("Extra arguments.");
                                 }
-                                for (int i = 0; i < args.Length; i++)
-                                {
-                                    var ok = scope.DefineUniqueOrFork(functionDefinition.Parameters[i].Name, args[i], out _);
-                                    Debug.Assert(ok);
-                                }
-                                // no tco by default
-                                var callResult = Run(functionDefinition.Body);
-                                PopScope();
 
-                                Current.DefineUniqueOrFork(result.Name, callResult, out _current);
-                                expression = Leave();
+                                if (applicationBinding.IsTailcall)
+                                {
+                                    // previous function
+                                    PopScope();
+                                    var returnTarget = Leave();
+                                    // current function
+                                    Enter(functionCallable, returnTarget);
+                                    PushScope();
+
+                                    var scope = Current;
+                                    for (int i = 0; i < args.Length; i++)
+                                    {
+                                        var ok = scope.DefineUniqueOrFork(functionDefinition.Parameters[i].Name, args[i], out _);
+                                        Debug.Assert(ok);
+                                    }
+                                    expression = functionDefinition.Body;
+                                }
+                                else
+                                {
+                                    Enter(functionCallable, applicationBinding.Expression.Unwrap());
+                                    PushScope();
+                                    var scope = Current;
+                                    for (int i = 0; i < args.Length; i++)
+                                    {
+                                        var ok = scope.DefineUniqueOrFork(functionDefinition.Parameters[i].Name, args[i], out _);
+                                        Debug.Assert(ok);
+                                    }
+
+                                    var callResult = Run(functionDefinition.Body);
+                                    PopScope();
+
+                                    Current.DefineUniqueOrFork(result.Name, callResult, out _current);
+                                    expression = Leave();
+                                }
                                 goto next;
                             }
                         case LambdaClosure lambda:
                             {
                                 var abstraction = lambda.Lambda;
-                                Enter(lambda, applicationBinding.Expression.Unwrap());
-                                var old = PushScope(lambda.Closure);
-                                var scope = Current;
                                 if (abstraction.Variables.Length < args.Length)
                                 {
                                     HaltAndCatchFire("Extra arguments.");
                                 }
-                                for (int i = 0; i < args.Length; i++)
-                                {
-                                    var ok = scope.DefineUniqueOrFork(abstraction.Variables[i].Name, args[i], out _);
-                                    Debug.Assert(ok);
-                                }
-                                // no tco by default
-                                var callResult = Run(abstraction.Body);
-                                PopScope(old);
 
-                                Current.DefineUniqueOrFork(result.Name, callResult, out _current);
-                                expression = Leave();
+                                if (applicationBinding.IsTailcall)
+                                {
+                                    // previous function
+                                    PopScope();
+                                    var returnTarget = Leave();
+                                    // current function
+                                    Enter(lambda, returnTarget);
+                                    PushScope();
+
+                                    var scope = Current;
+                                    for (int i = 0; i < args.Length; i++)
+                                    {
+                                        var ok = scope.DefineUniqueOrFork(abstraction.Variables[i].Name, args[i], out _);
+                                        Debug.Assert(ok);
+                                    }
+                                    expression = abstraction.Body;
+                                }
+                                else
+                                {
+                                    Enter(lambda, applicationBinding.Expression.Unwrap());
+                                    var old = PushScope(lambda.Closure);
+                                    var scope = Current;
+                                    for (int i = 0; i < args.Length; i++)
+                                    {
+                                        var ok = scope.DefineUniqueOrFork(abstraction.Variables[i].Name, args[i], out _);
+                                        Debug.Assert(ok);
+                                    }
+                                    // no tco by default
+                                    var callResult = Run(abstraction.Body);
+                                    PopScope(old);
+
+                                    Current.DefineUniqueOrFork(result.Name, callResult, out _current);
+                                    expression = Leave();
+                                }
                                 goto next;
                             }
                         default:
