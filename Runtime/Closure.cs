@@ -28,7 +28,7 @@ static class Closure
         {
             if (args.Length > 1)
             {
-                interpreter.ErrorAndThrow("Extra arguments.");
+                interpreter.HaltAndCatchFire("Extra arguments.");
             }
             return func();
         }, new(new CLRType(typeof(Unit))));
@@ -40,7 +40,7 @@ static class Closure
         {
             if (args.Length > 1)
             {
-                interpreter.ErrorAndThrow("Extra arguments.");
+                interpreter.HaltAndCatchFire("Extra arguments.");
             }
             return func()!;
         }, new(new CLRType(typeof(Unit))));
@@ -51,7 +51,7 @@ static class Closure
         {
             if (args.Length > 1)
             {
-                interpretr.ErrorAndThrow("Extra arguments.");
+                interpretr.HaltAndCatchFire("Extra arguments.");
             }
             return func(args[0].ValueCast<T1>())!;
         }, new(new CLRType(typeof(Unit))));
@@ -95,8 +95,8 @@ static class Closure
         {
             if (args.Length > 1)
             {
-                interpreter.ErrorAndThrow("Extra arguments.");
+                interpreter.HaltAndCatchFire("Extra arguments.");
             }
-            return interpreter.ErrorAndThrow(args[0].ValueCast<string>(interpreter.CallStack));
+            return interpreter.HaltAndCatchFire(args[0].ValueCast<string>(interpreter.CallStack));
         }, new(new CLRType(typeof(string))));
 }

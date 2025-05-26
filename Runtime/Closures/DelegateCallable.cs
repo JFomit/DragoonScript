@@ -17,11 +17,11 @@ record DelegateCallable(Func<Interpreter, object[], object> Delegate, HMClosureT
     {
         if (args.Length > MaxArgsCount)
         {
-            interpreter.ErrorAndThrow("Extra arguments.");
+            interpreter.HaltAndCatchFire("Extra arguments.");
         }
         if (args.Length < MaxArgsCount)
         {
-            interpreter.ErrorAndThrow("Too few arguments provided.");
+            interpreter.HaltAndCatchFire("Too few arguments provided.");
         }
         return Delegate(interpreter, args);
     }

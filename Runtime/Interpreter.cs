@@ -24,7 +24,7 @@ class Interpreter(FunctionScope globals)
         Enter(new FunctionCallable(main), null!);
         if (main.Parameters.Length > 1)
         {
-            ErrorAndThrow("Main function must not take named parameters, only ().");
+            HaltAndCatchFire("Main function must not take named parameters, only ().");
         }
 
         PushScope();
@@ -59,11 +59,11 @@ class Interpreter(FunctionScope globals)
                             {
                                 if (args.Length > overloaded.MaxArgsCount)
                                 {
-                                    ErrorAndThrow("Extra arguments.");
+                                    HaltAndCatchFire("Extra arguments.");
                                 }
                                 if (args.Length < overloaded.MaxArgsCount)
                                 {
-                                    ErrorAndThrow("Not enough arguments provided.");
+                                    HaltAndCatchFire("Not enough arguments provided.");
                                 }
 
                                 foreach (var item in overloaded.Closures)
@@ -75,7 +75,7 @@ class Interpreter(FunctionScope globals)
                                     }
                                 }
 
-                                return ErrorAndThrow($"No function in {overloaded.Format()} is callable with provided arguments: {args.Skip(1).Aggregate(args[0].GetType().Format(), (p, n) => $"{p} -> {n.GetType().Format()}")}");
+                                return HaltAndCatchFire($"No function in {overloaded.Format()} is callable with provided arguments: {args.Skip(1).Aggregate(args[0].GetType().Format(), (p, n) => $"{p} -> {n.GetType().Format()}")}");
                             }
                         case CurriedCallable curried:
                             {
@@ -89,11 +89,11 @@ class Interpreter(FunctionScope globals)
                                 Enter(curried, applicationBinding.Expression.Unwrap());
                                 if (args.Length > curried.MaxArgsCount)
                                 {
-                                    ErrorAndThrow("Extra arguments.");
+                                    HaltAndCatchFire("Extra arguments.");
                                 }
                                 if (args.Length < 1)
                                 {
-                                    ErrorAndThrow("Not enough arguments provided.");
+                                    HaltAndCatchFire("Not enough arguments provided.");
                                 }
 
                                 var callResult = new CurriedCallable(curried.Inner, [.. curried.Bound, .. args]); // partial application
@@ -117,7 +117,7 @@ class Interpreter(FunctionScope globals)
                                 var scope = Current;
                                 if (functionDefinition.Parameters.Length < args.Length)
                                 {
-                                    ErrorAndThrow("Extra arguments.");
+                                    HaltAndCatchFire("Extra arguments.");
                                 }
                                 for (int i = 0; i < args.Length; i++)
                                 {
@@ -140,7 +140,7 @@ class Interpreter(FunctionScope globals)
                                 var scope = Current;
                                 if (abstraction.Variables.Length < args.Length)
                                 {
-                                    ErrorAndThrow("Extra arguments.");
+                                    HaltAndCatchFire("Extra arguments.");
                                 }
                                 for (int i = 0; i < args.Length; i++)
                                 {
@@ -156,7 +156,7 @@ class Interpreter(FunctionScope globals)
                                 goto next;
                             }
                         default:
-                            return ErrorAndThrow($"Interpreter discovered an invalid program.");
+                            return HaltAndCatchFire($"Interpreter discovered an invalid program.");
                     }
                 }
             case Join join:
@@ -173,7 +173,7 @@ class Interpreter(FunctionScope globals)
                         .Get(variable.Name)
                         .TryUnwrap(out var v)
                     ? v
-                    : ErrorAndThrow($"Variable not in scope: {variable.Name}.");
+                    : HaltAndCatchFire($"Variable not in scope: {variable.Name}.");
                 }
             case FunctionVariable variable:
                 {
@@ -181,7 +181,7 @@ class Interpreter(FunctionScope globals)
                             .Get(variable.Function.Name)
                             .TryUnwrap(out var f)
                         ? f
-                        : ErrorAndThrow($"Function not in scope: {variable.Function.Name}.");
+                        : HaltAndCatchFire($"Function not in scope: {variable.Function.Name}.");
                 }
             case Abstraction abstraction:
                 {
@@ -200,7 +200,7 @@ class Interpreter(FunctionScope globals)
                 }
         }
 
-        return ErrorAndThrow("Interpreter discovered an invalid program.");
+        return HaltAndCatchFire("Interpreter discovered an invalid program.");
     }
 
     private object ExtractValue(Value value) => value switch
@@ -208,12 +208,12 @@ class Interpreter(FunctionScope globals)
         Variable v
             => Current.Get(v.Name).TryUnwrap(out var x)
             ? x
-            : (Variable)(object)ErrorAndThrow($"Variable not in scope: {v.Name}."),
+            : (Variable)(object)HaltAndCatchFire($"Variable not in scope: {v.Name}."),
         Literal l => ExtractLiteral(l),
         FunctionVariable f => Current.Get(f.Function.Name).Unwrap(),
         Abstraction lambda => Closure.FromLambda(lambda, Current),
 
-        _ => ErrorAndThrow($"Not in scope: {value}.")
+        _ => HaltAndCatchFire($"Not in scope: {value}.")
     };
     private object ExtractLiteral(Literal l)
     {
@@ -261,7 +261,7 @@ class Interpreter(FunctionScope globals)
 
             if (i + 1 >= value.Length)
             {
-                ErrorAndThrow("Invalid string literal.");
+                HaltAndCatchFire("Invalid string literal.");
             }
 
             char next = value[i + 1] switch
@@ -270,7 +270,7 @@ class Interpreter(FunctionScope globals)
                 't' => '\t',
                 '\\' => '\\',
                 '"' => '"',
-                _ => (char)(object)ErrorAndThrow("Invalid escape sequence.")
+                _ => (char)(object)HaltAndCatchFire("Invalid escape sequence.")
             };
             buffer[i - offset] = next;
             offset++;
@@ -303,5 +303,5 @@ class Interpreter(FunctionScope globals)
     private LambdaTerm Leave() => CallStack.Pop().ReturnTarget;
 
     [DoesNotReturn]
-    public Absurd ErrorAndThrow(string message) => throw new InterpreterException(message, CallStack);
+    public Absurd HaltAndCatchFire(string message) => throw new InterpreterException(message, CallStack);
 }
