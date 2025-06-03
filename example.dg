@@ -1,7 +1,7 @@
 fn (|>) x f = f x
 
 fn main () =
-    let code = "++++>+++++[<+>-]++++++++[<++++++>-]<."
+    let code = "++++++++++[>+++++++>++++++++++>+++>+++++++++<<<<-]>++.>+.+++++++..+++.>++.>---.<<.+++.------.--------.>+."
     brainfck code
     printline ()
 
@@ -40,7 +40,7 @@ fn interpret_rec source ip tape dp =
     else if current == '>' then   
         let dp = (dp + 1) % (length_of tape)
         let ip = ip + 1
-
+        
         brainfck_interpret source ip tape dp
     else if current == '<' then
         let dp = if dp == 0 then (length_of tape - 1) else dp - 1
