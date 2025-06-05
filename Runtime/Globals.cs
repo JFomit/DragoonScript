@@ -51,7 +51,15 @@ static class Globals
         ["||"] = Closure.FromDelegate((bool a, bool b) => a || b),
         ["&&"] = Closure.FromDelegate((bool a, bool b) => a && b),
 
-        ["++"] = Closure.FromDelegate((object x, object y) => $"{x}{y}"),
+        ["++"] = Closure.FromDelegate((object x, object y) =>
+        {
+            if (x is LinkedList<int> xs)
+            {
+                return new LinkedList<int>(xs.Append(y.ValueCast<int>()));
+            }
+
+            return (object)$"{x}{y}";
+        }),
 
         ["~##"] = Closure.FromDelegate((int x) => x * x),
         ["~###"] = Closure.FromDelegate((int x) => x * x * x),
@@ -110,6 +118,7 @@ static class Globals
         ["shell"] = ShellClosure.PrepareCommand(),
         ["||>"] = ShellClosure.Pipe(),
         ["run"] = ShellClosure.Run(),
+        ["<<<"] = ShellClosure.WithArguments(),
 
         ["!!"] = Closure.FromDelegate((object array, int index) =>
         {
@@ -124,6 +133,20 @@ static class Globals
 
             throw new InterpreterException($"Invalid type: expected string or array, got {array.GetType().Format()}.", Prelude.None);
         }),
+
+        ["int_list"] = Closure.FromDelegate(() =>
+        {
+            return new LinkedList<int>();
+        }),
+        ["head"] = Closure.FromDelegate((LinkedList<int> lst) =>
+        {
+            return lst.First!.Value;
+        }),
+        ["tail"] = Closure.FromDelegate((LinkedList<int> lst) =>
+        {
+            return new LinkedList<int>(lst.Skip(1));
+        }),
+
 
         ["int_array"] = Closure.FromDelegate((int size) => new int[size]),
         ["byte_array"] = Closure.FromDelegate((int size) => new byte[size]),
@@ -157,6 +180,10 @@ static class Globals
             else if (array is string str)
             {
                 return str.Length;
+            }
+            else if (array is LinkedList<int> lst)
+            {
+                return lst.Count;
             }
             throw new InterpreterException($"Invalid type: expected string or array, got {array.GetType().Format()}.", Prelude.None);
         }),
