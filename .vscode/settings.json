@@ -1,0 +1,24 @@
+{
+    "[antlr]": {
+        "editor.formatOnSave": false,
+        "editor.tabSize": 2
+    },
+    "antlr4.generation": {
+        "mode": "internal",
+        "language": "CSharp",
+        "listeners": false,
+        "visitors": false,
+    },
+    "files.exclude": {
+        "**/.git": true,
+        "**/.svn": true,
+        "**/.hg": true,
+        "**/.DS_Store": true,
+        "**/Thumbs.db": true,
+        "**/.antlr": true,
+        "**/.idea": true,
+        "**/bin": false,
+        "**/obj": true,
+        "**Folder.DotSettings.user": true
+    }
+}
