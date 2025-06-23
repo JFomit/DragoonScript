@@ -1,0 +1,3 @@
+[submodule "Spear"]
+	path = Spear
+	url = git@github.com:JFomit/Spear.git
