@@ -1,4 +1,7 @@
-This project relies on third-party tools and libraries. They are listed here in no particular order.
+This project relies on third-party tools and libraries. They are listed here in no particular order, separated by submodule.
+
+Spear, DragoonScript compiler
+====================================
 
 CliWrap by Tyrrrz, under MIT License
 ------------------------------------
